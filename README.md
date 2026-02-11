@@ -179,6 +179,34 @@
 - [AI SDK Overview](https://www.youtube.com/watch?v=TbjBzopteO4)
 - [AI SDK in React Tutorial](https://www.youtube.com/watch?v=y4IMq43KvRw)
 
+## Git Cheatsheet 📓
+
+| Command                             | What it does                               |
+| ----------------------------------- | ------------------------------------------ |
+| git init                            | Initalize a new Git repo                   |
+| git clone "rep-url"                 | Clone a repo from a URL                    |
+|                                     |                                            |
+| git status                          | Show changes status                        |
+| git add "file"                      | Add changes to staging, use "." for all    |
+| git commit -m "Descriptive Message" | Commit changes with a message              |
+| git push                            | Upload local repo content to a remote repo |
+| git log                             | View commit history                        |
+|                                     |                                            |
+| git branch                          | Lists all the branches                     |
+| git branch "branch-name"            | Create a new branch                        |
+| git checkout "branch-name"          | Switch to a branch                         |
+| git checkout -b "branch-name"       | Combines the previous 2 commands           |
+| git merge "branch-name"             | Merge changes from a branch                |
+| git branch -d "branch-name"         | Delete a branch                            |
+| git push origin "branch-name"       | Push to branch                             |
+| git pull origin "branch-name"       | Pull updates from a specific branch        |
+|                                     |                                            |
+| git pull                            | Fetch and merge changes                    |
+| git fetch                           | Fetch changes without merging              |
+| git reset --hard HEAD               | Discard changes                            |
+| git revert <commit-hash>            | Revert changes in a commit                 |
+
+
 ## Developers 🕵️‍♀️
 
 - Urmi Popuri
@@ -188,3 +216,7 @@
 
 **Project Manager:** Mohammad Mehrab  
 **Industry Mentor:** Sean Hassan
+
+<p align="center">
+  <img src="https://64.media.tumblr.com/3c90da32d14e544b92b89cf6f54fca0a/9b28579adc13f171-36/s400x600/a9aa1025c3ab5b20ac8bdd5ab0bd266e46be3f9a.gif" alt="detective-noir-gif" />
+</p>
