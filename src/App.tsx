@@ -1,35 +1,52 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [personalization, setPersonalization] = useState('');
+  const [timePeriod, setTimePeriod] = useState(10); // Default value
+  const [intensity, setIntensity] = useState(5); // Default value
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <div className="container">
+      <h1 className="title">Agentic Detective</h1>
+      <p className="subtitle">Welcome to the game you create for yourself!</p>
+      <input
+        type="text"
+        value={personalization}
+        onChange={(e) => setPersonalization(e.target.value)}
+        placeholder="Personalize your gameplay..."
+        className="input"
+      />
+      <div className="slider-container">
+        <label className="label">
+          Time Period: {timePeriod} mins
+        </label>
+        <input
+          type="range"
+          min="5"
+          max="90"
+          step="5"
+          value={timePeriod}
+          onChange={(e) => setTimePeriod(Number(e.target.value))}
+          className="slider"
+        />
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
+      <div className="slider-container">
+        <label className="label">
+          Intensity: {intensity}
+        </label>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          value={intensity}
+          onChange={(e) => setIntensity(Number(e.target.value))}
+          className="slider"
+        />
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
