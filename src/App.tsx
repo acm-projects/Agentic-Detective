@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import './App.css';
-
+import Interrogate from './Interrogate.tsx';
 function App() {
   const [personalization, setPersonalization] = useState('');
   const [timePeriod, setTimePeriod] = useState(10); // Default value
   const [intensity, setIntensity] = useState(5); // Default value
 
   return (
-    <div className="container">
+    /*<div className="container">
       <h1 className="title">Agentic Detective</h1>
       <p className="subtitle">Welcome to the game you create for yourself!</p>
       <input
@@ -45,8 +45,9 @@ function App() {
           className="slider"
         />
       </div>
-    </div>
-  );
+    </div>*/
+    <Interrogate />
+  )
 }
 
 export default App;
