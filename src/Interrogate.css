@@ -1,14 +1,25 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+html {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: #282c34; /* Same background color as the container */
+}
+
 .interrogate-container {
   font-family: 'Press Start 2P', cursive;
   text-align: center;
-  padding: 20px;
   color: white;
+  text-shadow: 3px 3px 6px #000000;
   min-height: 100vh;
-  width: 100%;
+  width: 100vw;
   display: flex;
   flex-direction: column;
+  background-image: url(assets/background2.png);
+  background-size: cover;
+  background-position: center;
 }
 
 h1 {
@@ -19,7 +30,10 @@ h1 {
   display: flex;
   flex-direction: row;
   justify-content: space-evenly;
-  width: 100vw;
+  width: fit-content;
+  max-height: 50vh;
+  background-color: rgba(256, 256, 256, 0.2);
+  align-self: center;
 }
 
 .stats {
@@ -31,3 +45,46 @@ h1 {
     text-align: left;
 }
 
+.chat-history {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    justify-self: center;
+    padding: 1em;
+    height: 20vh;
+    overflow-y: auto;
+    width: 66vw;
+    background-color: white;
+}
+
+.bot-message {
+  justify-self: flex-start;
+  text-align: left;
+  max-width: 50vw;
+  background: rgb(255, 0, 0);
+  padding: 1em;
+}
+
+.player-message {
+  justify-self: flex-end;
+  text-align: right;
+  max-width: 50vw;
+  background: blue;
+  padding: 1em;
+}
+
+img {
+    height: fit-content;
+}
+
+.chatbot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1em;
+    background-color: rgb(73, 73, 73);
+    width: 75vw;
+    align-self: center;
+    margin: 1em;
+}

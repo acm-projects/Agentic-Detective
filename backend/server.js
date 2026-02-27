@@ -12,15 +12,15 @@ app.use(express.json());
 
 // Defining endpoints
 app.post('/response', async (req, res) => {
-    const playerQuestion = req.body.question;
+    const {question, history} = req.body;
 
-    if (!playerQuestion) {
+    if (!question) {
         return res.status(400).json({ error: "Missing 'question' in request body" });
     }
 
     try {
-        console.log('Received question from frontend:', playerQuestion);
-        const responseText = await converse(playerQuestion);
+        console.log('Received question from frontend:', question);
+        const responseText = await converse(question, history);
         res.json({ response: responseText });
     } catch (error) {
         console.error('Error fetching response:', error);
