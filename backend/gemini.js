@@ -12,10 +12,19 @@ export async function converse(userInput, history = []) {
   // obtain model (Gemini) from the generative API
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
+  /*
   const formattedHistory = history.map(msg => ([
     { role: "user", parts: [{ text: msg.question }] },
     { role: "model", parts: [{ text: msg.answer }] },
   ])).flat();
+  */
+
+  const formattedHistory = history
+  .filter(msg => msg.question && msg.answer) // ✅ only completed exchanges
+  .flatMap(msg => [
+    { role: "user", parts: [{ text: msg.question }] },
+    { role: "model", parts: [{ text: msg.answer }] },
+  ]);
 
   // start a fresh chat; no preset history so every request is independent
   const chat = model.startChat({

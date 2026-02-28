@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { converse } from './gemini.js';
+import charData from "./data/characters.json" with { type: "json" };
 
 dotenv.config();
 const app = express();
@@ -11,6 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 // Defining endpoints
+
+// Gets response from Gemini API, POST method
 app.post('/response', async (req, res) => {
     const {question, history} = req.body;
 
@@ -28,6 +31,11 @@ app.post('/response', async (req, res) => {
     }
 });
 
+// Fetches character data from characters.json, GET method
+app.get('/characters', (req, res) => {
+    res.json(charData);
+});
+
 app.listen(port, () => {
     console.log(`Server is running on: http://localhost:${port}`)
-})
+});

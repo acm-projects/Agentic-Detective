@@ -88,3 +88,9 @@ img {
     align-self: center;
     margin: 1em;
 }
+
+.suspect-switcher{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
