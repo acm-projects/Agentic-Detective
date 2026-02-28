@@ -1,12 +1,16 @@
 import { useGameStore } from "./useGameStore";
 import CaseReportScreen from "./CaseReportScreen";
 import './App.css';
+import NotesPage from "./NotesPage";
+
+
 
 function App() {
   const { seed, setSeed, startCase, phase } = useGameStore();
 
   if (phase === "generating") return <div className="loading">Building your case...</div>;
   if (phase === "briefing") return <CaseReportScreen />;
+  if (phase === "investigation") return <NotesPage />;
 
   return (
     <div className="container">
@@ -53,7 +57,11 @@ function App() {
           className="slider"
         />
       </div>
-
+      {/* <p style={{color: 'red', fontSize: 11}}>{JSON.stringify(seed)}</p> 
+      if (!seed || !seed.theme.trim()) {
+        et({ error: "Please enter a case theme before starting." });
+        return;
+      }*/}
       <button className="detective-button" onClick={startCase}>
         Solve The Case!
       </button>

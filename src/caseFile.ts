@@ -319,7 +319,31 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   });
 
   const result = await model.generateContent(buildPrompt(seed));
-  const raw: CaseFileRaw = JSON.parse(result.response.text());
+
+
+const rawText = result.response.text()
+  // Strip any accidental markdown fences
+  .replace(/^```json\s*/i, '')
+  .replace(/^```\s*/i, '')
+  .replace(/```\s*$/i, '')
+  .trim();
+
+// Sanitize bad control characters inside JSON string values
+const sanitized = rawText.replace(
+  /"(?:[^"\\]|\\.)*"/g,
+  (match) => match
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r')
+    .replace(/\t/g, '\\t')
+    .split('')
+    .filter(c => {
+      const code = c.charCodeAt(0);
+      return code >= 32 || code === 10 || code === 13 || code === 9;
+    })
+    .join('')
+);
+
+const raw: CaseFileRaw = JSON.parse(sanitized);
 
   const backend: CaseFileBackend = {
     storyline: raw.storyline,
