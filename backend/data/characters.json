@@ -11,7 +11,7 @@
 
         "ai": {
             "characteristics": ["loyal", "cautious", "confident"],
-            "speakingStyle": ["urban slang-heavy", "laid-back confrontational", "first person AAVE influenced"],
+            "speakingStyle": ["urban slang-heavy", "laid-back confrontational", "casual"],
             "knowledgeScope": ["does not know who committed the crime"],
             "secrets": ["none"],
             "trustLevel": 0.7,
