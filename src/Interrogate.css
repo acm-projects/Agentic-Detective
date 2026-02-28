@@ -103,6 +103,12 @@ img {
     margin: 1em;
 }
 
+.suspect-switcher{
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
 .navigate {
     display: flex;
     flex-direction: column;
