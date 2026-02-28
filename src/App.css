@@ -1,42 +1,88 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* App.css */
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background-color: #282c34; /* Same background color as the container */
+  cursor: url('./assets/cursor.png'), auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.container {
+  font-family: 'Press Start 2P', cursive;
   text-align: center;
+  padding: 20px;
+  color: white;
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.title {
+  font-size: 3rem;
+  overflow: hidden; /* Ensures the text is hidden outside the container */
+  white-space: nowrap;
+  margin-bottom: 5rem;
+  border-right: 3px solid white;
+  width: fit-content;
+  animation: typing 2s steps(30, end), blink 0.5s step-end infinite; /* Typing and blinking animations */
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
+@keyframes typing {
   from {
-    transform: rotate(0deg);
+    width: 0;
   }
   to {
-    transform: rotate(360deg);
+    width: 100%;
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
+@keyframes blink {
+  50% {
+    border-color: transparent;
   }
 }
 
-.card {
-  padding: 2em;
+
+.subtitle {
+  font-size: 1rem;
+  margin-top: 3rem;
+  margin-bottom: 10px;
 }
 
-.read-the-docs {
-  color: #888;
+.input {
+  padding: 10px;
+  font-size: 1rem;
+  width: 60%;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-bottom: 8rem;
+}
+
+.slider-container {
+  margin-bottom: 20px;
+  width: 60%;
+}
+
+.label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 1rem;
+}
+.slider-container {
+  width: 60%; /* Adjust the width of the sliders */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.slider {
+  width: 100%;
 }
