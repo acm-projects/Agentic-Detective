@@ -1,6 +1,6 @@
 /* App.css */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap');
 
 html, body {
   margin: 0;
@@ -30,7 +30,7 @@ html, body {
   font-size: 3rem;
   overflow: hidden; /* Ensures the text is hidden outside the container */
   white-space: nowrap;
-  margin-bottom: 5rem;
+  margin-bottom: 3rem;
   border-right: 3px solid white;
   width: fit-content;
   animation: typing 2s steps(30, end), blink 0.5s step-end infinite; /* Typing and blinking animations */
@@ -54,7 +54,7 @@ html, body {
 .subtitle {
   font-size: 1rem;
   margin-top: 3rem;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
 .input {
@@ -63,7 +63,7 @@ html, body {
   width: 60%;
   border-radius: 5px;
   border: 1px solid #ccc;
-  margin-bottom: 8rem;
+  margin-bottom: 5rem;
 }
 
 .slider-container {
@@ -85,4 +85,22 @@ html, body {
 }
 .slider {
   width: 100%;
+}
+.detective-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.detective-button:hover {
+  background-color: #0056b3;
+}
+
+.loading {
+  color: white;
 }
