@@ -1,0 +1,410 @@
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap');
+
+/* ── Variables ── */
+:root {
+  --paper: #e8dfc8;
+  --paper-dark: #d4c9a8;
+  --ink: #1a1208;
+  --ink-faded: #4a3f2f;
+  --red: #8b1a1a;
+  --red-stamp: rgba(139, 26, 26, 0.85);
+  --shadow: rgba(15, 10, 5, 0.6);
+}
+
+/* ── Overlay ── */
+.report-overlay {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at center, #1a1208 0%, #0a0805 100%);
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 20px 80px;
+  font-family: 'Courier Prime', monospace;
+}
+
+/* ── Paper texture via layered backgrounds ── */
+.report-document {
+  position: relative;
+  background-color: var(--paper);
+  background-image:
+    /* grain */
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"),
+    /* subtle vignette */
+    radial-gradient(ellipse at center, transparent 60%, rgba(80,60,20,0.18) 100%);
+  color: var(--ink);
+  max-width: 740px;
+  width: 100%;
+  padding: 64px 72px;
+  border-radius: 1px;
+  box-shadow:
+    0 2px 0 #a89060,
+    0 4px 0 #8a7448,
+    0 30px 80px var(--shadow),
+    0 60px 120px rgba(0,0,0,0.4),
+    inset 0 0 60px rgba(180,150,80,0.08);
+  animation: pageIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(24px) rotate(-0.3deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+
+/* left binding edge */
+.report-document::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+  background: linear-gradient(to right, #8a7448, #b09060);
+  border-radius: 1px 0 0 1px;
+}
+
+/* faint horizontal lines like ruled paper */
+.report-document::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(100, 80, 40, 0.07) 31px,
+    rgba(100, 80, 40, 0.07) 32px
+  );
+  pointer-events: none;
+  border-radius: 1px;
+}
+
+/* ── Stagger animation for children ── */
+.report-document > * {
+  animation: fadeUp 0.5s ease both;
+}
+.report-document > *:nth-child(1) { animation-delay: 0.1s; }
+.report-document > *:nth-child(2) { animation-delay: 0.2s; }
+.report-document > *:nth-child(3) { animation-delay: 0.3s; }
+.report-document > *:nth-child(4) { animation-delay: 0.4s; }
+.report-document > *:nth-child(5) { animation-delay: 0.5s; }
+.report-document > *:nth-child(6) { animation-delay: 0.6s; }
+.report-document > *:nth-child(7) { animation-delay: 0.65s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Top Agency Banner ── */
+.report-agency {
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 6px;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--ink-faded);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 8px;
+}
+
+/* ── Header ── */
+.report-header {
+  text-align: center;
+  border-top: 3px double var(--ink);
+  border-bottom: 3px double var(--ink);
+  padding: 20px 0;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.case-id {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 5px;
+  color: var(--ink-faded);
+  margin-bottom: 8px;
+}
+
+.report-title {
+  font-family: 'Special Elite', cursive;
+  font-size: 32px;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: 0 0 10px;
+  text-shadow: 1px 1px 0 rgba(255,255,255,0.3);
+}
+
+.report-meta {
+  font-size: 12px;
+  color: var(--ink-faded);
+  letter-spacing: 1px;
+  font-style: italic;
+}
+
+/* ── CLASSIFIED stamp ── */
+.stamp {
+  position: absolute;
+  top: 50%;
+  right: -12px;
+  transform: translateY(-50%) rotate(12deg);
+  border: 3px solid var(--red-stamp);
+  color: var(--red-stamp);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 4px;
+  padding: 4px 10px;
+  opacity: 0.75;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* ── Section ── */
+.report-section {
+  margin-bottom: 32px;
+}
+
+.report-section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 4px;
+  color: var(--ink-faded);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--ink-faded);
+  padding-bottom: 4px;
+  margin-bottom: 14px;
+}
+
+/* ── Victim block ── */
+.victim-block {
+  background: rgba(0,0,0,0.04);
+  border-left: 3px solid var(--red);
+  padding: 16px 20px;
+  margin-bottom: 12px;
+}
+
+.victim-name {
+  font-family: 'Special Elite', cursive;
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+.victim-details {
+  font-size: 13px;
+  color: var(--ink-faded);
+  margin: 0 0 10px;
+  font-style: italic;
+}
+
+.cause-of-death {
+  font-size: 13px;
+  color: var(--red);
+  font-weight: 700;
+  font-family: 'Courier Prime', monospace;
+  letter-spacing: 0.5px;
+}
+
+.body-found {
+  font-size: 13px;
+  color: var(--ink-faded);
+  margin-top: 4px;
+}
+
+/* ── Briefing ── */
+.briefing-text {
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--ink);
+  font-style: italic;
+  border-left: 2px solid var(--paper-dark);
+  padding-left: 16px;
+}
+
+/* ── Facts & Questions lists ── */
+.report-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-list li {
+  font-size: 13.5px;
+  line-height: 1.6;
+  padding-left: 20px;
+  position: relative;
+  color: var(--ink);
+}
+
+.report-list li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--red);
+  font-size: 11px;
+  top: 3px;
+}
+
+.questions-list li::before {
+  content: '?';
+  font-family: 'Special Elite', cursive;
+  font-size: 14px;
+  color: var(--ink-faded);
+  top: 1px;
+}
+
+/* ── Divider ── */
+.report-divider {
+  border: none;
+  border-top: 1px dashed var(--ink-faded);
+  opacity: 0.3;
+  margin: 28px 0;
+}
+
+/* ── Footer / signature line ── */
+.report-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ink-faded);
+  font-size: 11px;
+  color: var(--ink-faded);
+  font-style: italic;
+}
+
+.signature-line {
+  border-bottom: 1px solid var(--ink-faded);
+  width: 160px;
+  margin-top: 24px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* ── Begin Investigation button ── */
+.begin-button {
+  display: block;
+  width: 100%;
+  margin-top: 40px;
+  padding: 18px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: background 0.2s, letter-spacing 0.2s;
+}
+
+.begin-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.begin-button:hover::before { transform: scaleX(1); }
+.begin-button:hover { letter-spacing: 8px; }
+
+.begin-button span {
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════════════════════════════════════
+   MAGNIFIER LENS
+   ══════════════════════════════════════════ */
+
+.magnifier-lens {
+  position: absolute;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 100;
+  /* dark vignette around the lens edge */
+  box-shadow:
+    0 0 0 3px #a89060,
+    0 0 0 6px #6b5a30,
+    0 0 0 8px rgba(0,0,0,0.6),
+    0 12px 40px rgba(0,0,0,0.7),
+    inset 0 0 30px rgba(0,0,0,0.15);
+  /* slight warm tint over the zoomed content */
+  background: rgba(232, 223, 200, 0.04);
+}
+
+/* The clone sits inside the lens and gets transformed by JS */
+.magnifier-clone-wrap {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+/* The clone itself — strip animations, shadows, margin so it tiles cleanly */
+.magnifier-clone {
+  animation: none !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  /* slightly warmer paper inside the lens */
+  background-color: #ede3c8 !important;
+}
+
+/* Brass rim overlay — sits on top of the clone */
+.magnifier-rim {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  background:
+    linear-gradient(135deg, rgba(200,170,80,0.5) 0%, transparent 50%, rgba(80,60,20,0.3) 100%)
+    border-box;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: destination-out;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Glare streak across the top-left of the lens */
+.magnifier-glare {
+  position: absolute;
+  top: 12%;
+  left: 14%;
+  width: 38%;
+  height: 18%;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.45) 0%,
+    rgba(255,255,255,0.0) 100%
+  );
+  border-radius: 50%;
+  transform: rotate(-30deg);
+  pointer-events: none;
+}
+
+/* Tiny crosshair dot at dead center */
+.magnifier-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(139, 26, 26, 0.6);
+  pointer-events: none;
+}

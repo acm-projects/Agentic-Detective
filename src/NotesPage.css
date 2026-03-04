@@ -1,0 +1,603 @@
+/* ══════════════════════════════════════════
+   NOTES PAGE — Noir Detective Notebook
+   Matches CaseReportScreen aesthetic
+   Uses same CSS variables — ensure CaseReportScreen.css is loaded too
+   or redefine :root here if used standalone
+   ══════════════════════════════════════════ */
+
+/* ── Overlay ── */
+.notes-overlay {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #1a1208 0%, #0a0805 100%);
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 48px 20px 80px;
+  font-family: 'Courier Prime', monospace;
+}
+
+/* ── Main document ── */
+.notes-document {
+  position: relative;
+  background-color: var(--paper);
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at center, transparent 60%, rgba(80,60,20,0.18) 100%);
+  color: var(--ink);
+  max-width: 860px;
+  width: 100%;
+  min-height: 80vh;
+  padding: 0;
+  border-radius: 1px;
+  box-shadow:
+    0 2px 0 #a89060,
+    0 4px 0 #8a7448,
+    0 30px 80px var(--shadow),
+    0 60px 120px rgba(0,0,0,0.4),
+    inset 0 0 60px rgba(180,150,80,0.08);
+  animation: pageIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  overflow: hidden;
+}
+
+/* Binding edge */
+.notes-document::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+  background: linear-gradient(to right, #8a7448, #b09060);
+  z-index: 10;
+}
+
+/* Ruled lines */
+.notes-document::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    transparent,
+    transparent 31px,
+    rgba(100, 80, 40, 0.07) 31px,
+    rgba(100, 80, 40, 0.07) 32px
+  );
+  pointer-events: none;
+}
+
+/* ── Header ── */
+.notes-header {
+  padding: 36px 64px 24px;
+  border-bottom: 3px double var(--ink);
+  text-align: center;
+  animation: fadeUp 0.5s ease 0.1s both;
+}
+
+.notes-agency {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 7px;
+  color: var(--ink-faded);
+  margin-bottom: 6px;
+}
+
+.notes-title {
+  font-family: 'Special Elite', cursive;
+  font-size: 26px;
+  color: var(--ink);
+  margin: 0 0 4px;
+}
+
+.notes-case-id {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--ink-faded);
+  opacity: 0.6;
+}
+
+/* ── Tabs ── */
+.notes-tabs {
+  display: flex;
+  border-bottom: 2px solid rgba(74, 63, 47, 0.3);
+  padding: 0 64px;
+  gap: 0;
+  position: relative;
+  animation: fadeUp 0.5s ease 0.2s both;
+}
+
+.notes-tab {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--ink-faded);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  padding: 14px 20px 12px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  margin-bottom: -2px;
+}
+
+.notes-tab:hover { color: var(--ink); }
+
+.notes-tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--red);
+}
+
+/* ══════════════════════════════════
+   SUSPECT NOTES TAB
+══════════════════════════════════ */
+
+.suspects-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 500px;
+  animation: fadeUp 0.4s ease 0.1s both;
+}
+
+/* ── Sidebar ── */
+.suspects-sidebar {
+  border-right: 1px solid rgba(74, 63, 47, 0.2);
+  padding: 16px 0;
+  background: rgba(0,0,0,0.03);
+}
+
+.suspect-tab-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 12px 22px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+  position: relative;
+}
+
+.suspect-tab-btn:hover {
+  background: rgba(0,0,0,0.04);
+}
+
+.suspect-tab-btn.active {
+  background: rgba(139, 26, 26, 0.06);
+  border-left-color: var(--red);
+}
+
+.suspect-tab-btn.tag-suspicious { border-left-color: #8b1a1a !important; }
+.suspect-tab-btn.tag-cleared    { border-left-color: #1a4a2f !important; }
+.suspect-tab-btn.tag-alibi      { border-left-color: #1a2f4a !important; }
+
+.suspect-tab-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--paper-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid rgba(74, 63, 47, 0.3);
+  position: relative;
+}
+
+.suspect-tab-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+
+.suspect-tab-initial {
+  font-family: 'Special Elite', cursive;
+  font-size: 16px;
+  color: var(--ink-faded);
+}
+
+.suspect-tab-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.suspect-tab-name {
+  font-family: 'Special Elite', cursive;
+  font-size: 13px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.suspect-tab-occupation {
+  font-size: 10px;
+  color: var(--ink-faded);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+  margin-top: 1px;
+}
+
+.suspect-tag-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Suspect notepad (right panel) ── */
+.suspect-notepad {
+  padding: 28px 40px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Suspect info card */
+.suspect-info-card {
+  display: flex;
+  gap: 18px;
+  padding: 18px 20px;
+  background: rgba(0,0,0,0.03);
+  border-left: 3px solid var(--red);
+  position: relative;
+}
+
+.suspect-avatar-large {
+  width: 72px;
+  height: 72px;
+  border-radius: 2px;
+  background: var(--paper-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 1px solid rgba(74, 63, 47, 0.3);
+  position: relative;
+}
+
+.suspect-avatar-large img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+
+.suspect-avatar-fallback {
+  font-family: 'Special Elite', cursive;
+  font-size: 28px;
+  color: var(--ink-faded);
+}
+
+.suspect-info-name {
+  font-family: 'Special Elite', cursive;
+  font-size: 20px;
+  margin: 0 0 2px;
+}
+
+.suspect-info-meta {
+  font-size: 12px;
+  color: var(--ink-faded);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.suspect-info-relation {
+  font-size: 12px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.suspect-info-alibi {
+  font-size: 12px;
+  color: var(--ink-faded);
+  font-style: italic;
+}
+
+.alibi-label {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Suspicion badge */
+.suspicion-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  padding: 3px 8px;
+  border: 1.5px solid currentColor;
+  text-transform: uppercase;
+}
+
+.suspicion-badge.suspicion-low    { color: #1a4a2f; }
+.suspicion-badge.suspicion-medium { color: #7a5a10; }
+.suspicion-badge.suspicion-high   { color: #8b1a1a; }
+
+/* Tag row */
+.tag-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tag-row-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--ink-faded);
+  margin-right: 4px;
+}
+
+.tag-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 4px 12px;
+  background: none;
+  border: 1.5px solid rgba(74, 63, 47, 0.3);
+  color: var(--ink-faded);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tag-btn:hover {
+  border-color: var(--tag-color);
+  color: var(--tag-color);
+}
+
+.tag-btn.active {
+  background: var(--tag-color);
+  border-color: var(--tag-color);
+  color: var(--paper);
+}
+
+/* Notepad area */
+.notepad-area {
+  position: relative;
+  flex: 1;
+}
+
+.notepad-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: var(--ink-faded);
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(74, 63, 47, 0.2);
+  padding-bottom: 4px;
+}
+
+.notepad-textarea {
+  width: 100%;
+  min-height: 200px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed rgba(74, 63, 47, 0.25);
+  resize: vertical;
+  font-family: 'Courier Prime', monospace;
+  font-size: 13.5px;
+  line-height: 2;           /* lines align with the ruled background */
+  color: var(--ink);
+  outline: none;
+  padding: 4px 0;
+  caret-color: var(--red);
+}
+
+.notepad-textarea::placeholder {
+  color: rgba(74, 63, 47, 0.4);
+  font-style: italic;
+}
+
+.notepad-char-count {
+  font-size: 10px;
+  color: var(--ink-faded);
+  opacity: 0.5;
+  text-align: right;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* ══════════════════════════════════
+   CASE SCRATCHPAD TAB
+══════════════════════════════════ */
+
+.case-scratchpad {
+  padding: 28px 64px 48px;
+  animation: fadeUp 0.4s ease 0.1s both;
+}
+
+/* Input row */
+.scratchpad-input-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+  border-bottom: 1px dashed rgba(74, 63, 47, 0.25);
+  padding-bottom: 28px;
+}
+
+.scratchpad-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(74, 63, 47, 0.3);
+  font-family: 'Courier Prime', monospace;
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink);
+  outline: none;
+  resize: none;
+  padding: 4px 0;
+  caret-color: var(--red);
+}
+
+.scratchpad-input::placeholder {
+  color: rgba(74, 63, 47, 0.4);
+  font-style: italic;
+}
+
+.scratchpad-add-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 10px 18px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 3px;
+  cursor: pointer;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+  transition: letter-spacing 0.2s;
+}
+
+.scratchpad-add-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.scratchpad-add-btn:hover::before { transform: scaleX(1); }
+.scratchpad-add-btn:hover { letter-spacing: 4px; }
+
+.scratchpad-add-btn span,
+.scratchpad-hint {
+  position: relative;
+  z-index: 1;
+}
+
+.scratchpad-hint {
+  font-size: 9px;
+  opacity: 0.5;
+  letter-spacing: 1px;
+}
+
+/* Notes list */
+.scratchpad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.scratchpad-empty {
+  font-style: italic;
+  color: var(--ink-faded);
+  opacity: 0.5;
+  font-size: 13px;
+  text-align: center;
+  padding: 40px 0;
+}
+
+.scratchpad-note {
+  background: rgba(0,0,0,0.03);
+  border-left: 3px solid rgba(74, 63, 47, 0.2);
+  padding: 14px 18px;
+  transition: border-color 0.2s;
+  position: relative;
+  animation: fadeUp 0.3s ease both;
+}
+
+.scratchpad-note:hover {
+  border-left-color: rgba(74, 63, 47, 0.5);
+}
+
+.scratchpad-note.pinned {
+  border-left-color: var(--red);
+  background: rgba(139, 26, 26, 0.04);
+}
+
+.pin-indicator {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.scratchpad-note-text {
+  font-family: 'Courier Prime', monospace;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--ink);
+  margin: 0 0 10px;
+  white-space: pre-wrap;
+}
+
+.scratchpad-note-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scratchpad-note-time {
+  font-size: 10px;
+  color: var(--ink-faded);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.scratchpad-note-actions {
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.scratchpad-note:hover .scratchpad-note-actions {
+  opacity: 1;
+}
+
+.note-action-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  background: none;
+  border: 1px solid rgba(74, 63, 47, 0.3);
+  color: var(--ink-faded);
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.note-action-btn:hover {
+  border-color: var(--ink-faded);
+  color: var(--ink);
+}
+
+.note-action-btn.delete:hover {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ── Shared animations ── */
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(24px) rotate(-0.3deg); }
+  to   { opacity: 1; transform: translateY(0) rotate(0deg); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
