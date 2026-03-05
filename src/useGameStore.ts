@@ -102,16 +102,19 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async () => {
+    console.log("Button pressed")
     const { seed } = get();
     if (!seed || !seed.theme.trim()) {
       set({ error: "Please enter a case personalization or theme before starting." });
       return;
     }
 
+    console.log("Start Generate")
     set({ phase: "generating", error: null });
 
     try {
       const { backend, player } = await generateCaseFile(seed);
+      console.log("Got casefile")
       set({ backend, player, phase: "briefing" });
     } catch (err) {
       set({

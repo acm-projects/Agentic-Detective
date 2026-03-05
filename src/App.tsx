@@ -1,19 +1,17 @@
-import { useGameStore } from "./useGameStore";
-import CaseReportScreen from "./CaseReportScreen";
-import './App.css';
-import NotesPage from "./NotesPage";
-
-
+import Interrogate from './Interrogate.tsx';
+import { Routes, Route } from 'react-router-dom';
+import Desk from './Desk.tsx';
+import NewGame from './NewGame.tsx';
 
 function App() {
-  const { seed, setSeed, startCase, phase } = useGameStore();
 
-  if (phase === "generating") return <div className="loading">Building your case...</div>;
-  if (phase === "briefing") return <CaseReportScreen />;
-  if (phase === "investigation") return <NotesPage />;
-
-  return (
-    <div className="container">
+  return (<>
+    <Routes>
+      <Route path="/" element={<NewGame />} />
+      <Route path="/desk" element={<Desk />} />
+      <Route path="/interrogate" element={<Interrogate />} />
+    </Routes>
+    {/*<div className="container">
       <h1 className="title">Agentic Detective</h1>
       <p className="subtitle">Welcome to the game you create for yourself!</p>
 
@@ -46,27 +44,9 @@ function App() {
           className="slider"
         />
       </div>
-
-      <div className="slider-container">
-        <label className="label">Difficulty: {seed?.difficulty ?? 5}</label>
-        <input
-          type="range"
-          min="1" max="10" step="1"
-          value={seed?.difficulty ?? 5}
-          onChange={(e) => setSeed({ difficulty: Number(e.target.value) })}
-          className="slider"
-        />
-      </div>
-      {/* <p style={{color: 'red', fontSize: 11}}>{JSON.stringify(seed)}</p> 
-      if (!seed || !seed.theme.trim()) {
-        et({ error: "Please enter a case theme before starting." });
-        return;
-      }*/}
-      <button className="detective-button" onClick={startCase}>
-        Solve The Case!
-      </button>
-    </div>
-  );
+    </div>*/}
+    </>
+  )
 }
 
 export default App;
