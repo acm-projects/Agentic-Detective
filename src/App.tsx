@@ -1,16 +1,38 @@
+import { useState } from "react";
 import { useGameStore } from "./useGameStore";
 import CaseReportScreen from "./CaseReportScreen";
-import './App.css';
 import NotesPage from "./NotesPage";
-
-
+import ClueBook from "./ClueBook";
+import './App.css';
 
 function App() {
   const { seed, setSeed, startCase, phase } = useGameStore();
+  const [investigationTab, setInvestigationTab] = useState<"notes" | "clues">("notes");
 
   if (phase === "generating") return <div className="loading">Building your case...</div>;
-  if (phase === "briefing") return <CaseReportScreen />;
-  if (phase === "investigation") return <NotesPage />;
+  if (phase === "briefing")   return <CaseReportScreen />;
+
+  if (phase === "investigation") return (
+    <div>
+      {/* Tab switcher */}
+      <div className="investigation-nav">
+        <button
+          className={investigationTab === "notes" ? "nav-btn active" : "nav-btn"}
+          onClick={() => setInvestigationTab("notes")}
+        >
+          📋 Notes
+        </button>
+        <button
+          className={investigationTab === "clues" ? "nav-btn active" : "nav-btn"}
+          onClick={() => setInvestigationTab("clues")}
+        >
+          🔍 Clues
+        </button>
+      </div>
+
+      {investigationTab === "notes" ? <NotesPage /> : <ClueBook />}
+    </div>
+  );
 
   return (
     <div className="container">

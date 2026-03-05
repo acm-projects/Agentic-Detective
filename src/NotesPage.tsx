@@ -29,7 +29,7 @@ function now() {
 }
 
 export default function NotesPage() {
-  const { player } = useGameStore();
+  const { player, goToBriefing } = useGameStore();
   const profiles = player?.characterProfiles ?? [];
   const caseReport = player?.caseReport;
 
@@ -49,6 +49,7 @@ export default function NotesPage() {
   const [activeTab, setActiveTab] = useState<"suspects" | "case">("suspects");
   const [activeSuspect, setActiveSuspect] = useState<string>(profiles[0]?.name ?? "");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
 
   const updateSuspectNote = (name: string, field: Partial<SuspectNote>) => {
     setSuspectNotes(prev =>
@@ -294,6 +295,9 @@ export default function NotesPage() {
         )}
 
       </div>
+      <button className="back-btn" onClick={goToBriefing}>
+        ← Case Report
+      </button>
     </div>
   );
 }

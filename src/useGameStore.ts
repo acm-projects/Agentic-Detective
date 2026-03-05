@@ -72,6 +72,7 @@ interface GameState {
   sendMessage: (text: string) => Promise<void>;
   makeAccusation: (suspectName: string) => void;
   resetGame: () => void;
+  goToBriefing: () => void;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -123,6 +124,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // ── Player has read the briefing, move to investigation ──
+  goToBriefing: () => set({ phase: "briefing" }), // player going back to the breifing page
   proceedToInvestigation: () => set({ phase: "investigation" }),
 
   // ── Open or resume a chat session with a suspect ──
@@ -242,6 +244,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // ── Reset everything for a new game ──
+  
   resetGame: () =>
     set({
       phase: "setup",
