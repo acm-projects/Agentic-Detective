@@ -7,14 +7,17 @@ import NotesPage from "./NotesPage";
 
 function NewGame() {
     const { seed, setSeed, startCase, phase } = useGameStore();
-    
-    if (phase === "generating") return <div className="loading">Building your case...</div>;
-    if (phase === "briefing") return <CaseReportScreen />;
-    if (phase === "investigation") return <NotesPage />;
 
     const [personalization, setPersonalization] = useState('');
     const [timePeriod, setTimePeriod] = useState(10); // Default value
     const [intensity, setIntensity] = useState(5); // Default value
+    const [difficulty, setDifficulty] = useState(5); // Default value
+    
+    if (phase === "generating") {return <div className="loading">Building your case...</div>}
+    if (phase === "briefing") {return <CaseReportScreen />}
+    if (phase === "investigation") {return <NotesPage />}
+
+    
 
     return (
       <div className="container">
@@ -51,6 +54,7 @@ function NewGame() {
           max="10"
           step="1"
           value={intensity}
+
           onChange={(e) => setIntensity(Number(e.target.value))}
           className="slider"
         />
@@ -61,11 +65,19 @@ function NewGame() {
           type="range"
           min="1" max="10" step="1"
           value={seed?.difficulty ?? 5}
-          onChange={(e) => setSeed({ difficulty: Number(e.target.value) })}
+          onChange={(e) => setDifficulty(Number(e.target.value))}
           className="slider"
         />
       </div>
-        <button className="detective-button" onClick={startCase}>
+        <button className="detective-button" onClick={()=>{
+          setSeed({
+            theme: personalization,        // "1920s jazz club", "remote Antarctic base", etc
+            difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
+            duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
+            intensity: intensity 
+          }) 
+          startCase()
+        }} >
         Solve The Case!
       </button>
         <Link to="/interrogate" className="start-button">Start Game</Link>

@@ -1,9 +1,11 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import "dotenv/config"
 
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = process.env.VITE_GEMINI_API_KEY;
 
 if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not defined in your environment variables");
+  console.log("api")
+  throw new Error("VITE_GEMINI_API_KEY is not defined in your environment variables");
 }
 
 const genAI = new GoogleGenerativeAI(apiKey);
