@@ -76,7 +76,6 @@ interface GameState {
 }
 
 const DEFAULT_SEED: PlayerSeed = {
-  theme: "",
   freeText: "",
   difficulty: 5,
   duration: 20,
@@ -105,9 +104,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   startCase: async () => {
     console.log("Button pressed")
     const { seed } = get();
-    console.log("this is seed", seed)
-    if (!seed || !seed.theme.trim()) {
-      console.log('blah')
+    if (!seed || !seed.freeText.trim()) {
       set({ error: "Please enter a case personalization or theme before starting." });
       return;
     }

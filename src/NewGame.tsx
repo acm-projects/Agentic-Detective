@@ -71,7 +71,7 @@ function NewGame() {
       </div>
         <button className="detective-button" onClick={()=>{
           setSeed({
-            theme: personalization,        // "1920s jazz club", "remote Antarctic base", etc
+            freeText: personalization,        // "1920s jazz club", "remote Antarctic base", etc
             difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
             intensity: intensity 

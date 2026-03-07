@@ -2,22 +2,13 @@
 //  CASE FILE — Single LLM call that fans out into 5 outputs
 //  Murder-only for now. Generalize to other crimes later.
 // ============================================================
-
+import type { PlayerSeed, Storyline, Contradiction } from "./obj/backendInterfaces"; 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-// ─────────────────────────────────────────────
-//  PLAYER SEED
-// ─────────────────────────────────────────────
 
-export interface PlayerSeed {
-  theme: string;        // "1920s jazz club", "remote Antarctic base", etc.
-  freeText: string;     // anything extra: "make it spooky", "include a love triangle"
-  difficulty: number;   // 1–10 slider ("on a scale of 1 to 10")
-  duration: number;     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
-  intensity: number;    // 1–10 slider (goriness / darkness)
-}
+
 
 // ─────────────────────────────────────────────
 //  AVATAR POOL
@@ -38,33 +29,11 @@ export const AVATAR_POOL = [
 
 export type AvatarId = typeof AVATAR_POOL[number]["id"];
 
-// ─────────────────────────────────────────────
-//  OUTPUT 1 — STORYLINE  🔒 BACKEND ONLY
-// ─────────────────────────────────────────────
-
-export interface Storyline {
-  trueSequenceOfEvents: string;
-  murdererName: string;
-  murderWeapon: string;
-  murderLocation: string;       // Specific spot within the setting
-  murderTime: string;           // e.g. "11:42pm"
-  hiddenBackstory: string;      // Deeper context — affairs, debts, grudges — that explains the crime
-  contradictions: Contradiction[];
-  difficultyNotes: string;      // How the LLM calibrated this case for the backend to reference
-}
-
-export interface Contradiction {
-  suspectName: string;
-  theirClaim: string;           // What they tell the detective
-  actualTruth: string;          // What really happened
-  exposedByClueId: string;      // Which clue ID reveals this
-  exposedByDialogue: string | null; // Optional: question that forces the contradiction
-}
 
 // ─────────────────────────────────────────────
 //  OUTPUT 2 — SUSPECTS  🔒 BACKEND + CHAT SESSIONS
 // ─────────────────────────────────────────────
-
+// This is the stuff that you feed to the LLM
 export interface Suspect {
   name: string;
   age: number;
@@ -87,7 +56,7 @@ export interface Suspect {
 // ─────────────────────────────────────────────
 //  OUTPUT 3 — CHARACTER PROFILES  👤 PLAYER UI
 // ─────────────────────────────────────────────
-
+// This is what the user see
 export interface CharacterProfile {
   name: string;
   age: number;
@@ -195,8 +164,7 @@ function buildPrompt(seed: PlayerSeed): string {
 You are a mystery game master designing a murder mystery detective game case.
 
 PLAYER SEED:
-- Theme / Setting: "${seed.theme}"
-- Additional details: "${seed.freeText || "none"}"
+- Theme / Setting and other information: "${seed.freeText}"
 - Difficulty: ${seed.difficulty} out of 10 — ${difficultyGuide}
 - Session length: ${seed.duration} minutes (target ~${estimatedConversations} total exchanges across all suspects before the player has enough to solve it)
 - Intensity: ${seed.intensity} out of 10 — ${intensityGuide}
@@ -327,6 +295,7 @@ const rawText = result.response.text()
   .replace(/^```\s*/i, '')
   .replace(/```\s*$/i, '')
   .trim();
+  console.log(rawText);
 
 // Sanitize bad control characters inside JSON string values
 const sanitized = rawText.replace(
