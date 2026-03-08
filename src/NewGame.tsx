@@ -78,7 +78,7 @@ function NewGame() {
           }) 
           startCase()
         }} >
-        Solve The Case!
+        SOLVE! 
       </button>
         <Link to="/interrogate" className="start-button">Start Game</Link>
     </div>

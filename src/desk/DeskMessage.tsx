@@ -1,11 +1,12 @@
+
 import './test.css'
 
 function Message() {
   const itemStyle = {
-    imageRendering: 'pixelated' as const,
-    cursor: 'pointer',
-    position: 'absolute' as const,
-    filter: 'drop-shadow(8px 8px 0px rgba(0,0,0,0.1))' 
+    imageRendering: "pixelated" as const,
+    cursor: "pointer",
+    position: "absolute" as const,
+    filter: "drop-shadow(8px 8px 0px rgba(0,0,0,0.1))"
   };
 
   return (
@@ -41,7 +42,11 @@ function Message() {
       <img 
         src="/gun.png" 
         alt="Gun" 
-        style={{ ...itemStyle, width: '280px', top: '70px', left: '78%', transform: 'rotate(15deg)' }} 
+        style={{ ...itemStyle, 
+        width: '280px', 
+        top: '70px', 
+        left: '78%', 
+        transform: 'rotate(15deg)' }} 
       />
 
       {/* 5. NOTEBOOK */}
@@ -49,7 +54,11 @@ function Message() {
         className='evidence-item'
         src="/notebook.png" 
         alt="Notebook" 
-        style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
+        style={{ ...itemStyle, 
+        width: '370px', 
+        top: '230px', 
+        left: '27%', 
+        transform: 'rotate(20deg)' }} 
         onClick={() => alert("Suspect page.")}
       />
 
@@ -57,25 +66,42 @@ function Message() {
       <img 
         src="/pencil.png" 
         alt="Pencil" 
-        style={{ ...itemStyle, width: '200px', top: '315px', left: '48%', transform: 'rotate(-3deg)' }} 
+        style={{ ...itemStyle, 
+        width: '200px', 
+        top: '315px', 
+        left: '48%', 
+        transform: 'rotate(-3deg)' }} 
       />
 
-      {/* 11. PLANT */}
+      {/* 7. PLANT */}
       <img 
         src="/plant.png" 
         alt="Office Plant" 
-        style={{ ...itemStyle, width: '300px', top: '2px', left: '35%', transform: 'rotate(360deg)' }}
+        style={{ ...itemStyle, 
+        width: '300px', 
+        top: '2px', 
+        left: '35%', 
+        transform: 'rotate(360deg)' }}
       />
 
-        {/* 12. PHONE */}
-      <img 
-        className='evidence-item'
-        src="/cellphone5.png" 
-        alt="Cellphone" 
-        style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }} 
-      />
-
-
+        {/* 8. PHONE */}
+      <img
+        className="evidence-item"
+        src="/cellphone5.png"
+        alt="Cellphone"
+        onClick={() => {
+          const audio = new Audio("http://localhost:5555/api/voice");
+          audio.play(); 
+        }}
+        style={{
+           ...itemStyle,
+           width: "360px",
+           top: "310px",
+           left: "70%",
+           transform: "rotate(40deg)",
+           zIndex: 10
+  }}
+/>
     </div>
   );
 }
