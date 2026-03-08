@@ -72,6 +72,7 @@ interface GameState {
   sendMessage: (text: string) => Promise<void>;
   makeAccusation: (suspectName: string) => void;
   resetGame: () => void;
+  goToBriefing: () => void;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -102,16 +103,21 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async () => {
+    console.log("Button pressed")
     const { seed } = get();
+    console.log("this is seed", seed)
     if (!seed || !seed.theme.trim()) {
+      console.log('blah')
       set({ error: "Please enter a case personalization or theme before starting." });
       return;
     }
 
+    console.log("Start Generate")
     set({ phase: "generating", error: null });
 
     try {
       const { backend, player } = await generateCaseFile(seed);
+      console.log("Got casefile")
       set({ backend, player, phase: "briefing" });
     } catch (err) {
       set({
@@ -123,6 +129,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // ── Player has read the briefing, move to investigation ──
+  goToBriefing: () => set({ phase: "briefing" }), // player going back to the breifing page
   proceedToInvestigation: () => set({ phase: "investigation" }),
 
   // ── Open or resume a chat session with a suspect ──
@@ -242,6 +249,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // ── Reset everything for a new game ──
+  
   resetGame: () =>
     set({
       phase: "setup",

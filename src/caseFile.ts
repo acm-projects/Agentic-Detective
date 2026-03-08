@@ -309,7 +309,8 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
 export async function generateCaseFile(seed: PlayerSeed): Promise<{
   backend: CaseFileBackend;
   player: CaseFilePlayer;
-}> {
+}> 
+{
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash-lite",
     generationConfig: {
@@ -317,7 +318,6 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
       responseMimeType: "application/json",
     },
   });
-
   const result = await model.generateContent(buildPrompt(seed));
 
 
