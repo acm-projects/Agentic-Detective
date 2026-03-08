@@ -36,6 +36,7 @@ export type GamePhase =
   | "generating"     // LLM generating the case file
   | "briefing"       // Player reading the case report
   | "investigation"  // Active interrogation / clue review
+  | "interrogation"  // Asking questions to the suspects and finding clues
   | "accusation"     // Player making their final accusation
   | "resolved";      // Case closed, outcome shown
 
@@ -66,13 +67,14 @@ interface GameState {
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
-  startCase: () => Promise<void>;
-  proceedToInvestigation: () => void;
+  startCase: (navigate: (path: string) => void) => Promise<void>;
+  proceedToInvestigation: (navigate: (path: string) => void) => void;
+  interrogateSuspects: (navigate: (path: string) => void) => void;
+  goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
   sendMessage: (text: string) => Promise<void>;
   makeAccusation: (suspectName: string) => void;
-  resetGame: () => void;
-  goToBriefing: () => void;
+  resetGame: () => void,
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -101,35 +103,39 @@ export const useGameStore = create<GameState>((set, get) => ({
     })),
 
   // ── Generate the full case from player seed ──
-  startCase: async () => {
-    console.log("Button pressed")
+  startCase: async (navigate: (path: string) => void) => {
     const { seed } = get();
     if (!seed || !seed.freeText.trim()) {
-      set({ error: "Please enter a case personalization or theme before starting." });
+      set({ error: "Please enter a case theme before starting." });
+      alert("Please enter a case theme before starting.");
       return;
     }
-
-    console.log("Start Generate")
     set({ phase: "generating", error: null });
-
     try {
       const { backend, player } = await generateCaseFile(seed);
-      console.log("Got casefile")
       set({ backend, player, phase: "briefing" });
+      navigate("/report");           // ← instead of set({ phase: "briefing" })
     } catch (err) {
-      set({
-        error: "Failed to generate case. Check your API key or try again.",
-        phase: "setup",
-      });
+      set({ error: "Failed to generate case.", phase: "setup" });
       console.error(err);
     }
   },
 
   // ── Player has read the briefing, move to investigation ──
-  goToBriefing: () => set({ phase: "briefing" }), // player going back to the breifing page
-  proceedToInvestigation: () => set({ phase: "investigation" }),
-
+ goToBriefing: (navigate: (path: string) => void) => {
+  set({ phase: "briefing" });
+  navigate("/report");             // ← instead of set({ phase: "briefing" })
+  },
+  proceedToInvestigation: (navigate) => {
+    set({ phase: "investigation" });
+    navigate("/investigate");
+  },
   // ── Open or resume a chat session with a suspect ──
+  interrogateSuspects: (navigate) => {
+    set({ phase: "interrogation" });
+    navigate("/interrogate");
+  },
+
   startInterrogation: (suspectName) => {
     const { backend, player, sessions } = get();
     if (!backend || !player) return;
@@ -145,8 +151,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport);
 
+    console.log("system prompt");
+    console.log(systemPrompt);
+
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: systemPrompt,
       generationConfig: { temperature: 0.85 },
     });
@@ -160,7 +169,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         [suspectName]: {
           suspectName,
           chatSession,
-          history: [],
+           history: [],
           conversationCount: 0,
         },
       },
@@ -190,6 +199,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const result = await session.chatSession.sendMessage(text);
       const responseText = result.response.text();
+      console.log("suspect response");
+      console.log(responseText);
 
       const suspectMessage: ChatMessage = {
         role: "suspect",

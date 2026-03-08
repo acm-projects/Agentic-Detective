@@ -2,13 +2,21 @@ import { useState } from "react";
 import { useGameStore } from "./useGameStore";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
+import { useNavigate } from 'react-router-dom';
+
 
 export default function ClueBook() {
+  const navigate = useNavigate();
   const { player } = useGameStore();
   const clues = player?.clues ?? [];
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
-
+  const {
+    proceedToInvestigation,
+    goToBriefing,
+    interrogateSuspects
+  } = useGameStore();
+  
   const handleClueClick = (clue: Clue) => {
     setSelected(clue);
     setExamined(prev => new Set(prev).add(clue.id));
@@ -116,6 +124,15 @@ export default function ClueBook() {
         {/* Book corners */}
         <div className="pixel-corner bl" />
         <div className="pixel-corner br" />
+        <button className="back-btn" onClick={() =>goToBriefing(navigate)}>
+        ← Case Report
+      </button>
+      <button className="back-btn" onClick={() =>proceedToInvestigation(navigate)}>
+        Notes Page
+      </button>
+      <button className="back-btn" onClick={() =>interrogateSuspects(navigate)}>
+        Interrogate
+      </button>
       </div>
     </div>
   );
@@ -123,11 +140,11 @@ export default function ClueBook() {
 
 // ── Pixel icons — deterministic per index, CSS-drawn ──
 function PixelIcon({ index, decisive, large }: { index: number; decisive?: boolean; large?: boolean }) {
-  const icons = ["🔍", "🗒️", "🔑", "💊", "🧤", "📱", "🔫", "✉️", "💉", "🪓", "👁️", "🕯️"];
-  const icon = icons[index % icons.length];
+  const imagePath = `/assets/clues/clue_${index}.jpg`;
+
   return (
     <div className={`pixel-icon-wrap ${large ? "large" : ""} ${decisive ? "decisive" : ""}`}>
-      {icon}
+      <img src={imagePath} alt={`Clue ${index}`} className="pixel-icon-image" />
     </div>
   );
 }

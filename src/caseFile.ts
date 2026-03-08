@@ -2,7 +2,7 @@
 //  CASE FILE — Single LLM call that fans out into 5 outputs
 //  Murder-only for now. Generalize to other crimes later.
 // ============================================================
-import type { PlayerSeed, Storyline, Contradiction } from "./obj/backendInterfaces"; 
+import type { PlayerSeed, Storyline } from "./obj/backendInterfaces"; 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
@@ -17,14 +17,10 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 // ─────────────────────────────────────────────
 
 export const AVATAR_POOL = [
-  { id: "avatar_01", description: "Elderly man, white hair, sharp formal suit, stern expression" },
-  { id: "avatar_02", description: "Young woman, casual clothes, bright eyes, approachable look" },
-  { id: "avatar_03", description: "Middle-aged woman, professional blazer, composed and polished" },
-  { id: "avatar_04", description: "Young man, disheveled hair, nervous energy, informal clothing" },
-  { id: "avatar_05", description: "Older woman, elegant dress, silver jewelry, refined and cold" },
-  { id: "avatar_06", description: "Middle-aged man, rugged build, worn jacket, weathered face" },
-  { id: "avatar_07", description: "Young woman, dark clothing, guarded expression, artistic look" },
-  { id: "avatar_08", description: "Middle-aged man, glasses, academic appearance, quietly intense" },
+  { id: "avatar_01", description: "brown hair, small nose, pink lips, mole, upturned eyebrows" },
+  { id: "avatar_02", description: "black hair, long nose, purple lips, downturned eyebrows, freckles" },
+  { id: "avatar_03", description: "yellow hair, wide nose, mustache, thick eyebrows, and green shirt" },
+  { id: "avatar_04", description: "grey hair, glasses, long nose, blue sweater vest, medium thick eyebrows" }
 ] as const;
 
 export type AvatarId = typeof AVATAR_POOL[number]["id"];
@@ -186,12 +182,21 @@ SUSPECT HONESTY RULES (important — not all innocents are hiding something):
 
 RULES:
 1. Generate EXACTLY 4 suspects. Exactly 1 is guilty (isGuilty: true).
-2. All clue IDs must follow format "clue_<short_label>" e.g. "clue_wine_glass".
+2. All clue IDs must follow format "clue_<clue#>" based on the description mentioned below. e.g. "clue_3".
 3. Each contradiction's exposedByClueId must match a real clue id you generate.
 4. characterProfiles must be the REDACTED version — no trueAlibi, no trueMotive, no isGuilty, no secrets.
 5. caseReport must contain NO spoilers. It is what the detective reads upon arriving at the scene.
 6. conversationsNeededToBreak for the guilty suspect should roughly equal ${estimatedConversations}.
-7. Generate between 4 and 7 clues. All are visible to the player from the start.
+7. Generate between 2 and 6 clues. All are visible to the player from the start.
+8. The clues are going to be one of the following painting, cipher, letter/note, prints, jewelry, and weapons.
+
+Clues:
+1. id: clue_1; jewel
+2. id: clue_2; weapon
+3. id: clue_3; painting
+4. id: clue_4; letter/note
+5. id: clue_5; cipher
+6. id: clue_6; fingerprint or other prints (shoe, paw, etc)
 
 Respond ONLY with a single valid JSON object. No markdown, no commentary, no trailing text.
 
@@ -313,6 +318,22 @@ const sanitized = rawText.replace(
 );
 
 const raw: CaseFileRaw = JSON.parse(sanitized);
+
+
+try {
+  await fetch("http://localhost:3000/save-case", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      caseId:            raw.caseReport.caseId,
+      caseTitle:         raw.caseReport.caseTitle,
+      suspects:          raw.suspects,
+      characterProfiles: raw.characterProfiles,
+    }),
+  });
+} catch (err) {
+  console.warn("[save-case] Could not reach Express server — skipping save:", err);
+}
 
   const backend: CaseFileBackend = {
     storyline: raw.storyline,

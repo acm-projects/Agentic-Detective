@@ -32,10 +32,22 @@ html, body {
   overflow: hidden; /* Ensures the text is hidden outside the container */
   white-space: nowrap;
   margin-bottom: 3rem;
-  border-right: 3px solid white;
   width: fit-content;
-  animation: typing 2s steps(30, end), blink 0.5s step-end infinite; /* Typing and blinking animations */
+  animation: typing 2s steps(30, end); /* Typing animation */
+  border-right: none; /* Remove the border-right from the main element */
+  position: relative; /* Required for the pseudo-element */
 }
+.title::after {
+  content: ""; /* Creates the blinking cursor */
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background-color: white;
+  animation: blink 0.5s step-end infinite; /* Blinking animation */
+}
+
 @keyframes typing {
   from {
     width: 0;

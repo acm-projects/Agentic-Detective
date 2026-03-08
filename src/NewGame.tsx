@@ -4,9 +4,11 @@ import { useGameStore } from "./useGameStore";
 import CaseReportScreen from "./CaseReportScreen";
 import { Link } from 'react-router';
 import NotesPage from "./NotesPage";
+import { useNavigate } from "react-router-dom";
 
 function NewGame() {
-    const { seed, setSeed, startCase, phase } = useGameStore();
+    const { setSeed, startCase, phase } = useGameStore();
+    const navigate = useNavigate();
 
     const [personalization, setPersonalization] = useState('');
     const [timePeriod, setTimePeriod] = useState(10); // Default value
@@ -60,11 +62,13 @@ function NewGame() {
         />
       </div>
       <div className="slider-container">
-        <label className="label">Difficulty: {seed?.difficulty ?? 5}</label>
+        <label className="label">Difficulty: {difficulty}</label>
         <input
           type="range"
-          min="1" max="10" step="1"
-          value={seed?.difficulty ?? 5}
+          min="1" 
+          max="10" 
+          step="1"
+          value={difficulty}
           onChange={(e) => setDifficulty(Number(e.target.value))}
           className="slider"
         />
@@ -76,7 +80,7 @@ function NewGame() {
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
             intensity: intensity 
           }) 
-          startCase()
+          startCase(navigate) // Pass the seed as an argument
         }} >
         Solve The Case!
       </button>

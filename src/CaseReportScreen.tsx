@@ -1,5 +1,6 @@
 import { useGameStore } from "./useGameStore";
 import "./CaseReportScreen.css";
+import { useNavigate } from "react-router-dom";
 import { useState, useRef, useCallback, useEffect } from "react";
 
 const LENS_SIZE = 180;   // diameter in px
@@ -10,6 +11,7 @@ interface LensPos { x: number; y: number; }
 type CaseReport = NonNullable<ReturnType<typeof useGameStore>["player"]>["caseReport"];
 
 export default function CaseReportScreen() {
+  const navigate = useNavigate();
   const { player, proceedToInvestigation } = useGameStore();
   const report = player?.caseReport;
 
@@ -148,7 +150,7 @@ export default function CaseReportScreen() {
           </div>
         </div>
 
-        <button className="begin-button" onClick={proceedToInvestigation}>
+        <button className="begin-button" onClick={()=>proceedToInvestigation(navigate)}>
           <span>Begin Investigation →</span>
         </button>
       </div>

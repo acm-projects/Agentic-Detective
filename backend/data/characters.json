@@ -1,43 +1,127 @@
 {
-    "chief_keef": {
-        "profile": {
-            "mugshot": "https://ih1.redbubble.net/image.5653390764.7646/raf,360x360,075,t,fafafa:ca443f4786.u1.jpg",
-            "name": "Cheif Keef",
-            "age": "35",
-            "occupation": "Rapper",
-            "knownAssociates": ["Lil Durk", "Young Chop"],
-            "chatHistory": [""]
-        },
-
-        "ai": {
-            "characteristics": ["loyal", "cautious", "confident"],
-            "speakingStyle": ["urban slang-heavy", "laid-back confrontational", "casual"],
-            "knowledgeScope": ["does not know who committed the crime"],
-            "secrets": ["none"],
-            "trustLevel": 0.7,
-            "trustsPlayer": "trusts the player",
-            "isGuilty": false
-        }
+  "meta": {
+    "caseId": "CHS-2023-10-26-001",
+    "caseTitle": "The Sterling Homicide",
+    "savedAt": "2026-03-08T21:18:20.770Z"
+  },
+  "suspects": [
+    {
+      "name": "Amelia Vance",
+      "age": 28,
+      "occupation": "Artist",
+      "relationshipToVictim": "Business associate and former lover",
+      "personality": "Passionate, impulsive, prone to dramatic outbursts.",
+      "physicalDescription": "She has striking features, with long, dark hair often pulled back severely. Her eyes are a deep, intense blue, and she has a slender build. She often wears dark, artistic clothing. A small, silver locket is always around her neck.",
+      "avatarId": "avatar_02",
+      "trueAlibi": "She was in Victor Sterling's study, arguing with him about money.",
+      "claimedAlibi": "She was in the east wing library reading until she heard the commotion.",
+      "trueMotive": "Victor Sterling discovered her crippling gambling debts and was blackmailing her.",
+      "isGuilty": true,
+      "honestyLevel": "deceptive",
+      "secretTheyreHiding": "She has massive gambling debts and was being blackmailed by the victim.",
+      "lyingTells": "Becomes agitated and defensive when questioned about her finances or her relationship with the victim.",
+      "knowledgeOfOtherSuspects": "She knows Marcus Thorne often met with Victor privately and suspects he was involved in something shady. She believes Evelyn Reed resents Victor for his business practices.",
+      "conversationsNeededToBreak": 5
     },
-
-    "lil_durk": {
-        "profile": {
-            "mugshot": "https://upload.wikimedia.org/wikipedia/en/thumb/5/57/Lil_Durk_-_Mugshot_%282024%29.jpeg/250px-Lil_Durk_-_Mugshot_%282024%29.jpeg",
-            "name": "L'il Durk",
-            "age": "33",
-            "occupation": "Rapper",
-            "knownAssociates": ["Chief Keef", "Young Chop"],
-            "chatHistory": [""]
-        },
-
-        "ai": {
-            "characteristics": ["defensive", "observant", "loyal to known associates"],
-            "speakingStyle": ["short deliberate responses", "sophisticated", "professional"],
-            "knowledgeScope": ["knows who committed the crime"],
-            "secrets": ["none"],
-            "trustLevel": 0.1,
-            "trustsPlayer": "does not trust the player",
-            "isGuilty": true
-        }
+    {
+      "name": "Marcus Thorne",
+      "age": 45,
+      "occupation": "Lawyer",
+      "relationshipToVictim": "Business partner",
+      "personality": "Calm, calculating, meticulous, and slightly arrogant.",
+      "physicalDescription": "He has neatly combed, greying black hair and a sharp, angular face. He is impeccably dressed in tailored suits and wears a signet ring on his left hand. His eyes are piercing and observant.",
+      "avatarId": "avatar_01",
+      "trueAlibi": "He left Victor's study at 9:30 PM and met an informant in the garden until 10:30 PM, discussing sensitive client information.",
+      "claimedAlibi": "He left Victor's study around 9:30 PM and went directly home.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "partially_honest",
+      "secretTheyreHiding": "He was meeting with a confidential informant in the garden, which he cannot disclose due to client privilege.",
+      "lyingTells": "Becomes evasive when asked about his exact movements after leaving the study.",
+      "knowledgeOfOtherSuspects": "He knows Amelia Vance had a volatile relationship with Victor and that Jonathan Price strongly disliked him.",
+      "conversationsNeededToBreak": 3
+    },
+    {
+      "name": "Evelyn Reed",
+      "age": 55,
+      "occupation": "Art Curator",
+      "relationshipToVictim": "Acquaintance",
+      "personality": "Sophisticated, reserved, intelligent, and keenly observant.",
+      "physicalDescription": "She has elegant silver hair styled in an updo and wears refined, tasteful clothing. Her posture is always perfect. She carries a small, jeweled walking stick.",
+      "avatarId": "avatar_04",
+      "trueAlibi": "She was in her private gallery on the estate, cataloging new acquisitions from 9:00 PM to 11:00 PM.",
+      "claimedAlibi": "She was in her private gallery on the estate, cataloging new acquisitions from 9:00 PM to 11:00 PM.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "honest",
+      "secretTheyreHiding": null,
+      "lyingTells": null,
+      "knowledgeOfOtherSuspects": "She knows Victor Sterling had a strained relationship with Amelia Vance and that Marcus Thorne handled his most sensitive legal matters.",
+      "conversationsNeededToBreak": 1
+    },
+    {
+      "name": "Jonathan Price",
+      "age": 62,
+      "occupation": "Retired Banker",
+      "relationshipToVictim": "Neighbor and former associate",
+      "personality": "Gruff, opinionated, and easily angered, but fundamentally decent.",
+      "physicalDescription": "He has a hearty build, with a ruddy complexion and a full head of grey hair. He wears thick-rimmed glasses and often sports a tweed jacket.",
+      "avatarId": "avatar_03",
+      "trueAlibi": "He was at home watching television and reading the newspaper from 9:00 PM onwards.",
+      "claimedAlibi": "He was at home watching television and reading the newspaper from 9:00 PM onwards.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "honest",
+      "secretTheyreHiding": null,
+      "lyingTells": null,
+      "knowledgeOfOtherSuspects": "He knows Victor Sterling was a disliked figure in business circles and that Amelia Vance was often seen visiting him, appearing distressed.",
+      "conversationsNeededToBreak": 1
     }
+  ],
+  "characterProfiles": [
+    {
+      "name": "Amelia Vance",
+      "age": 28,
+      "occupation": "Artist",
+      "relationshipToVictim": "Business associate and former lover",
+      "personalityBlurb": "Passionate, impulsive, prone to dramatic outbursts. Appears distraught but her eyes dart nervously.",
+      "claimedAlibi": "She was in the east wing library reading until she heard the commotion.",
+      "physicalDescription": "Striking features, long dark hair, intense blue eyes, slender build. Wears dark, artistic clothing. A small, silver locket is always around her neck.",
+      "avatarId": "avatar_02",
+      "suspicionLevel": "high"
+    },
+    {
+      "name": "Marcus Thorne",
+      "age": 45,
+      "occupation": "Lawyer",
+      "relationshipToVictim": "Business partner",
+      "personalityBlurb": "Calm, calculating, meticulous, and slightly arrogant. His demeanor is cool and collected.",
+      "claimedAlibi": "He left Victor's study around 9:30 PM and went directly home.",
+      "physicalDescription": "Neatly combed greying black hair, sharp angular face, impeccably dressed. Wears a signet ring on his left hand. Piercing, observant eyes.",
+      "avatarId": "avatar_01",
+      "suspicionLevel": "medium"
+    },
+    {
+      "name": "Evelyn Reed",
+      "age": 55,
+      "occupation": "Art Curator",
+      "relationshipToVictim": "Acquaintance",
+      "personalityBlurb": "Sophisticated, reserved, intelligent, and keenly observant. Speaks precisely and thoughtfully.",
+      "claimedAlibi": "She was in her private gallery on the estate, cataloging new acquisitions from 9:00 PM to 11:00 PM.",
+      "physicalDescription": "Elegant silver hair styled in an updo, refined tasteful clothing. Perfect posture. Carries a small, jeweled walking stick.",
+      "avatarId": "avatar_04",
+      "suspicionLevel": "low"
+    },
+    {
+      "name": "Jonathan Price",
+      "age": 62,
+      "occupation": "Retired Banker",
+      "relationshipToVictim": "Neighbor and former associate",
+      "personalityBlurb": "Gruff, opinionated, and easily angered, but fundamentally decent. Appears annoyed by the situation.",
+      "claimedAlibi": "He was at home watching television and reading the newspaper from 9:00 PM onwards.",
+      "physicalDescription": "Hearty build, ruddy complexion, full head of grey hair. Wears thick-rimmed glasses and often sports a tweed jacket.",
+      "avatarId": "avatar_03",
+      "suspicionLevel": "low"
+    }
+  ]
 }
