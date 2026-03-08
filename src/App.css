@@ -1,40 +1,79 @@
 /* App.css */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&display=swap');
+
 
 html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  background-color: #282c34; /* Same background color as the container */
+  background-color: #101010;
   cursor: url('./assets/cursor.png'), auto;
   display: flex;
   justify-content: center;
   align-items: center;
+  background-image: url('./public/3bloodsplatter.png'); 
+  background-repeat: no-repeat; 
+  background-position: -35px -25px;
+  background-size: 400px; 
+
+  image-rendering: pixelated;
+
+  position: relative;
+  z-index: 0;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 40px;
+  right: -40px;
+
+  width: 400px;
+  height: 400px;
+
+  background-image: url('./public/3bloodsplatter.png');
+  background-repeat: no-repeat;
+  background-size: contain;
+
+  image-rendering: pixelated;
+
+  pointer-events: none;
+  z-index: -1;
 }
 
 .container {
   font-family: 'Press Start 2P', cursive;
   text-align: center;
-  padding: 20px;
-  color: white;
-  min-height: 100vh;
-  width: 100%;
+  padding: 40px;
+  color: #ffffff;
+
+  max-width: 900px;
+  background-color: #151515;
+
+  position: relative;
+  z-index: 10;
+
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 0 25px rgba(0,0,0,0.8);
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
 }
 
 .title {
   font-size: 3rem;
-  overflow: hidden; /* Ensures the text is hidden outside the container */
+  overflow: hidden;
   white-space: nowrap;
-  margin-bottom: 5rem;
-  border-right: 3px solid white;
+  margin-bottom: 1rem;
+  border-right: 2px solid white;
   width: fit-content;
-  animation: typing 2s steps(30, end), blink 0.5s step-end infinite; /* Typing and blinking animations */
+  animation: typing 2s steps(30, end), blink 0.5s step-end infinite;
+  text-shadow: 0 0 18px rgba(77, 77, 254, 0.6);
 }
+
 @keyframes typing {
   from {
     width: 0;
@@ -50,10 +89,9 @@ html, body {
   }
 }
 
-
 .subtitle {
   font-size: 1rem;
-  margin-top: 3rem;
+  margin-top: .5rem;
   margin-bottom: 10px;
 }
 
@@ -61,9 +99,11 @@ html, body {
   padding: 10px;
   font-size: 1rem;
   width: 60%;
-  border-radius: 5px;
+  border-radius: 0px;
   border: 1px solid #ccc;
-  margin-bottom: 8rem;
+  margin-top: 3rem; 
+  margin-bottom: 2.5rem;
+  appearance: none; 
 }
 
 .slider-container {
@@ -73,16 +113,63 @@ html, body {
 
 .label {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
   font-size: 1rem;
 }
+
 .slider-container {
-  width: 60%; /* Adjust the width of the sliders */
+  width: 60%;
   display: flex;
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
 }
+
 .slider {
   width: 100%;
+  height: 8px;
+  appearance: none;
+  background: #4a4a4a;
+  border-radius: 5px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+
+  width: 40px;
+  height: 40px;
+
+  background-image: url('./public/improvedmagnifier.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  border: none;
+  cursor: pointer;
+
+  display: block;
+  transform: rotate(-25deg);
+}
+
+.detective-button {
+  background-color: #f84a4a;
+  color: #101010;
+  border: none;
+  border-radius: 0px;
+  padding: 10px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Press Start 2P', cursive; 
+}
+
+.detective-button:hover {
+  background-color: #a10303;
+  transform: scale(1.05); 
+}
+
+.loading {
+  color: white;
 }
