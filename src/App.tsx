@@ -3,8 +3,6 @@ import CaseReportScreen from "./CaseReportScreen";
 import './App.css';
 import NotesPage from "./NotesPage";
 
-
-
 function App() {
   const { seed, setSeed, startCase, phase } = useGameStore();
 
@@ -57,13 +55,9 @@ function App() {
           className="slider"
         />
       </div>
-      {/* <p style={{color: 'red', fontSize: 11}}>{JSON.stringify(seed)}</p> 
-      if (!seed || !seed.theme.trim()) {
-        et({ error: "Please enter a case theme before starting." });
-        return;
-      }*/}
+
       <button className="detective-button" onClick={startCase}>
-        Solve The Case!
+        SOLVE!
       </button>
     </div>
   );
