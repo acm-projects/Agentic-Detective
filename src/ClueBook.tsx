@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useGameStore } from "./useGameStore";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
+import { useNavigate } from "react-router-dom";
 
 export default function ClueBook() {
   const { player } = useGameStore();
   const clues = player?.clues ?? [];
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
 
   const handleClueClick = (clue: Clue) => {
     setSelected(clue);
@@ -112,7 +114,7 @@ export default function ClueBook() {
             </div>
           </div>
         )}
-
+        <button onClick={() => navigate('/desk')}>Back to desk</button>
         {/* Book corners */}
         <div className="pixel-corner bl" />
         <div className="pixel-corner br" />

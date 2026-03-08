@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getCharacterById } from './services/characterService';
 import type { CharacterData } from './obj/characterInterfaces';
 import './Interrogate.css';
@@ -6,17 +6,38 @@ import { Link } from 'react-router';
 
 
 
-interface NoteInterface{
-  shown: boolean;
-  content: string[];
-}
-
 function Interrogate() { 
   // store the current text the user is typing
   const [input, setInput] = useState('');
   const [activeCharacter, setActiveCharacter] = useState<CharacterData | null>(null);
-  const [notes, setNotes] = useState<string[]>([]);
   const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playClickSound = () => {
+    const audio = new Audio('../assets/assets/viacheslavstarostin-mystery-detective-investigation-music-473843.mp3');
+    audio.play();
+  }
+
+  useEffect(() => {
+    // Create audio element once
+    if (!audioRef.current) {
+      audioRef.current = new Audio('../assets/HomeMusic.mp3');
+      audioRef.current.loop = true;
+      audioRef.current.play().catch(() => {
+        // Autoplay may be blocked by browser
+      });
+    }
+
+    // Control audio based on muted state
+    if (isMuted && audioRef.current) {
+      audioRef.current.pause();
+    } else if (!isMuted && audioRef.current) {
+      audioRef.current.play().catch(() => {
+        // Autoplay may be blocked
+      });
+    }
+  }, [isMuted]);
 
   useEffect(() => {
     (async () => {
@@ -114,32 +135,47 @@ function Interrogate() {
     }
   }
 
-
   return (
     <div className='game-container'>
       <div className='navigate'>
-        <button onClick={() => setIsNoteOpen(!isNoteOpen)}>Notes</button>
-        <button>Clues</button>
-        <button>Files</button>
-        <button onClick={() => (document.getElementById('case-report') as HTMLDialogElement)?.showModal()}>Case Report</button>
+        <button onClick={() => {
+          playClickSound();
+          setIsMuted(!isMuted);
+          }}>{isMuted ? "Unmute" : "Mute"}</button>
+        <button onClick={() => {
+          playClickSound()
+          setIsNoteOpen(!isNoteOpen)}}>Notes</button>
+        <button onClick={() => {
+          playClickSound()
+        }}>Clues</button>
+        <button onClick={() => {
+          playClickSound()
+        }}>Files</button>
+        <button onClick={() => {
+          playClickSound();
+          (document.getElementById('case-report') as HTMLDialogElement)?.showModal();
+        }}>Case Report</button>
         <dialog className="nes-dialog" id="case-report">
           <form method="dialog">
             <h3>Case Report</h3>
             <p>Case Report: {profile.name}'s Case File</p>
             <menu className="dialog-menu">
-              <button>Close</button>
+              <button onClick={playClickSound}>Close</button>
             </menu>
           </form>
         </dialog>
-        <button><Link to="/desk">Desk</Link></button>
-        <button onClick={() => (document.getElementById('settings') as HTMLDialogElement)?.showModal()}>Settings</button>
+        <button onClick={playClickSound}><Link to="/desk">Desk</Link></button>
+        <button onClick={() => {
+          playClickSound();
+          (document.getElementById('settings') as HTMLDialogElement)?.showModal();
+        }}>Settings</button>
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
             <p>Alert: this is a dialog.</p>
             <menu className="dialog-menu">
-              <button>Nah</button>
-              <button><Link to="/">Go Home</Link></button>
+              <button onClick={playClickSound}>Nah</button>
+              <button onClick={playClickSound}><Link to="/">Go Home</Link></button>
             </menu>
           </form>
         </dialog>
@@ -154,11 +190,11 @@ function Interrogate() {
               <h2>{profile.name}</h2>
               <h4>Age: {profile.age}</h4>
               <h4>Occupation: {profile.occupation}</h4>
-              <h4>Known Associates: {profile.knownAssociates}</h4>
+              <h4>Known Associates: {Array.isArray(profile.knownAssociates) ? profile.knownAssociates.join(", ") : profile.knownAssociates}</h4>
           </div>
         </div>
         <div className='chatbot'>
-          <form onSubmit={handleSendMessage} className="message-form">
+          <form onSubmit={handleSendMessage} onClick={playClickSound} className="message-form">
             <h2>Messages</h2>
             <div>
               <div className='chat-history'>
@@ -180,7 +216,9 @@ function Interrogate() {
                 console.log(e.target.value);
               }}
             />
-            <button type='submit'>Submit</button>
+            <button type='submit' onClick={playClickSound}>
+              Submit
+            </button>
           </form>
         </div>
 

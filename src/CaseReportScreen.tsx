@@ -9,7 +9,12 @@ interface LensPos { x: number; y: number; }
 
 type CaseReport = NonNullable<ReturnType<typeof useGameStore>["player"]>["caseReport"];
 
-export default function CaseReportScreen() {
+interface CaseReportScreenProps {
+  onClose?: () => void;
+  isModal?: boolean;
+}
+
+export default function CaseReportScreen({ onClose, isModal = false }: CaseReportScreenProps) {
   const { player, proceedToInvestigation } = useGameStore();
   const report = player?.caseReport;
 
@@ -39,6 +44,13 @@ export default function CaseReportScreen() {
   }, []);
 
   const handleMouseLeave = useCallback(() => setLens(null), []);
+
+  const handleButtonClick = () => {
+    proceedToInvestigation();
+    if (onClose) {
+      onClose();
+    }
+  };
 
   if (!report) return null;
 
@@ -148,8 +160,8 @@ export default function CaseReportScreen() {
           </div>
         </div>
 
-        <button className="begin-button" onClick={proceedToInvestigation}>
-          <span>Begin Investigation →</span>
+        <button className="begin-button" onClick={handleButtonClick}>
+          <span>{isModal ? 'Close Case Report' : 'Begin Investigation →'}</span>
         </button>
       </div>
     </div>
