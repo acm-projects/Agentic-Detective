@@ -121,7 +121,7 @@ function NewGame() {
           startCase();
           navigate('/desk');
         }} >
-        Solve The Case!
+        SOLVE! 
       </button>
     </div>
     );

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../useGameStore';
@@ -34,10 +33,10 @@ function Message() {
   }
 
   const itemStyle = {
-    imageRendering: 'pixelated' as const,
-    cursor: 'pointer',
-    position: 'absolute' as const,
-    filter: 'drop-shadow(8px 8px 0px rgba(0,0,0,0.1))' 
+    imageRendering: "pixelated" as const,
+    cursor: "pointer",
+    position: "absolute" as const,
+    filter: "drop-shadow(8px 8px 0px rgba(0,0,0,0.1))"
   };
 
   const handlePhoneClick = () => {
@@ -121,19 +120,21 @@ function Message() {
           style={{ ...itemStyle, width: '300px', top: '2px', left: '35%', transform: 'rotate(360deg)' }}
         />
 
-          {/* 12. PHONE */}
-        <img 
-          className='evidence-item'
+        {/* 12. PHONE */}
+      <img 
+        className='evidence-item'
           src={phoneImg} 
           alt="Cellphone" 
-          style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }} 
-          onClick={handlePhoneClick}
-          title="Click to interrogate"
-        />
+          style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
+          onClick={() => {
+          const audio = new Audio("http://localhost:5555/api/voice");
+          audio.play();
+          handlePhoneClick();
+        }}
+      />
+    </div>
 
-      </div>
-
-      {/* Modal for Case Report */}
+    {/* Modal for Case Report */}
       {showCaseReportModal && (
         <div className="modal-overlay" onClick={handleCloseCaseReport}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -141,6 +142,7 @@ function Message() {
           </div>
         </div>
       )}
+
     </>
   );
 }
