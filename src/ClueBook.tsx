@@ -6,11 +6,11 @@ import { useNavigate } from 'react-router-dom';
 
 
 export default function ClueBook() {
-  const navigate = useNavigate();
-  const { player, proceedToInvestigation, goToBriefing, interrogateSuspects } = useGameStore();
+  const { player } = useGameStore();
   const clues = player?.clues ?? [];
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
+  const navigate = useNavigate();
 
   const handleClueClick = (clue: Clue) => {
     setSelected(clue);
@@ -42,6 +42,7 @@ export default function ClueBook() {
             {clues.length === 0 && (
               <div className="clue-empty">NO CLUES COLLECTED YET</div>
             )}
+            </div>
             {clues.slice(0, 6).map((clue, i) => {
               const isExamined = examined.has(clue.id);
               const isSelected = selected?.id === clue.id;
@@ -107,22 +108,10 @@ export default function ClueBook() {
               <div className="clue-detail-empty-icon">?</div>
               <div className="clue-detail-empty-text">SELECT A CLUE TO EXAMINE</div>
             </div>
-          )}
-        </div>
-
-        {/* Nav buttons */}
-        <div className="clue-book-nav">
-          <button className="back-btn" onClick={() => goToBriefing(navigate)}>
-            ← Case Report
-          </button>
-          <button className="back-btn" onClick={() => proceedToInvestigation(navigate)}>
-            Notes Page
-          </button>
-          <button className="back-btn" onClick={() => interrogateSuspects(navigate)}>
-            Interrogate
-          </button>
-        </div>
-
+    
+        )}
+        <button className="back-btn" onClick={() => navigate('/desk')}>Back to desk</button>
+        {/* Book corners */}
         <div className="pixel-corner bl" />
         <div className="pixel-corner br" />
       </div>
@@ -130,7 +119,8 @@ export default function ClueBook() {
   );
 }
 
-function PixelIcon({ index, decisive, large }: { index: number; decisive?: boolean; large?: boolean }) {
+function PixelIcon({ index, decisive = false, large = false }: { index: number; decisive?: boolean; large?: boolean }) {
+
   const imagePath = `../public/clues/clue_${index + 1}.png`; // Adjusted path to start from the public directory
   return (
     <div className={`pixel-icon-wrap ${large ? "large" : ""} ${decisive ? "decisive" : ""}`}>

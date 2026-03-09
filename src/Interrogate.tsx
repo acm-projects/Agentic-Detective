@@ -6,6 +6,14 @@ import {
   useActiveSuspectProfile,
 } from './useGameStore';
 import './Interrogate.css';
+import { Link } from 'react-router';
+
+
+
+interface NoteInterface{
+  shown: boolean;
+  content: string[];
+}
 
 function Interrogate() {
   const navigate = useNavigate();
@@ -25,6 +33,35 @@ function Interrogate() {
   const profiles = player?.characterProfiles ?? [];
 
   const [input, setInput] = useState('');
+  const [activeCharacter, setActiveCharacter] = useState<CharacterData | null>(null);
+  const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playClickSound = () => {
+    const audio = new Audio('../assets/assets/viacheslavstarostin-mystery-detective-investigation-music-473843.mp3');
+    audio.play();
+  }
+
+  useEffect(() => {
+    // Create audio element once
+    if (!audioRef.current) {
+      audioRef.current = new Audio('../assets/HomeMusic.mp3');
+      audioRef.current.loop = true;
+      audioRef.current.play().catch(() => {
+        // Autoplay may be blocked by browser
+      });
+    }
+
+    // Control audio based on muted state
+    if (isMuted && audioRef.current) {
+      audioRef.current.pause();
+    } else if (!isMuted && audioRef.current) {
+      audioRef.current.play().catch(() => {
+        // Autoplay may be blocked
+      });
+    }
+  }, [isMuted]);
   //const [isNoteOpen, setIsNoteOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -59,76 +96,64 @@ function Interrogate() {
       <div className="interrogate-container">
         No active case. <Link to="/">Go Home</Link>
       </div>
-    );
-  }
+    </div>
+  </div>
+</div>
+);
+}
 
   return (
     <div className='game-container'>
 
       {/* ── Nav bar — matches original structure ── */}
       <div className='navigate'>
+        <button onClick={() => {
+          playClickSound();
+          setIsMuted(!isMuted);
+          }}>{isMuted ? "Unmute" : "Mute"}</button>
+        <button onClick={() => {
+          playClickSound()
+          setIsNoteOpen(!isNoteOpen)}}>Notes</button>
+        <button onClick={() => {
+          playClickSound()
+        }}>Clues</button>
+        <button onClick={() => {
+          playClickSound()
+        }}>Files</button>
+        <button onClick={() => {
+          playClickSound();
+          (document.getElementById('case-report') as HTMLDialogElement)?.showModal();
+        }}>Case Report</button>
         <button onClick={() => proceedToInvestigation(navigate)}>Notes</button>
         <button onClick = {() => navigate("/clues")}>Clues</button>
         <button>Files</button>
-
-        {/*<button onClick={() =>
-          (document.getElementById('case-report') as HTMLDialogElement)?.showModal()
-        }>
-          Case Report
-        </button>
-       <dialog className="nes-dialog" id="case-report">
+        <button onClick={() => (document.getElementById('case-report') as HTMLDialogElement)?.showModal()}>Case Report</button>
+        <dialog className="nes-dialog" id="case-report">
           <form method="dialog">
             <h3>Case Report</h3>
-            <p><strong>{player.caseReport.caseTitle}</strong></p>
-            <p>{player.caseReport.officialBriefing}</p>
+            <p>Case Report: {profile.name}'s Case File</p>
             <menu className="dialog-menu">
               <button>Close</button>
             </menu>
           </form>
-        </dialog> */}
-        <button className="back-btn" onClick={() =>goToBriefing(navigate)}>
-        Case Report
-      </button>
-
-        <button><Link to="/desk">Desk</Link></button>
-
-        <button onClick={() =>
-          (document.getElementById('settings') as HTMLDialogElement)?.showModal()
-        }>
-          Settings
-        </button>
+        </dialog>
+        <button onClick={playClickSound}><Link to="/desk">Desk</Link></button>
+        <button onClick={() => {
+          playClickSound();
+          (document.getElementById('settings') as HTMLDialogElement)?.showModal();
+        }}>Settings</button>
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
+            <p>Alert: this is a dialog.</p>
             <menu className="dialog-menu">
-              <button>Nah</button>
-              <button><Link to="/">Go Home</Link></button>
+              <button onClick={playClickSound}>Nah</button>
+              <button onClick={playClickSound}><Link to="/">Go Home</Link></button>
             </menu>
           </form>
         </dialog>
-
-        <button onClick={() => goToBriefing(navigate)}>← Case File</button>
-
-        <button onClick={() =>
-          (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
-        }>
-          Accuse
-        </button>
-        <dialog className="nes-dialog" id="accuse">
-          <form method="dialog">
-            <h3>Make Your Accusation</h3>
-            <p>Who do you think did it?</p>
-            {profiles.map(p => (
-              <button key={p.name} onClick={() => makeAccusation(p.name)}>
-                {p.name}
-              </button>
-            ))}
-            <menu className="dialog-menu">
-              <button>Cancel</button>
-            </menu>
-          </form>
-        </dialog>
-      </div>
+        </div>
+        
 
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
@@ -156,6 +181,7 @@ function Interrogate() {
                 {activeProfile.suspicionLevel} suspicion
               </span>
             </div>
+          
           </div>
         )}
 
@@ -199,9 +225,10 @@ function Interrogate() {
               disabled={isResponding}
               onChange={e => setInput(e.target.value)}
             />
-            <button type='submit' disabled={isResponding || !input.trim()}>
+            <button type='submit' onClick={playClickSound} disabled={isResponding || !input.trim()}>
               Submit
             </button>
+          
           </form>
         </div>
 
@@ -224,6 +251,7 @@ function Interrogate() {
           </form>
         </div>
 
+      
       </div>
     </div>
   );

@@ -1,30 +1,69 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useGameStore } from "./useGameStore";
-import CaseReportScreen from "./CaseReportScreen";
-import { Link } from 'react-router';
-import NotesPage from "./NotesPage";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 
 function NewGame() {
-    const { setSeed, startCase, phase } = useGameStore();
+    const { seed, setSeed, startCase } = useGameStore();
     const navigate = useNavigate();
+    const audioRef = useRef<HTMLAudioElement>(null);
 
     const [personalization, setPersonalization] = useState('');
     const [timePeriod, setTimePeriod] = useState(10); // Default value
     const [intensity, setIntensity] = useState(5); // Default value
     const [difficulty, setDifficulty] = useState(5); // Default value
-    
-    if (phase === "generating") {return <div className="loading">Building your case...</div>}
-    if (phase === "briefing") {return <CaseReportScreen />}
-    if (phase === "investigation") {return <NotesPage />}
+    const [isMuted, setIsMuted] = useState(false);
 
-    
+    // Setup background music on mount
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (audio) {
+            audio.volume = 0.3; // Set volume to 30%
+            audio.play().catch(err => console.log('Audio playback failed:', err));
+        }
+
+        return () => {
+            // Cleanup: stop music when component unmounts
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        };
+    }, []);
+
+    // Handle mute/unmute
+    const toggleMute = () => {
+        if (audioRef.current) {
+            if (isMuted) {
+                audioRef.current.play();
+            } else {
+                audioRef.current.pause();
+            }
+            setIsMuted(!isMuted);
+        }
+    };
+
+    const playClickSound = () => {
+      const audio = new Audio('../assets/Graphic_Pulse.mp3'); // Ensure you have a click sound at this path
+      audio.play();
+    }
 
     return (
       <div className="container">
+      <audio
+        ref={audioRef}
+        src="/assets/9jackjack8-the-triple-move-adventure-spy-jazz-409674.mp3"
+        loop
+      />
       <h1 className="title">Agentic Detective</h1>
       <p className="subtitle">Welcome to the game you create for yourself!</p>
+      <button
+        onClick={toggleMute}
+        className="detective-button"
+        style={{ marginBottom: '20px', maxWidth: '250px' }}
+      >
+        {isMuted ? 'Unmute Music' : 'Mute Music'}
+      </button>
       <input
         type="text"
         value={personalization}
@@ -74,17 +113,18 @@ function NewGame() {
         />
       </div>
         <button className="detective-button" onClick={()=>{
+          playClickSound();
           setSeed({
             freeText: personalization,        // "1920s jazz club", "remote Antarctic base", etc
             difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
             intensity: intensity 
           }) 
-          startCase(navigate) // Pass the seed as an argument
+          startCase(navigate);
+          navigate('/desk');
         }} >
-        Solve The Case!
+        SOLVE! 
       </button>
-        <Link to="/interrogate" className="start-button">Start Game</Link>
     </div>
     );
 }
