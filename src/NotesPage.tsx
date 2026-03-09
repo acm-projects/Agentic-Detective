@@ -188,9 +188,9 @@ export default function NotesPage() {
                       </div>
                     </div>
                     {/* Suspicion badge */}
-                    <div className={`suspicion-badge suspicion-${profile.suspicionLevel}`}>
+                    {/* <div className={`suspicion-badge suspicion-${profile.suspicionLevel}`}>
                       {profile.suspicionLevel}
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Tag selector */}
@@ -210,7 +210,7 @@ export default function NotesPage() {
                     ))}
                   </div>
 
-                  {/* Notes textarea */}
+                  {/* Notes text area */}
                   <div className="notepad-area">
                     <div className="notepad-label">Field Notes</div>
                     <textarea
@@ -299,7 +299,7 @@ export default function NotesPage() {
       </div>
       <div>
       <button className="back-btn" onClick={() =>goToBriefing(navigate)}>
-        ← Case Report
+        Case Report
       </button>
       <button className="back-btn" onClick={() =>navigate("/clues")}>
         Clues Page
