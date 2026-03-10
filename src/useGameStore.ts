@@ -128,7 +128,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   proceedToInvestigation: (navigate) => {
     set({ phase: "investigation" });
-    navigate("/investigate");
+    navigate("/interrogate");
   },
   // ── Open or resume a chat session with a suspect ──
   interrogateSuspects: (navigate) => {

@@ -191,10 +191,10 @@ RULES:
 8. The clues are going to be one of the following painting, cipher, letter/note, prints, jewelry, and weapons.
 
 Clues:
-1. id: clue_1; letter/note
+1. id: clue_1; jewel
 2. id: clue_2; weapon
 3. id: clue_3; painting
-4. id: clue_4; jewel
+4. id: clue_4; letter/note
 5. id: clue_5; cipher
 6. id: clue_6; fingerprint or other prints (shoe, paw, etc)
 

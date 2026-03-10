@@ -7,7 +7,7 @@ dotenv.config();
 const app = express();
 app.use(cors());
 
-const PORT = 5555;
+const PORT = 3001;
 
 app.get("/api/voice", async (req, res) => {
   console.log("Route was hit"); 

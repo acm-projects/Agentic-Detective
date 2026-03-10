@@ -8,14 +8,12 @@ const ZOOM = 2.0;        // zoom level
 
 interface LensPos { x: number; y: number; }
 
-type CaseReport = NonNullable<ReturnType<typeof useGameStore>["player"]>["caseReport"];
+import type { CaseFilePlayer } from "./caseFile";
 
-interface CaseReportScreenProps {
-  onClose?: () => void;
-  isModal?: boolean;
-}
+type CaseReport = CaseFilePlayer["caseReport"];
 
-export default function CaseReportScreen({ onClose, isModal = false }: CaseReportScreenProps) {
+export default function CaseReportScreen() {
+  const navigate = useNavigate();
   const { player, proceedToInvestigation } = useGameStore();
   const report = player?.caseReport;
 
@@ -45,13 +43,6 @@ export default function CaseReportScreen({ onClose, isModal = false }: CaseRepor
   }, []);
 
   const handleMouseLeave = useCallback(() => setLens(null), []);
-
-  const handleButtonClick = () => {
-    proceedToInvestigation();
-    if (onClose) {
-      onClose();
-    }
-  };
 
   if (!report) return null;
 
@@ -161,8 +152,8 @@ export default function CaseReportScreen({ onClose, isModal = false }: CaseRepor
           </div>
         </div>
 
-        <button className="begin-button" onClick={handleButtonClick}>
-          <span>{isModal ? 'Close Case Report' : 'Begin Investigation →'}</span>
+        <button className="begin-button" onClick={()=>proceedToInvestigation(navigate)}>
+          <span>Begin Investigation →</span>
         </button>
       </div>
     </div>

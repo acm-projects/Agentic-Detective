@@ -1,141 +1,521 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* Importing Press Start 2P for headings/pixel vibe 
+  Importing VT323 for readable 70s terminal/typewriter body text 
+*/
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 
-.game-container{
-  display: flex;
-  flex-direction: row;
-  height: 100vh;
-  width: 100vw;
+:root {
+  --bg-paper: #e0dcd3;   /* Vintage dossier beige */
+  --bg-dark: #d1cbb8;    /* Slightly darker beige for contrast */
+  --ink-color: #111111;  /* Almost black for thick outlines */
+  --white: #ffffff;
 }
 
-html {
+/* Base Styles */
+html, body {
   margin: 0;
   padding: 0;
   height: 100vh;
   width: 100vw;
-  background-color: #282c34; /* Same background color as the container */
+  background-color: var(--bg-paper);
+  color: var(--ink-color);
+  font-family: 'VT323', monospace;
+  overflow: hidden; /* Prevent unwanted scrolling outside containers */
+}
+
+.interrogate-container,
+.interrogate-container * {
+  color: var(--ink-color);
 }
 
 * {
   cursor: url('https://unpkg.com/nes.css/assets/cursor.png'), auto;
+  box-sizing: border-box; /* Ensures padding doesn't break flex layouts */
 }
 
-.interrogate-container {
-  font-family: 'Press Start 2P', cursive;
-  text-align: center;
-  color: white;
-  text-shadow: 3px 3px 6px #000000;
-  min-height: 100vh;
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.game-container {
+  display: flex;
+  flex-direction: row;
+  height: 100vh;
   width: 100vw;
+}
+
+/* ── Top Left Suspect Switcher ── */
+.suspect-switcher {
+  position: absolute;
+  top: 1.5em;
+  left: 1.5em;
+  z-index: 10;
+  background: var(--ink-color);
+  color: var(--white);
+  padding: 0.8em;
+  border: 3px solid var(--white);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
   display: flex;
   flex-direction: column;
-  background-image: url(assets/background2.png);
-  background-size: cover;
-  background-position: center;
-  padding: 1em;
 }
 
-h1 {
-    padding: .5em;
+.you-text {
+  color: var(--white);
 }
 
+.switch-suspect-text {
+  color: var(--white);
+}
+
+.suspect-switcher select {
+  margin-top: 0.8em;
+  background: var(--white);
+  color: var(--ink-color);
+  border: 2px solid var(--ink-color);
+  font-family: 'VT323', monospace;
+  font-size: 1.5rem;
+  padding: 0.2em;
+  cursor: pointer;
+}
+
+/* ── Sidebar Navigation ── */
+.navigate {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 2em 1em;
+  gap: 1.2em;
+  background-color: var(--bg-dark);
+  width: 15vw;
+  min-width: 180px;
+  height: 100vh;
+  border-right: 4px solid var(--ink-color);
+  /* A subtle grid background to look like a planner/terminal edge */
+  background-image: linear-gradient(var(--bg-paper) 1px, transparent 1px);
+  background-size: 100% 4px;
+}
+
+.navigate button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  padding: 1.2em 1.5em; /* Increased horizontal padding for a better "runway" */
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  color: var(--ink-color);
+  text-transform: uppercase;
+  cursor: pointer;
+  
+  /* Flexbox makes the alignment much more stable during the transition */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+}
+
+.navigate button span {
+  display: inline-block;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap; /* Keeps the arrow on one line while expanding */
+  transition: width 0.3s ease, opacity 0.2s ease, margin-right 0.3s ease;
+  pointer-events: none; /* Ensures the span doesn't interfere with clicks */
+}
+
+.navigate button:hover span {
+  width: 25px;       /* Adjust this based on your font size */
+  opacity: 1;
+  margin-right: 8px; /* Adds space between arrow and text only on hover */
+}
+
+.navigate button:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0 var(--ink-color);
+}
+
+.navigate button:hover {
+  background: var(--ink-color);
+  color: var(--white);
+  border: 3px solid var(--white);
+}
+
+/* ── Main Interrogation Area ── */
+.interrogate-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 2em;
+  background-color: var(--bg-paper);
+  /* Geometric background lines mimicking your sketch */
+  background-image: 
+    linear-gradient(45deg, rgba(17,17,17,0.03) 25%, transparent 25%, transparent 75%, rgba(17,17,17,0.03) 75%, rgba(17,17,17,0.03)), 
+    linear-gradient(45deg, rgba(17,17,17,0.03) 25%, transparent 25%, transparent 75%, rgba(17,17,17,0.03) 75%, rgba(17,17,17,0.03));
+  background-size: 60px 60px;
+  background-position: 0 0, 30px 30px;
+}
+
+/* ── Headers ── */
+.case-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 0.5em;
+  margin-top: 1em;
+}
+
+.case-title h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.8rem;
+  text-transform: uppercase;
+  background: var(--bg-paper);
+  padding: 0.2em 0.5em;
+  border: 4px solid var(--ink-color);
+  box-shadow: 6px 6px 0 var(--ink-color);
+  z-index: 2;
+}
+
+/* Geometric line cutting behind the title */
+.case-title::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 4px;
+  background: var(--ink-color);
+  z-index: 1;
+}
+
+.currently-interrogating-container {
+  display: flex;
+  justify-content: center;
+  align-self: center;
+  background: var(--white);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  padding: 0.8em 2em;
+  margin-bottom: 2em;
+}
+
+.currently-interrogating-container h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  margin: 0;
+  color: var(--ink-color);
+}
+
+/* ── Content Windows ── */
+.windows-container {
+  display: flex;
+  flex-direction: row;
+  gap: 2em;
+  justify-content: center;
+  align-items: stretch;
+  height: 65vh;
+}
+
+.interrogation-window {
+  display: flex;
+  flex-direction: column;
+  width: 55%;
+  gap: 1em;
+}
+
+/* ── Character Details ── */
+/* ── Character Details Layout Update ── */
 .character-container {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  min-width: 50vw;
-  max-height: 30vh;
-  background-color: rgba(256, 256, 256, 0.2);
-  align-self: center;
+  gap: 1em;
+  width: 100%;
+  align-items: stretch; /* Ensures both boxes are always the same height */
 }
 
-.stats {
-    padding: 1em;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    text-align: left;
+.character-avatar {
+  /* Changed from a fixed 160px to a flexible 40% width */
+  flex: 0 0 40%; 
+  min-height: 180px;
+  border: 4px solid var(--ink-color);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1em;
+  text-align: center;
+}
+
+.case-details {
+  /* Takes up the remaining 60% (minus the gap) */
+  flex: 1; 
+  border: 4px solid var(--ink-color);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  padding: 1em;
+  font-size: 1.4rem;
+  line-height: 1.2;
+}
+
+/* Ensure the mugshot scales to the new wider box */
+.character-avatar img {
+  width: 100%; /* Spans the width of the new larger container */
+  max-width: 220px; /* Prevents it from getting comically large */
+  height: auto;
+  border: 2px solid var(--ink-color);
+  object-fit: cover;
+  margin-bottom: 0.5em;
+}
+
+.case-details h2 { 
+  margin-top: 0; 
+  font-family: 'Press Start 2P', cursive; 
+  font-size: 0.9rem; 
+  text-transform: uppercase; 
+  border-bottom: 3px dashed var(--ink-color); 
+  padding-bottom: 0.5em; 
+}
+
+.case-details h4 { 
+  margin: 0.4em 0; 
+  font-weight: normal; 
+}
+
+/* Base styles for the tag shape */
+.suspicion-tag { 
+  display: inline-block; 
+  margin-top: 0.5em; 
+  padding: 0.4em 0.8em; 
+  font-family: 'Press Start 2P', cursive; 
+  font-size: 0.6em; 
+  text-transform: uppercase;
+  border: 2px solid var(--ink-color);
+  box-shadow: 2px 2px 0 var(--ink-color);
+}
+
+/* Green for Low */
+.suspicion-low {
+  background-color: #2e7d32; 
+  color: var(--white);
+}
+
+/* Yellow for Medium */
+.suspicion-medium {
+  background-color: #fbc02d; 
+  color: var(--ink-color); /* Dark ink for readability on yellow */
+}
+
+/* Red for High */
+.suspicion-high {
+  background-color: #c62828; 
+  color: var(--white);
+  /* Optional: adds a slight "danger" animation */
+  animation: pulse-red 2s infinite ease-in-out;
+}
+
+@keyframes pulse-red {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* ── Chatbot Area ── */
+.chatbot {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow: hidden;
+}
+
+.message-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 1em;
 }
 
 .chat-history {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    justify-self: center;
-    padding: 1em;
-    height: 25vh;
-    overflow-y: scroll;
-    width: 66vw;
-    background-color: white;
+  flex: 1;
+  border: 4px solid var(--ink-color);
+  background-color: var(--white);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  padding: 1.5em;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  font-size: 1.5rem;
 }
 
-.bot-message {
-  justify-self: flex-start;
+
+.bot-message, .player-message {
+  padding: 0.6em 1em;
+  max-width: 75%;
+  border: 3px solid var(--ink-color);
+  line-height: 1.3;
+  }
+  
+  
+  .bot-message {
+  align-self: flex-start;
   text-align: left;
-  max-width: 50vw;
-  background: rgb(255, 0, 0);
-  padding: 1em;
-  font-size: .66em;
+  background: var(--bg-dark);
+  color: var(--ink-color);
+  border-radius: 8px;
+  line-height: 1.4;
+  }
+  
+  
+  /* Player messages (right side) */
+  
+  .player-message {
+  align-self: flex-end;
+  text-align: left;
+  margin-left: 20vh;
+  background: var(--ink-color);
+  color: var(--white);
+  padding: 0.8em 1em;
+  border-radius: 8px;
+  line-height: 1.4;
+  } 
+
+/* ── Text Input & Submit ── */
+.question-submit-box {
+  display: flex;
+  gap: 1em;
+  height: 50px;
 }
 
-.player-message {
-  justify-self: flex-end;
-  text-align: right;
-  max-width: 50vw;
-  background: blue;
-  padding: 1em;
-  font-size: .66em;
+.question-box {
+  flex: 1;
+  height: 100%;
 }
 
-img {
-    height: 30vh;
+.question-box input {
+  width: 100%;
+  height: 100%;
+  padding: 0 1em;
+  border: 4px solid var(--ink-color);
+  font-family: 'VT323', monospace;
+  font-size: 1.5rem;
+  box-shadow: 4px 4px 0 var(--ink-color);
+  outline: none;
+  background: var(--white);
 }
 
-.chatbot {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: .5em;
-    background-color: rgb(73, 73, 73);
-    width: 75vw;
-    align-self: center;
-    margin: 1em;
+.question-box input:focus {
+  background: #fdfceb; /* Slight highlight when typing */
 }
 
-.suspect-switcher{
-    position: absolute;
-    left: 0px;
-    top: 0px;
+.submit-button button {
+  height: 100%;
+  padding: 0 1.5em;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+  background: var(--ink-color);
+  color: var(--white);
+  border: 4px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--bg-dark), 8px 8px 0 var(--ink-color);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: transform 0.1s, box-shadow 0.1s;
 }
 
-.navigate {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 1em;
-    gap: 1em;
-    background-color: rgb(73, 73, 73);
-    width: 20vw;
-    align-self: center;
-    height: 100vh;
+.submit-button button:active {
+  transform: translate(4px, 4px);
+  box-shadow: 4px 4px 0 var(--ink-color);
 }
 
-.notes {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    padding: 1em;
-    gap: 1em;
-    background-color: rgb(73, 73, 73);
-    width: 20vw;
-    align-self: center;
-    height: 100vh;
-    visibility: collapse;
-
+.submit-button button:disabled {
+  background: #555;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
 }
 
-.notes.open {
-    display: flex;
-    visibility: visible;
+/* ── Notes Notebook (Right Side) ── */
+.notes-window {
+  width: 35%;
+  background-color: #fdfae5; /* Pale notebook yellow */
+  border: 4px solid var(--ink-color);
+  box-shadow: 8px 8px 0 var(--ink-color);
+  position: relative;
+  padding: 2.5em 1.5em;
+  font-size: 1.6rem;
+  /* Notebook Ruled lines */
+  background-image: repeating-linear-gradient(transparent, transparent 1.9rem, #ccc 1.9rem, #ccc 2rem);
+  background-position: 0 3em;
+  border-radius: 0 15px 15px 0;
+}
+
+/* The spiral rings at the top */
+.notes-window::before {
+  content: '';
+  position: absolute;
+  top: -16px;
+  left: 15px;
+  right: 15px;
+  height: 25px;
+  background-image: radial-gradient(circle, var(--ink-color) 35%, transparent 40%);
+  background-size: 35px 25px;
+  background-repeat: repeat-x;
+}
+
+.notes-window h1 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 1em;
+  text-transform: uppercase;
+  background: #fdfae5; /* Mask the lines behind title */
+  display: inline-block;
+  padding: 0 0.5em;
+  border-bottom: 4px solid var(--ink-color);
+}
+
+/* ── Dialog Modals ── */
+.nes-dialog {
+  border: 5px solid var(--ink-color);
+  background: var(--bg-paper);
+  box-shadow: 10px 10px 0 var(--ink-color);
+  font-family: 'VT323', monospace;
+  font-size: 1.6rem;
+  color: var(--ink-color);
+  padding: 2em;
+}
+
+.nes-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.nes-dialog h3 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.2rem;
+  margin-top: 0;
+  border-bottom: 3px dashed var(--ink-color);
+  padding-bottom: 0.5em;
+}
+
+.dialog-menu {
+  display: flex;
+  gap: 1em;
+  justify-content: flex-end;
+  margin-top: 2em;
+  padding: 0;
+}
+
+.dialog-menu button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.8rem;
+  padding: 0.8em 1.2em;
+  background: var(--white);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  cursor: pointer;
 }
