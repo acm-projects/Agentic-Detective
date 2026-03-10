@@ -83,7 +83,7 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
-        <button onClick={() => goToBriefing(navigate)}>← Case File</button>
+        <button onClick={() => goToBriefing(navigate)}> <span> ← </span> Case File</button>
         <button onClick={() =>
           (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
         }>Accuse</button>
