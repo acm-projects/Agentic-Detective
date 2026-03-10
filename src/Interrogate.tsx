@@ -51,9 +51,9 @@ function Interrogate() {
     <div className='game-container'>
       {/* ── Nav bar — matches original structure ── */}
       <div className='navigate'>
-        <button onClick={() => proceedToInvestigation(navigate)}>Notes</button>
-        <button onClick = {() => navigate("/clues")}>Clues</button>
-        <button>Files</button>
+        <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
+        <button onClick = {() => navigate("/clues")}><span> ← </span>Clues</button>
+        <button><span> ← </span>Files</button>
         {/*<button onClick={() =>
           (document.getElementById('case-report') as HTMLDialogElement)?.showModal()
         }>
@@ -70,10 +70,10 @@ function Interrogate() {
           </form>
         </dialog> */}
         <button className="back-btn" onClick={() =>goToBriefing(navigate)}>Case Report</button>
-        <button><Link to="/desk">Desk</Link></button>
+        <button><Link to="/desk"><span> ← </span>Desk</Link></button>
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
-        }>Settings</button>
+        }><span> ← </span>Settings</button>
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
