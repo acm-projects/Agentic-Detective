@@ -1,0 +1,256 @@
+{
+  "storyline": {
+    "trueSequenceOfEvents": "Victor Sterling was working late on a new tech startup pitch. His former business partner, Marcus Thorne, arrived unannounced, demanding his share of profits. A heated argument ensued. Marcus, in a fit of rage, grabbed a heavy antique paperweight from Victor's desk and struck him. Victor fell, hitting his head on the corner of the desk, which was the fatal blow. Marcus, panicked, staged the scene to look like an accident.",
+    "murdererName": "Marcus Thorne",
+    "murderWeapon": "Antique paperweight and desk corner",
+    "murderLocation": "Victor Sterling's home office",
+    "murderTime": "Approximately 10:00 PM on October 26th, 2003",
+    "hiddenBackstory": "Victor Sterling and Marcus Thorne were childhood friends who started a tech company together in the late 90s. Victor pushed Marcus out of the company a year ago, claiming Marcus was not pulling his weight, but secretly he had been siphoning funds for his own ventures. Marcus suspected Victor was hiding something and had been investigating.",
+    "contradictions": [
+      {
+        "suspectName": "Marcus Thorne",
+        "theirClaim": "I was at home all night, feeling unwell.",
+        "actualTruth": "He was at Victor Sterling's office confronting him.",
+        "exposedByClueId": "clue_phone_records",
+        "exposedByDialogue": "Marcus Thorne's hesitant responses about his whereabouts and a conflicting witness statement."
+      },
+      {
+        "suspectName": "Marcus Thorne",
+        "theirClaim": "I haven't seen Victor in months. We had a falling out.",
+        "actualTruth": "He visited Victor on the night of the murder.",
+        "exposedByClueId": "clue_witness_neighbor",
+        "exposedByDialogue": "His initial denial of being near the victim's house."
+      },
+      {
+        "suspectName": "Eleanor Vance",
+        "theirClaim": "Victor was stressed but excited about a new investor meeting.",
+        "actualTruth": "Victor was worried about a financial audit and a former partner.",
+        "exposedByClueId": "clue_financial_report",
+        "exposedByDialogue": "Her downplaying of Victor's financial troubles."
+      }
+    ],
+    "difficultyNotes": "The misleading clues are the seemingly accidental fall and Eleanor Vance's slightly altered testimony, which might point to a business dispute with an unknown party. Marcus Thorne's initial alibi is weak, but the phone records and neighbor's statement are key. Requires 2-3 interrogations to break Marcus's alibi."
+  },
+  "suspects": [
+    {
+      "id": "marcus_thorne",
+      "name": "Marcus Thorne",
+      "age": 35,
+      "occupation": "Former Tech Partner",
+      "relationshipToVictim": "Estranged business partner and childhood friend",
+      "personality": "Aggressive, resentful, outwardly confident but inwardly insecure.",
+      "physicalDescription": "A middle-aged man with a rugged build. He wears a worn, slightly too-small leather jacket over a faded band t-shirt, and his face looks weathered from late nights and stress. His dark hair is often disheveled.",
+      "avatarId": "avatar_06",
+      "trueAlibi": "Was at Victor Sterling's home office, arguing with him, and committed the murder.",
+      "claimedAlibi": "Was at home all night, feeling unwell with a bad flu.",
+      "trueMotive": "Revenge and financial desperation after being pushed out of their company.",
+      "isGuilty": true,
+      "honestyLevel": "deceptive",
+      "secretTheyreHiding": "He was the one who argued with Victor and caused his death.",
+      "lyingTells": "Becomes agitated and defensive when questioned about his whereabouts on the night of the murder. Avoids eye contact when discussing Victor.",
+      "knowledgeOfOtherSuspects": "Knows Sarah Jenkins was Victor's assistant and likely privy to some business dealings. Suspects Eleanor Vance might have been involved in business with Victor. Doesn't know much about Dr. Anya Sharma.",
+      "conversationsNeededToBreak": 5
+    },
+    {
+      "id": "eleanor_vance",
+      "name": "Eleanor Vance",
+      "age": 42,
+      "occupation": "Venture Capitalist",
+      "relationshipToVictim": "Potential investor",
+      "personality": "Sharp, business-minded, pragmatic, and somewhat aloof.",
+      "physicalDescription": "A middle-aged woman in a well-tailored professional blazer and crisp blouse. Her dark hair is pulled back neatly, and her demeanor is composed and polished, with a hint of impatience.",
+      "avatarId": "avatar_03",
+      "trueAlibi": "Was at a late-night networking event across town until midnight. She had a brief call with Victor earlier that evening about his pitch.",
+      "claimedAlibi": "Was working late at her office preparing for a meeting. Mentions Victor was stressed about finances but excited about a new investor.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "partially_honest",
+      "secretTheyreHiding": "She was Victor's last known contact and is downplaying the tense nature of their conversation, which was about Victor's financial instability.",
+      "lyingTells": "Slightly evasive when asked about the specifics of her last conversation with Victor.",
+      "knowledgeOfOtherSuspects": "Knows Marcus Thorne was Victor's former partner and they had a bitter falling out. Has met Sarah Jenkins briefly. Has no knowledge of Dr. Anya Sharma.",
+      "conversationsNeededToBreak": 2
+    },
+    {
+      "id": "sarah_jenkins",
+      "name": "Sarah Jenkins",
+      "age": 24,
+      "occupation": "Victim's Personal Assistant",
+      "relationshipToVictim": "Employee",
+      "personality": "Loyal, nervous, observant, and slightly overwhelmed.",
+      "physicalDescription": "A young woman with bright, observant eyes, dressed in casual but neat clothing like jeans and a simple sweater. She has an approachable look, though she appears anxious.",
+      "avatarId": "avatar_02",
+      "trueAlibi": "Left Victor's office at 7:00 PM and went straight home to her apartment. She saw Marcus Thorne's car parked a few blocks away around 9:30 PM.",
+      "claimedAlibi": "Left work at 7:00 PM and went home. Mentions Victor seemed preoccupied lately but didn't confide in her.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "honest",
+      "secretTheyreHiding": null,
+      "lyingTells": null,
+      "knowledgeOfOtherSuspects": "Knows Marcus Thorne was Victor's ex-partner and their relationship was toxic. Knows Eleanor Vance was a potential investor Victor was trying to impress. Has never met Dr. Anya Sharma.",
+      "conversationsNeededToBreak": 1
+    },
+    {
+      "id": "dr_anya_sharma",
+      "name": "Dr. Anya Sharma",
+      "age": 60,
+      "occupation": "Victim's Neighbor and Retired Academic",
+      "relationshipToVictim": "Neighbor",
+      "personality": "Observant, private, and somewhat detached, with a sharp intellect.",
+      "physicalDescription": "An older woman with neatly styled white hair, dressed in a sharp, dark grey formal suit. Her expression is stern and her posture is rigid, conveying an air of authority and reserve.",
+      "avatarId": "avatar_01",
+      "trueAlibi": "Was at home reading a book from 8:00 PM onwards. Heard raised voices from Victor's office around 10:00 PM.",
+      "claimedAlibi": "Was at home reading. Heard some commotion from Victor's place around 10 PM but assumed it was a late-night work call.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "honest",
+      "secretTheyreHiding": null,
+      "lyingTells": null,
+      "knowledgeOfOtherSuspects": "Recognizes Marcus Thorne as Victor's former partner from past arguments. Has seen Eleanor Vance visit Victor. Doesn't know Sarah Jenkins.",
+      "conversationsNeededToBreak": 1
+    }
+  ],
+  "characterProfiles": [
+    {
+      "id": "marcus_thorne",
+      "name": "Marcus Thorne",
+      "age": 35,
+      "occupation": "Former Tech Partner",
+      "relationshipToVictim": "Estranged business partner and childhood friend",
+      "personalityBlurb": "Aggressive and resentful, he blames the victim for his current financial woes. Seems to have a short temper.",
+      "claimedAlibi": "Was at home all night, feeling unwell with a bad flu.",
+      "physicalDescription": "A middle-aged man with a rugged build, wearing a worn leather jacket and disheveled hair. He has a weathered face and appears stressed.",
+      "avatarId": "avatar_06",
+      "suspicionLevel": "high",
+      "chatHistory": [""]
+    },
+    {
+      "id": "eleanor_vance",
+      "name": "Eleanor Vance",
+      "age": 42,
+      "occupation": "Venture Capitalist",
+      "relationshipToVictim": "Potential investor",
+      "personalityBlurb": "A sharp and composed businesswoman. She seems focused on business and possibly hiding details about her last interaction with the victim.",
+      "claimedAlibi": "Was working late at her office preparing for a meeting. Mentions Victor was stressed about finances.",
+      "physicalDescription": "A middle-aged woman in a professional blazer, her appearance is polished and composed. Her dark hair is neatly styled.",
+      "avatarId": "https://ih1.redbubble.net/image.5653390764.7646/raf,360x360,075,t,fafafa:ca443f4786.u1.jpg",
+      "suspicionLevel": "medium",
+      "chatHistory": [""]
+    },
+    {
+      "id": "sarah_jenkins",
+      "name": "Sarah Jenkins",
+      "age": 24,
+      "occupation": "Victim's Personal Assistant",
+      "relationshipToVictim": "Employee",
+      "personalityBlurb": "Appears loyal and observant, but nervous. She seems genuinely upset and potentially holds key information about the victim's recent activities.",
+      "claimedAlibi": "Left work at 7:00 PM and went straight home.",
+      "physicalDescription": "A young woman with bright, kind eyes, dressed in casual, neat clothes. She looks approachable but anxious.",
+      "avatarId": "avatar_02",
+      "suspicionLevel": "low",
+      "chatHistory": [""]
+    },
+    {
+      "id": "dr_anya_sharma",
+      "name": "Dr. Anya Sharma",
+      "age": 60,
+      "occupation": "Victim's Neighbor and Retired Academic",
+      "relationshipToVictim": "Neighbor",
+      "personalityBlurb": "An elderly woman who is reserved and observant. She seems to keep to herself but heard something unusual on the night of the murder.",
+      "claimedAlibi": "Was at home reading a book. Heard raised voices from Victor's office around 10:00 PM.",
+      "physicalDescription": "An elderly man with sharp, stern features and white hair, dressed in a formal suit. He has an authoritative presence.",
+      "avatarId": "avatar_01",
+      "suspicionLevel": "low",
+      "chatHistory": [""]
+    }
+  ],
+  "caseReport": {
+    "caseTitle": "The Sterling Silicon Scandal",
+    "caseId": "2003-10-27-SSR",
+    "setting": "Late 2003, the height of the dot-com era's aftermath. A sleek, modern home office in a suburban neighborhood.",
+    "date": "October 27th, 2003",
+    "victim": {
+      "name": "Victor Sterling",
+      "age": 38,
+      "occupation": "Tech Entrepreneur",
+      "background": "Known for his ambitious nature and recent struggles to secure funding for his new startup.",
+      "causeOfDeath": "Blunt force trauma to the head, consistent with a fall or a blow.",
+      "bodyFoundAt": "His home office desk."
+    },
+    "officialBriefing": "The victim, Victor Sterling, was found deceased in his home office this morning by his assistant. Initial assessment suggests the death may have resulted from an accident, but suspicious circumstances warrant a full investigation. We need to determine if foul play was involved and identify any potential perpetrators.",
+    "knownFacts": [
+      "The victim was found slumped over his desk.",
+      "The office appeared somewhat disheveled, suggesting a struggle or an accident.",
+      "The victim was known to be under significant financial pressure.",
+      "Several individuals had recent contact or business dealings with the victim."
+    ],
+    "openQuestions": [
+      "Was the victim's death an accident or a homicide?",
+      "Who was the last person to see Victor Sterling alive?",
+      "What was the nature of Victor Sterling's recent professional and personal relationships?",
+      "Were there any financial disputes or motives for murder?"
+    ]
+  },
+  "clues": [
+    {
+      "id": "clue_phone_records",
+      "name": "Victim's Phone Records",
+      "description": "Records show a series of increasingly frantic calls from Marcus Thorne to Victor Sterling in the hours leading up to the estimated time of death. The last outgoing call from Victor's landline was to Eleanor Vance earlier in the evening.",
+      "location": "Victim's desk",
+      "couldImplicateSuspects": [
+        "Marcus Thorne",
+        "Eleanor Vance"
+      ],
+      "isDecisive": false
+    },
+    {
+      "id": "clue_financial_report",
+      "name": "Torn Financial Report",
+      "description": "A crumpled and torn section of a financial audit report is found near the victim's wastebasket. It indicates significant discrepancies and potential fraud, far exceeding what Eleanor Vance might have known.",
+      "location": "Victim's office floor",
+      "couldImplicateSuspects": [
+        "Marcus Thorne"
+      ],
+      "isDecisive": false
+    },
+    {
+      "id": "clue_witness_neighbor",
+      "name": "Neighbor's Statement",
+      "description": "Dr. Anya Sharma reported hearing loud, angry voices coming from Victor Sterling's office around 10:00 PM, specifically mentioning a man's voice she didn't recognize as Victor's. She also noted seeing a car matching Marcus Thorne's description parked nearby earlier in the evening.",
+      "location": "Witness Interview",
+      "couldImplicateSuspects": [
+        "Marcus Thorne"
+      ],
+      "isDecisive": true
+    },
+    {
+      "id": "clue_antique_paperweight",
+      "name": "Heavy Antique Paperweight",
+      "description": "A heavy, ornate antique paperweight sits on the victim's desk. It has a small, almost imperceptible smudge that could be blood, and its weight suggests it could be used as a weapon. It seems out of place with the modern tech setup.",
+      "location": "Victim's desk",
+      "couldImplicateSuspects": [
+        "Marcus Thorne"
+      ],
+      "isDecisive": false
+    },
+    {
+      "id": "clue_dislodged_desk_corner",
+      "name": "Dislodged Desk Corner",
+      "description": "A corner of the victim's heavy oak desk has a fresh chip and scuff marks, as if something heavy struck it with force. This is consistent with the victim falling or being thrown against it.",
+      "location": "Victim's desk",
+      "couldImplicateSuspects": [
+        "Marcus Thorne"
+      ],
+      "isDecisive": false
+    },
+    {
+      "id": "clue_late_night_call_log",
+      "name": "Victim's Call Log (Digital)",
+      "description": "Victor Sterling's computer shows a brief, outgoing video call log to Eleanor Vance at 9:45 PM, ending abruptly. This contradicts Eleanor's claim of only having a phone call earlier.",
+      "location": "Victim's computer",
+      "couldImplicateSuspects": [
+        "Eleanor Vance"
+      ],
+      "isDecisive": false
+    }
+  ]
+}

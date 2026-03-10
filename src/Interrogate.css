@@ -212,17 +212,21 @@ a {
 .windows-container {
   display: flex;
   flex-direction: row;
-  gap: 2em;
+  gap: 1.5rem;
   justify-content: center;
   align-items: stretch;
-  height: 65vh;
+  /* Use flex-grow to fill the height instead of a fixed 65vh */
+  flex: 1; 
+  min-height: 0; /* Critical for nested scrollbars to work */
+  margin-bottom: 1rem;
 }
 
 .interrogation-window {
   display: flex;
   flex-direction: column;
-  width: 55%;
-  gap: 1em;
+  flex: 2; /* Takes 2/3 of the horizontal space */
+  gap: 1rem;
+  min-width: 0;
 }
 
 /* ── Character Details ── */
@@ -230,15 +234,14 @@ a {
 .character-container {
   display: flex;
   flex-direction: row;
-  gap: 1em;
-  width: 100%;
-  align-items: stretch; /* Ensures both boxes are always the same height */
+  gap: 1rem;
+  /* Cap the height so it doesn't squash the chat */
+  flex: 0 0 auto; 
+  max-height: 200px; 
 }
 
 .character-avatar {
-  /* Changed from a fixed 160px to a flexible 40% width */
-  flex: 0 0 40%; 
-  min-height: 180px;
+  flex: 0 0 150px; /* Fixed width for the mugshot */
   border: 4px solid var(--ink-color);
   background-color: var(--white);
   box-shadow: 4px 4px 0 var(--ink-color);
@@ -246,44 +249,41 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1em;
-  text-align: center;
+  padding: 0.5rem;
+  overflow: hidden;
 }
 
 .case-details {
-  /* Takes up the remaining 60% (minus the gap) */
   flex: 1; 
   border: 4px solid var(--ink-color);
   background-color: var(--white);
   box-shadow: 4px 4px 0 var(--ink-color);
-  padding: 1em;
-  font-size: 1.4rem;
-  line-height: 1.2;
+  padding: 0.8rem;
+  font-size: 1.1rem;
+  line-height: 1.1;
+  overflow-y: auto; /* Scrollable if claims are too long */
 }
 
 /* Ensure the mugshot scales to the new wider box */
 .character-avatar img {
-  width: 100%; /* Spans the width of the new larger container */
-  max-width: 220px; /* Prevents it from getting comically large */
-  height: auto;
-  border: 2px solid var(--ink-color);
-  object-fit: cover;
-  margin-bottom: 0.5em;
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+}
+
+.character-avatar p {
+    font-size: 0.6rem;
+    margin: 4px 0 0 0;
+    font-family: 'Press Start 2P';
 }
 
 .case-details h2 { 
-  margin-top: 0; 
-  font-family: 'Press Start 2P', cursive; 
-  font-size: 0.9rem; 
-  text-transform: uppercase; 
-  border-bottom: 3px dashed var(--ink-color); 
-  padding-bottom: 0.5em; 
+  margin: 0 0 0.4rem 0;
+  font-size: 0.8rem;
+  border-bottom: 2px dashed var(--ink-color);
 }
 
-.case-details h4 { 
-  margin: 0.4em 0; 
-  font-weight: normal; 
-}
+.case-details h4 { margin: 0.2rem 0; font-weight: normal; }
 
 /* Base styles for the tag shape */
 .suspicion-tag { 
@@ -325,18 +325,16 @@ a {
 
 /* ── Chatbot Area ── */
 .chatbot {
-  flex: 1;
+  flex: 1; /* This tells the chat to take ALL remaining vertical space */
   display: flex;
   flex-direction: column;
-  width: 100%;
-  overflow: hidden;
+  min-height: 0; /* Allows inner chat-history to scroll */
 }
 
 .message-form {
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 1em;
 }
 
 .chat-history {
@@ -344,12 +342,9 @@ a {
   border: 4px solid var(--ink-color);
   background-color: var(--white);
   box-shadow: 4px 4px 0 var(--ink-color);
-  padding: 1.5em;
+  padding: 1rem;
   overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 1em;
-  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 
