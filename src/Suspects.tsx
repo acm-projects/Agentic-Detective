@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import './Suspects.css';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Suspects() {
   const [selectedSuspect, setSelectedSuspect] = useState();
+  const navigate = useNavigate();
   const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
   const profiles = player?.characterProfiles ?? [];
   const activeProfile = useActiveSuspectProfile();
@@ -41,6 +43,14 @@ function Suspects() {
                 </button>
               ))}
             </div>
+            <div>
+              <br /> <br />
+            </div>
+            <button 
+              className='back-button'
+              onClick = {() => navigate("/interrogate")}>
+                <span> ← </span>Return to Interrogation
+            </button>
           </div>
 
           {/* Right Main Area - Suspect Details */}

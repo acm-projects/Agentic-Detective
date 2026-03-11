@@ -16,7 +16,7 @@ html, body {
   padding: 0;
   height: 100vh;
   width: 100vw;
-  background-color: var(--bg-paper);
+  background-color: var(--ink-color);
   color: var(--ink-color);
   font-family: 'VT323', monospace;
   overflow: hidden; /* Prevent unwanted scrolling outside containers */

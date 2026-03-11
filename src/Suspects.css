@@ -79,7 +79,7 @@ a {
 .suspects-sidebar {
   display: flex;
   flex-direction: column;
-  width: 50%;
+  width: 110%;
   background-color: var(--white);
   border: 4px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
@@ -100,12 +100,12 @@ a {
 .suspect-list {
   display: flex;
   flex-direction: column;
-  gap: 0.8em;
+  gap: 1em;
   overflow-y: auto;
 }
 
 .suspect-button {
-  padding: 0.8em 1em;
+  padding: 1em 1em;
   background-color: var(--bg-paper);
   border: 3px solid var(--ink-color);
   box-shadow: 3px 3px 0 var(--ink-color);
@@ -116,6 +116,49 @@ a {
   transition: all 0.1s;
   text-align: left;
   text-transform: uppercase;
+}
+
+.back-button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  padding: 1.2em 1.5em; /* Increased horizontal padding for a better "runway" */
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  color: var(--ink-color);
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s, 0.1s;
+}
+
+.back-button:hover {
+  background: var(--ink-color);
+  color: var(--white);
+  border: 3px solid var(--white);
+}
+
+.back-button span {
+  display: inline-block;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap; /* Keeps the arrow on one line while expanding */
+  transition: width 0.3s ease, opacity 0.2s ease, margin-right 0.3s ease;
+  pointer-events: none; /* Ensures the span doesn't interfere with clicks */
+}
+
+.back-button:hover span {
+  width: 25px;       /* Adjust this based on your font size */
+  opacity: 1;
+  margin-right: 8px; /* Adds space between arrow and text only on hover */
+}
+
+.back-button:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0 var(--ink-color);
 }
 
 .suspect-button:hover {
