@@ -1,55 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './Suspects.css';
-
-const dummySuspects = [
-  {
-    id: 1,
-    name: "Vikram Singh",
-    age: 45,
-    occupation: "Businessman",
-    relationshipToVictim: "Business Rival",
-    personalityBlurb: "Ambitious, volatile, and prone to outbursts. He carries a heavy burden of past grievances.",
-    claimedAlibi: "I was at the bar across town the entire evening.",
-    suspicionLevel: "high",
-    avatarId: "avatar_02"
-  },
-  {
-    id: 2,
-    name: "Priya Sharma",
-    age: 28,
-    occupation: "Art Curator",
-    relationshipToVictim: "Niece",
-    personalityBlurb: "Reserved, observant, and carries a quiet sadness. She is often overlooked but misses little.",
-    claimedAlibi: "I retired to my room with a headache before the commotion started.",
-    suspicionLevel: "medium",
-    avatarId: "avatar_01"
-  },
-  {
-    id: 3,
-    name: "Arjun Mehta",
-    age: 38,
-    occupation: "Real Estate Developer",
-    relationshipToVictim: "Business Associate",
-    personalityBlurb: "Smooth-talking, ambitious, and outwardly charming, but with a calculating edge.",
-    claimedAlibi: "I was admiring the art collection in the west wing.",
-    suspicionLevel: "medium",
-    avatarId: "avatar_03"
-  },
-  {
-    id: 4,
-    name: "Dr. Ananya Rao",
-    age: 55,
-    occupation: "Doctor",
-    relationshipToVictim: "Family Friend",
-    personalityBlurb: "Calm, collected, and professional, but with a hint of weariness. She speaks with precision.",
-    claimedAlibi: "I was in my private study reviewing patient files.",
-    suspicionLevel: "low",
-    avatarId: "avatar_04"
-  }
-];
+import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
 
 function Suspects() {
-  const [selectedSuspect, setSelectedSuspect] = useState(dummySuspects[0]);
+  const [selectedSuspect, setSelectedSuspect] = useState();
+  const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
+  const profiles = player?.characterProfiles ?? [];
+  const activeProfile = useActiveSuspectProfile();
+
+  useEffect(() => {
+    if (!activeSuspectName && profiles.length > 0) {
+      setSelectedSuspect(profiles[0].name);
+    }
+  }, []);
+
 
   return (
     <div className="suspects-wrapper">
@@ -67,10 +31,10 @@ function Suspects() {
               <h3>SUSPECT PAGE</h3>
             </div>
             <div className="suspect-list">
-              {dummySuspects.map((suspect) => (
+              {profiles.map((suspect) => (
                 <button
-                  key={suspect.id}
-                  className={`suspect-button ${selectedSuspect.id === suspect.id ? 'active' : ''}`}
+                  key={suspect?.id}
+                  className={`suspect-button ${selectedSuspect?.id === suspect?.id ? 'active' : ''}`}
                   onClick={() => setSelectedSuspect(suspect)}
                 >
                   {suspect.name}
@@ -90,11 +54,11 @@ function Suspects() {
               <div className="suspect-name-section">
                 <h4>NAME</h4>
                 <div className="suspect-info">
-                  <p>{selectedSuspect.name}</p>
+                  <p>{activeProfile?.name.toUpperCase()}</p>
                   <ul>
-                    <li>Age: {selectedSuspect.age}</li>
-                    <li>Occupation: {selectedSuspect.occupation}</li>
-                    <li>Relationship to Victim: {selectedSuspect.relationshipToVictim}</li>
+                    <li>Age: {activeProfile?.age}</li>
+                    <li>Occupation: {activeProfile?.occupation}</li>
+                    <li>Relationship to Victim: {activeProfile?.relationshipToVictim}</li>
                   </ul>
                 </div>
               </div>
@@ -105,23 +69,23 @@ function Suspects() {
                 <div className="polaroid">
                   <div className="polaroid-content">
                     <img
-                      src={`/avatars/${selectedSuspect.avatarId}.png`}
-                      alt={selectedSuspect.name}
+                      src={`/avatars/${activeProfile?.avatarId}.png`}
+                      alt={activeProfile?.name}
                       onError={e => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   </div>
-                  <p className="polaroid-label">{selectedSuspect.name}</p>
+                  <p className="polaroid-label">{activeProfile?.name}</p>
                 </div>
 
                 {/* BioData Section */}
                 <div className="biodata-section">
                   <h4>BIODATA</h4>
                   <ul>
-                    <li>{selectedSuspect.personalityBlurb}</li>
-                    <li>"<em>{selectedSuspect.claimedAlibi}</em>"</li>
-                    <li>Suspicion: <span className={`suspicion-tag suspicion-${selectedSuspect.suspicionLevel}`}>{selectedSuspect.suspicionLevel.toUpperCase()}</span></li>
+                    <li>{activeProfile?.personalityBlurb}</li>
+                    <li>"<em>{activeProfile?.claimedAlibi}</em>"</li>
+                    <li>Suspicion: <span className={`suspicion-tag suspicion-${activeProfile?.suspicionLevel}`}>{activeProfile?.suspicionLevel.toUpperCase()}</span></li>
                   </ul>
                 </div>
               </div>
