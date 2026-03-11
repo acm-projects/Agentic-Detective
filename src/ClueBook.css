@@ -26,7 +26,6 @@
   position: fixed;
   inset: 0;
   background: var(--px-bg);
-  /* wooden desk texture via repeating gradient */
   background-image:
     repeating-linear-gradient(
       92deg,
@@ -43,7 +42,7 @@
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 40px 20px 80px;
+  padding: 32px 24px 60px;
   font-family: 'Press Start 2P', monospace;
   image-rendering: pixelated;
 }
@@ -52,23 +51,19 @@
 .clue-book {
   position: relative;
   width: 100%;
-  max-width: 820px;
+  max-width: 1200px;
+  min-height: calc(100vh - 80px);
   background: var(--px-paper);
-  /* pixelated border via box-shadow stacking */
   box-shadow:
-    /* pixel border */
     -4px 0   0 var(--px-border),
      4px 0   0 var(--px-border),
      0  -4px 0 var(--px-border),
      0   4px 0 var(--px-border),
-    /* outer shadow */
     8px 8px 0 var(--px-dark),
-    /* depth layers */
     0 20px 60px rgba(0,0,0,0.7),
     0 40px 80px rgba(0,0,0,0.4);
-  padding: 32px;
+  padding: 32px 32px 48px;
   animation: bookIn 0.4s steps(8, end) both;
-  /* pixel grid overlay */
   background-image:
     repeating-linear-gradient(
       transparent, transparent 7px,
@@ -80,6 +75,8 @@
       rgba(139,105,20,0.04) 7px, rgba(139,105,20,0.04) 8px
     );
   background-color: var(--px-paper);
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes bookIn {
@@ -93,6 +90,7 @@
   width: 16px;
   height: 16px;
   background: var(--px-border);
+  z-index: 2;
 }
 .pixel-corner.tl { top: 0;    left: 0; }
 .pixel-corner.tr { top: 0;    right: 0; }
@@ -102,13 +100,13 @@
 /* ── Header ── */
 .clue-book-header {
   text-align: center;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
   padding-bottom: 20px;
   border-bottom: 4px solid var(--px-border);
   position: relative;
+  flex-shrink: 0;
 }
 
-/* pixel step border */
 .clue-book-header::after {
   content: '';
   position: absolute;
@@ -122,9 +120,7 @@
   font-family: 'Press Start 2P', monospace;
   font-size: 28px;
   color: var(--px-red);
-  text-shadow:
-    3px 3px 0 #660000,
-    6px 6px 0 #330000;
+  text-shadow: 3px 3px 0 #660000, 6px 6px 0 #330000;
   letter-spacing: 6px;
   display: block;
   margin-bottom: 8px;
@@ -148,12 +144,25 @@
   margin-top: 8px;
 }
 
-/* ── Clue grid ── */
+/* ── Main body: grid + detail side by side ── */
+.clue-book-body {
+  display: grid;
+  /* grid-template-columns: 340px 1fr;
+  gap: 24px; */
+  flex: 1;
+  min-height: 0;;
+  grid-template-columns: 3fr 2fr; /* left grid / right detail */
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+/* ── Clue grid — left column, 2 cols × 3 rows ── */
 .clue-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: .33fr .33fr .33fr;
   gap: 12px;
-  margin-bottom: 24px;
+  align-content: start;
 }
 
 .clue-empty {
@@ -171,9 +180,8 @@
   background: var(--px-tan);
   border: none;
   cursor: pointer;
-  padding: 12px 8px 10px;
+  padding: 14px 8px 12px;
   text-align: center;
-  /* pixelated card border */
   box-shadow:
     -2px 0   0 var(--px-border),
      2px 0   0 var(--px-border),
@@ -183,6 +191,11 @@
   transition: transform 0.05s steps(2, end), box-shadow 0.05s steps(2, end);
   animation: cardIn 0.3s steps(4, end) both;
   font-family: 'Press Start 2P', monospace;
+  aspect-ratio: 3/2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 @keyframes cardIn {
@@ -220,9 +233,7 @@
      3px 3px 0 var(--px-dark);
 }
 
-.clue-card.decisive {
-  background: #d4b870;
-}
+.clue-card.decisive { background: #d4b870; }
 
 .clue-card.examined::after {
   content: '✓';
@@ -234,7 +245,6 @@
   font-family: 'Press Start 2P', monospace;
 }
 
-/* NEW badge */
 .clue-new-badge {
   position: absolute;
   top: -6px;
@@ -253,7 +263,6 @@
   50%       { opacity: 0; }
 }
 
-/* Star badge for decisive */
 .clue-decisive-badge {
   position: absolute;
   top: 4px;
@@ -263,25 +272,28 @@
   text-shadow: 1px 1px 0 #7a5a00;
 }
 
-/* Icon */
 .pixel-icon-wrap {
-  font-size: 24px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
   margin: 0 auto 8px;
   image-rendering: pixelated;
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.4));
-  line-height: 1;
 }
 
 .pixel-icon-wrap.large {
-  font-size: 40px;
+  width: 72px;
+  height: 72px;
 }
 
-.pixel-icon-wrap.decisive {
-  filter: drop-shadow(2px 2px 0 rgba(212,168,32,0.6));
+.pixel-icon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
 }
 
-/* Card text */
 .clue-card-name {
   font-size: 6px;
   color: var(--px-border);
@@ -300,7 +312,7 @@
   opacity: 0.8;
 }
 
-/* ── Detail panel ── */
+/* ── Detail panel — right column ── */
 .clue-detail {
   position: relative;
   background: var(--px-dark);
@@ -311,9 +323,12 @@
      0  -2px 0 var(--px-border),
      0   2px 0 var(--px-border),
     inset 0 0 0 2px rgba(255,255,255,0.03);
-  padding: 20px;
+  padding: 28px;
   overflow: hidden;
   animation: detailIn 0.2s steps(4, end) both;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 @keyframes detailIn {
@@ -321,7 +336,6 @@
   to   { opacity: 1; transform: translateX(0); }
 }
 
-/* Scanlines */
 .clue-detail-scanlines {
   position: absolute;
   inset: 0;
@@ -336,18 +350,11 @@
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  margin-bottom: 0;
   position: relative;
 }
 
 .clue-detail-icon-large {
   flex-shrink: 0;
-  width: 56px;
-  height: 56px;
-  background: rgba(255,255,255,0.05);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   box-shadow:
     -2px 0   0 rgba(255,255,255,0.1),
      2px 0   0 rgba(255,255,255,0.1),
@@ -356,22 +363,22 @@
 }
 
 .clue-detail-name {
-  font-size: 9px;
+  font-size: 20px;
   color: var(--px-paper);
   letter-spacing: 1px;
   line-height: 1.6;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .clue-detail-location {
-  font-size: 6px;
+  font-size: 12px;
   color: var(--px-gray);
   letter-spacing: 1px;
   margin-bottom: 6px;
 }
 
 .clue-detail-decisive {
-  font-size: 6px;
+  font-size: 10px;
   color: var(--px-gold);
   letter-spacing: 1px;
 }
@@ -383,9 +390,9 @@
   background: var(--px-red);
   color: var(--px-white);
   border: none;
-  width: 20px;
-  height: 20px;
-  font-size: 8px;
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
   cursor: pointer;
   font-family: 'Press Start 2P', monospace;
   display: flex;
@@ -404,42 +411,43 @@
     var(--px-brown) 0px, var(--px-brown) 6px,
     transparent 6px, transparent 10px
   );
-  margin: 14px 0;
+  margin: 18px 0;
 }
 
 .clue-detail-description {
-  font-size: 7px;
+  font-size: 15px;
   color: var(--px-tan);
-  line-height: 2.2;
+  line-height: 2.4;
   letter-spacing: 0.5px;
   position: relative;
   z-index: 1;
+  flex: 1;
 }
 
 .clue-detail-suspects {
-  margin-top: 16px;
+  margin-top: 20px;
   position: relative;
   z-index: 1;
 }
 
 .clue-suspects-label {
-  font-size: 6px;
+  font-size: 10px;
   color: var(--px-gray);
   letter-spacing: 2px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
 .clue-suspects-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .clue-suspect-tag {
-  font-size: 6px;
+  font-size: 8px;
   background: rgba(139, 26, 26, 0.3);
   color: var(--px-red-light);
-  padding: 3px 8px;
+  padding: 4px 10px;
   letter-spacing: 1px;
   box-shadow:
     -1px 0   0 var(--px-red),
@@ -448,20 +456,19 @@
      0   1px 0 var(--px-red);
 }
 
-/* Empty detail state */
 .clue-detail-empty {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 140px;
-  gap: 16px;
+  height: 100%;
+  gap: 20px;
 }
 
 .clue-detail-empty-icon {
-  font-size: 32px;
+  font-size: 48px;
   color: var(--px-gray);
-  opacity: 0.3;
+  opacity: 0.2;
   font-family: 'Press Start 2P', monospace;
   animation: blink 2s steps(2, end) infinite;
 }
@@ -470,8 +477,43 @@
   font-size: 7px;
   color: var(--px-gray);
   letter-spacing: 2px;
-  opacity: 0.5;
+  opacity: 0.4;
 }
+
+/* ── Nav buttons row ── */
+.clue-book-nav {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-shrink: 0;
+  padding-top: 20px;
+  border-top: 4px solid var(--px-border);
+}
+
+.back-btn {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  letter-spacing: 2px;
+  background: var(--px-dark);
+  color: var(--px-tan);
+  border: none;
+  box-shadow:
+    -2px 0   0 var(--px-border),
+     2px 0   0 var(--px-border),
+     0  -2px 0 var(--px-border),
+     0   2px 0 var(--px-border),
+     3px 3px 0 #0a0805;
+  padding: 10px 16px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.1s steps(1);
+}
+
+.back-btn:hover {
+  background: var(--px-border);
+  color: var(--px-paper);
+}
+
 html, body, #root {
   height: 100%;
   margin: 0;

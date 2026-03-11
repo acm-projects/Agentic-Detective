@@ -101,11 +101,13 @@ function NewGame() {
         />
       </div>
       <div className="slider-container">
-        <label className="label">Difficulty: {seed?.difficulty ?? 5}</label>
+        <label className="label">Difficulty: {difficulty}</label>
         <input
           type="range"
-          min="1" max="10" step="1"
-          value={seed?.difficulty ?? 5}
+          min="1" 
+          max="10" 
+          step="1"
+          value={difficulty}
           onChange={(e) => setDifficulty(Number(e.target.value))}
           className="slider"
         />
@@ -113,12 +115,12 @@ function NewGame() {
         <button className="detective-button" onClick={()=>{
           playClickSound();
           setSeed({
-            theme: personalization,        // "1920s jazz club", "remote Antarctic base", etc
+            freeText: personalization,        // "1920s jazz club", "remote Antarctic base", etc
             difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
             intensity: intensity 
           }) 
-          startCase();
+          startCase(navigate);
           navigate('/desk');
         }} >
         SOLVE! 

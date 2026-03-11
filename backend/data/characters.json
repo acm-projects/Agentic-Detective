@@ -1,43 +1,127 @@
 {
-    "chief_keef": {
-        "profile": {
-            "mugshot": "https://ih1.redbubble.net/image.5653390764.7646/raf,360x360,075,t,fafafa:ca443f4786.u1.jpg",
-            "name": "Cheif Keef",
-            "age": "35",
-            "occupation": "Rapper",
-            "knownAssociates": ["Lil Durk", "Young Chop"],
-            "chatHistory": [""]
-        },
-
-        "ai": {
-            "characteristics": ["loyal", "cautious", "confident"],
-            "speakingStyle": ["urban slang-heavy", "laid-back confrontational", "casual"],
-            "knowledgeScope": ["does not know who committed the crime"],
-            "secrets": ["none"],
-            "trustLevel": 0.7,
-            "trustsPlayer": "trusts the player",
-            "isGuilty": false
-        }
+  "meta": {
+    "caseId": "CS-2023-1115",
+    "caseTitle": "The Study's Silence",
+    "savedAt": "2026-03-10T13:22:39.134Z"
+  },
+  "suspects": [
+    {
+      "name": "Vikram Malhotra",
+      "age": 45,
+      "occupation": "Former Business Partner",
+      "relationshipToVictim": "Business partner and friend",
+      "personality": "Ambitious, outwardly calm, but prone to bursts of temper when cornered.",
+      "physicalDescription": "A man in his mid-40s, with sharp features, dark, neatly combed hair, and intense eyes. He carries himself with an air of authority, though his hands sometimes tremble when stressed.",
+      "avatarId": "avatar_01",
+      "trueAlibi": "Was in the victim's study confronting the victim between 9:00 PM and 10:00 PM.",
+      "claimedAlibi": "Claims he was in the garden, tending to his roses, between 9:00 PM and 10:00 PM.",
+      "trueMotive": "Financial ruin and betrayal by the victim.",
+      "isGuilty": true,
+      "honestyLevel": "deceptive",
+      "secretTheyreHiding": "He is the murderer of Rajan.",
+      "lyingTells": "Avoids direct eye contact when discussing his whereabouts during the murder and his financial situation.",
+      "knowledgeOfOtherSuspects": "He knows that Anjali is observant and might have seen something, and that Priya has a gambling problem, which could be a motive for her to steal something valuable.",
+      "conversationsNeededToBreak": 7
     },
-
-    "lil_durk": {
-        "profile": {
-            "mugshot": "https://upload.wikimedia.org/wikipedia/en/thumb/5/57/Lil_Durk_-_Mugshot_%282024%29.jpeg/250px-Lil_Durk_-_Mugshot_%282024%29.jpeg",
-            "name": "L'il Durk",
-            "age": "33",
-            "occupation": "Rapper",
-            "knownAssociates": ["Chief Keef", "Young Chop"],
-            "chatHistory": [""]
-        },
-
-        "ai": {
-            "characteristics": ["defensive", "observant", "loyal to known associates"],
-            "speakingStyle": ["short deliberate responses", "sophisticated", "professional"],
-            "knowledgeScope": ["knows who committed the crime"],
-            "secrets": ["none"],
-            "trustLevel": 0.1,
-            "trustsPlayer": "does not trust the player",
-            "isGuilty": true
-        }
+    {
+      "name": "Anjali Sharma",
+      "age": 32,
+      "occupation": "Victim's Personal Assistant",
+      "relationshipToVictim": "Employee",
+      "personality": "Shy, observant, and easily intimidated, but has a strong sense of justice.",
+      "physicalDescription": "A young woman with dark, shoulder-length hair, large, expressive eyes, and a slender build. She often fidgets with her hands and speaks softly.",
+      "avatarId": "avatar_02",
+      "trueAlibi": "Was in her room reading from 9:00 PM onwards. Heard a thud from the study around 9:30 PM and saw Vikram Malhotra leaving the study shortly after.",
+      "claimedAlibi": "States she was in her room reading a book from 9:00 PM onwards.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "partially_honest",
+      "secretTheyreHiding": "She saw Vikram Malhotra leaving the study shortly after the estimated time of death but is afraid to say anything.",
+      "lyingTells": null,
+      "knowledgeOfOtherSuspects": "She knows that Vikram and Rajan had a heated argument earlier that day. She also suspects Priya has been borrowing money from Rajan.",
+      "conversationsNeededToBreak": 3
+    },
+    {
+      "name": "Priya Kapoor",
+      "age": 28,
+      "occupation": "Art Dealer",
+      "relationshipToVictim": "Acquaintance",
+      "personality": "Vivacious, materialistic, and a bit reckless. Enjoys the finer things in life.",
+      "physicalDescription": "A fashionable woman with striking features, dark hair styled elegantly, and a confident smile. She wears expensive jewelry and is always impeccably dressed.",
+      "avatarId": "avatar_01",
+      "trueAlibi": "Was at a private auction house across town from 8:00 PM to 11:00 PM. Her attendance can be verified.",
+      "claimedAlibi": "Claims she was at a private auction house across town from 8:00 PM to 11:00 PM.",
+      "trueMotive": "She owed the victim a significant amount of money from a failed art deal and was desperate to avoid repayment.",
+      "isGuilty": false,
+      "honestyLevel": "honest",
+      "secretTheyreHiding": null,
+      "lyingTells": null,
+      "knowledgeOfOtherSuspects": "She knows Vikram was in financial trouble and that Anjali seemed unusually nervous after the incident.",
+      "conversationsNeededToBreak": 2
+    },
+    {
+      "name": "Ravi Singh",
+      "age": 55,
+      "occupation": "Victim's Lawyer",
+      "relationshipToVictim": "Legal Advisor",
+      "personality": "Calm, methodical, and discreet. Values order and legality above all else.",
+      "physicalDescription": "An older gentleman with greying hair, a distinguished air, and a serious demeanor. He wears spectacles and is always sharply dressed in formal attire.",
+      "avatarId": "avatar_04",
+      "trueAlibi": "Was at his office working late on a case file until 10:30 PM. His secretary can corroborate this.",
+      "claimedAlibi": "States he was at his office working late on a case file until 10:30 PM.",
+      "trueMotive": null,
+      "isGuilty": false,
+      "honestyLevel": "honest",
+      "secretTheyreHiding": null,
+      "lyingTells": null,
+      "knowledgeOfOtherSuspects": "He knows about the victim's complex financial dealings and was aware of the strain in Vikram's business relationship with the victim.",
+      "conversationsNeededToBreak": 2
     }
+  ],
+  "characterProfiles": [
+    {
+      "name": "Vikram Malhotra",
+      "age": 45,
+      "occupation": "Former Business Partner",
+      "relationshipToVictim": "Business partner and friend",
+      "personalityBlurb": "Ambitious and outwardly calm, but prone to bursts of temper when cornered. His hands tremble when stressed.",
+      "claimedAlibi": "Claims he was in the garden, tending to his roses, between 9:00 PM and 10:00 PM.",
+      "physicalDescription": "A man in his mid-40s, with sharp features, dark, neatly combed hair, and intense eyes. He carries himself with an air of authority.",
+      "avatarId": "avatar_01",
+      "suspicionLevel": "high"
+    },
+    {
+      "name": "Anjali Sharma",
+      "age": 32,
+      "occupation": "Victim's Personal Assistant",
+      "relationshipToVictim": "Employee",
+      "personalityBlurb": "Shy, observant, and easily intimidated, but has a strong sense of justice. She fidgets with her hands and speaks softly.",
+      "claimedAlibi": "States she was in her room reading a book from 9:00 PM onwards.",
+      "physicalDescription": "A young woman with dark, shoulder-length hair, large, expressive eyes, and a slender build.",
+      "avatarId": "avatar_02",
+      "suspicionLevel": "medium"
+    },
+    {
+      "name": "Priya Kapoor",
+      "age": 28,
+      "occupation": "Art Dealer",
+      "relationshipToVictim": "Acquaintance",
+      "personalityBlurb": "Vivacious, materialistic, and a bit reckless. Enjoys the finer things in life and is always impeccably dressed.",
+      "claimedAlibi": "Claims she was at a private auction house across town from 8:00 PM to 11:00 PM.",
+      "physicalDescription": "A fashionable woman with striking features, dark hair styled elegantly, and a confident smile. She wears expensive jewelry.",
+      "avatarId": "avatar_01",
+      "suspicionLevel": "medium"
+    },
+    {
+      "name": "Ravi Singh",
+      "age": 55,
+      "occupation": "Victim's Lawyer",
+      "relationshipToVictim": "Legal Advisor",
+      "personalityBlurb": "Calm, methodical, and discreet. Values order and legality above all else. Always sharply dressed in formal attire.",
+      "claimedAlibi": "States he was at his office working late on a case file until 10:30 PM.",
+      "physicalDescription": "An older gentleman with greying hair, a distinguished air, and a serious demeanor. He wears spectacles.",
+      "avatarId": "avatar_04",
+      "suspicionLevel": "low"
+    }
+  ]
 }

@@ -67,12 +67,23 @@ body::after {
   font-size: 3rem;
   overflow: hidden;
   white-space: nowrap;
-  margin-bottom: 1rem;
-  border-right: 2px solid white;
+  margin-bottom: 3rem;
   width: fit-content;
-  animation: typing 2s steps(30, end), blink 0.5s step-end infinite;
-  text-shadow: 0 0 18px rgba(77, 77, 254, 0.6);
+  animation: typing 2s steps(30, end); /* Typing animation */
+  border-right: none; /* Remove the border-right from the main element */
+  position: relative; /* Required for the pseudo-element */
 }
+.title::after {
+  content: ""; /* Creates the blinking cursor */
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background-color: white;
+  animation: blink 0.5s step-end infinite; /* Blinking animation */
+}
+
 
 @keyframes typing {
   from {

@@ -2,22 +2,13 @@
 //  CASE FILE — Single LLM call that fans out into 5 outputs
 //  Murder-only for now. Generalize to other crimes later.
 // ============================================================
-
+import type { PlayerSeed, Storyline } from "./obj/backendInterfaces"; 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-// ─────────────────────────────────────────────
-//  PLAYER SEED
-// ─────────────────────────────────────────────
 
-export interface PlayerSeed {
-  theme: string;        // "1920s jazz club", "remote Antarctic base", etc.
-  freeText: string;     // anything extra: "make it spooky", "include a love triangle"
-  difficulty: number;   // 1–10 slider ("on a scale of 1 to 10")
-  duration: number;     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
-  intensity: number;    // 1–10 slider (goriness / darkness)
-}
+
 
 // ─────────────────────────────────────────────
 //  AVATAR POOL
@@ -26,48 +17,23 @@ export interface PlayerSeed {
 // ─────────────────────────────────────────────
 
 export const AVATAR_POOL = [
-  { id: "avatar_01", description: "Elderly man, white hair, sharp formal suit, stern expression" },
-  { id: "avatar_02", description: "Young woman, casual clothes, bright eyes, approachable look" },
-  { id: "avatar_03", description: "Middle-aged woman, professional blazer, composed and polished" },
-  { id: "avatar_04", description: "Young man, disheveled hair, nervous energy, informal clothing" },
-  { id: "avatar_05", description: "Older woman, elegant dress, silver jewelry, refined and cold" },
-  { id: "avatar_06", description: "Middle-aged man, rugged build, worn jacket, weathered face" },
-  { id: "avatar_07", description: "Young woman, dark clothing, guarded expression, artistic look" },
-  { id: "avatar_08", description: "Middle-aged man, glasses, academic appearance, quietly intense" },
+  { id: "avatar_01", description: "brown hair, small nose, pink lips, mole, upturned eyebrows" },
+  { id: "avatar_02", description: "black hair, long nose, purple lips, downturned eyebrows, freckles" },
+  { id: "avatar_03", description: "yellow hair, wide nose, mustache, thick eyebrows, and green shirt" },
+  { id: "avatar_04", description: "grey hair, glasses, long nose, blue sweater vest, medium thick eyebrows" }
 ] as const;
 
 export type AvatarId = typeof AVATAR_POOL[number]["id"];
 
-// ─────────────────────────────────────────────
-//  OUTPUT 1 — STORYLINE  🔒 BACKEND ONLY
-// ─────────────────────────────────────────────
-
-export interface Storyline {
-  trueSequenceOfEvents: string;
-  murdererName: string;
-  murderWeapon: string;
-  murderLocation: string;       // Specific spot within the setting
-  murderTime: string;           // e.g. "11:42pm"
-  hiddenBackstory: string;      // Deeper context — affairs, debts, grudges — that explains the crime
-  contradictions: Contradiction[];
-  difficultyNotes: string;      // How the LLM calibrated this case for the backend to reference
-}
-
-export interface Contradiction {
-  suspectName: string;
-  theirClaim: string;           // What they tell the detective
-  actualTruth: string;          // What really happened
-  exposedByClueId: string;      // Which clue ID reveals this
-  exposedByDialogue: string | null; // Optional: question that forces the contradiction
-}
 
 // ─────────────────────────────────────────────
 //  OUTPUT 2 — SUSPECTS  🔒 BACKEND + CHAT SESSIONS
 // ─────────────────────────────────────────────
-
+// This is the stuff that you feed to the LLM
 export interface Suspect {
   name: string;
   age: number;
+  gender: "male" | "female";
   occupation: string;
   relationshipToVictim: string;
   personality: string;
@@ -87,10 +53,11 @@ export interface Suspect {
 // ─────────────────────────────────────────────
 //  OUTPUT 3 — CHARACTER PROFILES  👤 PLAYER UI
 // ─────────────────────────────────────────────
-
+// This is what the user see
 export interface CharacterProfile {
   name: string;
   age: number;
+  gender: "male" | "female";
   occupation: string;
   relationshipToVictim: string;
   personalityBlurb: string;     // Flavourful, not mechanical
@@ -195,8 +162,7 @@ function buildPrompt(seed: PlayerSeed): string {
 You are a mystery game master designing a murder mystery detective game case.
 
 PLAYER SEED:
-- Theme / Setting: "${seed.theme}"
-- Additional details: "${seed.freeText || "none"}"
+- Theme / Setting and other information: "${seed.freeText}"
 - Difficulty: ${seed.difficulty} out of 10 — ${difficultyGuide}
 - Session length: ${seed.duration} minutes (target ~${estimatedConversations} total exchanges across all suspects before the player has enough to solve it)
 - Intensity: ${seed.intensity} out of 10 — ${intensityGuide}
@@ -218,12 +184,22 @@ SUSPECT HONESTY RULES (important — not all innocents are hiding something):
 
 RULES:
 1. Generate EXACTLY 4 suspects. Exactly 1 is guilty (isGuilty: true).
-2. All clue IDs must follow format "clue_<short_label>" e.g. "clue_wine_glass".
+2. All clue IDs must follow format "clue_<clue#>" based on the description mentioned below. e.g. "clue_3".
 3. Each contradiction's exposedByClueId must match a real clue id you generate.
 4. characterProfiles must be the REDACTED version — no trueAlibi, no trueMotive, no isGuilty, no secrets.
 5. caseReport must contain NO spoilers. It is what the detective reads upon arriving at the scene.
 6. conversationsNeededToBreak for the guilty suspect should roughly equal ${estimatedConversations}.
-7. Generate between 4 and 7 clues. All are visible to the player from the start.
+7. Generate between 2 and 6 clues. All are visible to the player from the start.
+8. The clues are going to be one of the following painting, cipher, letter/note, prints, jewelry, and weapons.
+9. For each suspect, assign a realistic gender: "male" or "female".
+
+Clues:
+1. id: clue_1; jewel
+2. id: clue_2; weapon
+3. id: clue_3; painting
+4. id: clue_4; letter/note
+5. id: clue_5; cipher
+6. id: clue_6; fingerprint or other prints (shoe, paw, etc)
 
 Respond ONLY with a single valid JSON object. No markdown, no commentary, no trailing text.
 
@@ -247,6 +223,7 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
   "suspects": [{
     "name": string,
     "age": number,
+    "gender": "male" | "female",
     "occupation": string,
     "relationshipToVictim": string,
     "personality": string,
@@ -265,6 +242,7 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
   "characterProfiles": [{
     "name": string,
     "age": number,
+    "gender": "male" | "female",
     "occupation": string,
     "relationshipToVictim": string,
     "personalityBlurb": string,
@@ -327,6 +305,7 @@ const rawText = result.response.text()
   .replace(/^```\s*/i, '')
   .replace(/```\s*$/i, '')
   .trim();
+  console.log(rawText);
 
 // Sanitize bad control characters inside JSON string values
 const sanitized = rawText.replace(
@@ -344,6 +323,22 @@ const sanitized = rawText.replace(
 );
 
 const raw: CaseFileRaw = JSON.parse(sanitized);
+
+
+try {
+  await fetch("http://localhost:3000/save-case", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      caseId:            raw.caseReport.caseId,
+      caseTitle:         raw.caseReport.caseTitle,
+      suspects:          raw.suspects,
+      characterProfiles: raw.characterProfiles,
+    }),
+  });
+} catch (err) {
+  console.warn("[save-case] Could not reach Express server — skipping save:", err);
+}
 
   const backend: CaseFileBackend = {
     storyline: raw.storyline,

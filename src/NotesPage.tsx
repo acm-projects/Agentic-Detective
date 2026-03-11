@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { useGameStore } from "./useGameStore";
 import "./NotesPage.css";
+import { useNavigate } from "react-router-dom";
 
 // ── Types ──
 interface SuspectNote {
@@ -29,7 +30,8 @@ function now() {
 }
 
 export default function NotesPage() {
-  const { player, goToBriefing } = useGameStore();
+  const navigate = useNavigate();
+  const { player, goToBriefing, interrogateSuspects} = useGameStore();
   const profiles = player?.characterProfiles ?? [];
   const caseReport = player?.caseReport;
 
@@ -130,7 +132,7 @@ export default function NotesPage() {
                   >
                     <div className="suspect-tab-avatar">
                       <img
-                        src={`/avatars/${p.avatarId}.png`}
+                        src={`./assets/avatars/avatar_${p.avatarId}.png`}
                         alt={p.name}
                         onError={e => {
                           (e.target as HTMLImageElement).style.display = "none";
@@ -186,9 +188,9 @@ export default function NotesPage() {
                       </div>
                     </div>
                     {/* Suspicion badge */}
-                    <div className={`suspicion-badge suspicion-${profile.suspicionLevel}`}>
+                    {/* <div className={`suspicion-badge suspicion-${profile.suspicionLevel}`}>
                       {profile.suspicionLevel}
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Tag selector */}
@@ -208,7 +210,7 @@ export default function NotesPage() {
                     ))}
                   </div>
 
-                  {/* Notes textarea */}
+                  {/* Notes text area */}
                   <div className="notepad-area">
                     <div className="notepad-label">Field Notes</div>
                     <textarea
@@ -295,9 +297,17 @@ export default function NotesPage() {
         )}
 
       </div>
-      <button className="back-btn" onClick={goToBriefing}>
-        ← Case Report
+      <div>
+      <button className="back-btn" onClick={() =>goToBriefing(navigate)}>
+        Case Report
       </button>
+      <button className="back-btn" onClick={() =>navigate("/clues")}>
+        Clues Page
+      </button>
+      <button className="back-btn" onClick={() =>interrogateSuspects(navigate)}>
+        Interrogate
+      </button>
+      </div>
     </div>
   );
 }

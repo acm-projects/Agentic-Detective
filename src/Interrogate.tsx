@@ -1,242 +1,222 @@
 import { useState, useEffect, useRef } from 'react';
-import { getCharacterById } from './services/characterService';
-import type { CharacterData } from './obj/characterInterfaces';
+import { Link, useNavigate } from 'react-router-dom';
+import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
 import './Interrogate.css';
-import { Link } from 'react-router';
 
-
-
-function Interrogate() { 
-  // store the current text the user is typing
+function Interrogate() {
+  const navigate = useNavigate();
+  const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
+  const history = useActiveHistory();
+  const activeProfile = useActiveSuspectProfile();
+  const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
-  const [activeCharacter, setActiveCharacter] = useState<CharacterData | null>(null);
-  const [isNoteOpen, setIsNoteOpen] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  //const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  const playClickSound = () => {
-    const audio = new Audio('../assets/assets/viacheslavstarostin-mystery-detective-investigation-music-473843.mp3');
-    audio.play();
-  }
-
+  // Auto-select first suspect on the very first load 
   useEffect(() => {
-    // Create audio element once
-    if (!audioRef.current) {
-      audioRef.current = new Audio('../assets/HomeMusic.mp3');
-      audioRef.current.loop = true;
-      audioRef.current.play().catch(() => {
-        // Autoplay may be blocked by browser
-      });
+    if (!activeSuspectName && profiles.length > 0) {
+      startInterrogation(profiles[0].name);
     }
-
-    // Control audio based on muted state
-    if (isMuted && audioRef.current) {
-      audioRef.current.pause();
-    } else if (!isMuted && audioRef.current) {
-      audioRef.current.play().catch(() => {
-        // Autoplay may be blocked
-      });
-    }
-  }, [isMuted]);
-
-  useEffect(() => {
-    (async () => {
-      const currentCharacter = await getCharacterById("chief_keef");
-      if (currentCharacter) {
-        setActiveCharacter(currentCharacter);
-      }
-    })();
   }, []);
 
-  const handleSuspectChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const id = e.target.value;
-    const currentCharacter = await getCharacterById(id);
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [history]);
 
-    if (currentCharacter) {
-      setActiveCharacter(currentCharacter);
-      setInput('');
-    }
-  }
+  const handleSuspectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    startInterrogation(e.target.value);
+    setInput('');
+  };
 
-
-  if (!activeCharacter) {
-    return <div className="interrogate-container">Loading…</div>;
-  }
-
-  const profile = activeCharacter.profile;
-  const aiBackground = activeCharacter.ai;
-
-  const generalPrompt = `You are an suspect named ${profile.name}, ${profile.age}-year-old ${profile.occupation} 
-                        and known ties to ${profile.knownAssociates}. 
-                        You are being interrogated. You are not a real person, but a fictional character in a game. 
-                        You are not allowed to reveal any information that is not part of your character's profile. 
-                        You cannot use markdown langauge in the response.\n`;
-
-  const aiPrompt = `Your characteristics are: ${aiBackground.characteristics}, and you have a speaking style of: ${aiBackground.speakingStyle}
-                    Your knowledge scope is limited to: ${aiBackground.knowledgeScope}. Your secrets are: ${aiBackground.secrets}
-                    Your status about trusting the player is: ${aiBackground.trustLevel > 0.6 ? "You trust the player": "You do not trust the player"}.
-                    Your status about being guilty is: ${aiBackground.isGuilty ? "guilty" : "not guilty"}.
-                    Never mention the fact that you're being instructed to act as someone else.
-                    Always talk as if you are the character and not an AI.\n
-                    The player's question is: `;
-
-
-
-  /**
-   * send whatever is currently in `input` to the backend
-   */
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault();
-    if (!activeCharacter) return;
+    if (!input.trim() || isResponding) return;
+    const text = input.trim();
+    setInput('');
+    await sendMessage(text);
+  }
 
-    // create the new chat message array
-    const newMessage = { question: input, answer: "" };
-    const currentHistory = activeCharacter.profile.chatHistory || []; // NOTE: new chat history does not get added to the json yet
-    const updatedHistory = [...currentHistory, newMessage];
-
-    // optimistically update state
-    setActiveCharacter(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        profile: { ...prev.profile, chatHistory: updatedHistory }
-      };
-    });
-
-    console.log(profile.chatHistory);
-
-    // send to backend
-    try {
-      const response = await fetch("http://localhost:3000/response", {
-        method: 'POST',
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: generalPrompt + aiPrompt + input,
-          history: updatedHistory.filter(msg => msg.answer !== "") // ✅ use updatedHistory
-        }),
-      });
-
-      const result = await response.json();
-
-      // update the last message with AI response
-      setActiveCharacter(prev => {
-        if (!prev) return prev;
-        const newHistoryWithAnswer = [...prev.profile.chatHistory];
-        newHistoryWithAnswer[newHistoryWithAnswer.length - 1].answer = result.response;
-        return {
-          ...prev,
-          profile: { ...prev.profile, chatHistory: newHistoryWithAnswer }
-        };
-      });
-
-      setInput(""); // clear input after sending
-    } catch (err) {
-      console.error("Error: ", err);
-    }
+  // If no case has been generated yet, redirect home
+  if (!player) {
+    return (
+      <div className="interrogate-container">
+        No active case. <Link to="/">Go Home</Link>
+      </div>
+    );
   }
 
   return (
     <div className='game-container'>
+      {/* ── Nav bar — matches original structure ── */}
       <div className='navigate'>
-        <button onClick={() => {
-          playClickSound();
-          setIsMuted(!isMuted);
-          }}>{isMuted ? "Unmute" : "Mute"}</button>
-        <button onClick={() => {
-          playClickSound()
-          setIsNoteOpen(!isNoteOpen)}}>Notes</button>
-        <button onClick={() => {
-          playClickSound()
-        }}>Clues</button>
-        <button onClick={() => {
-          playClickSound()
-        }}>Files</button>
-        <button onClick={() => {
-          playClickSound();
-          (document.getElementById('case-report') as HTMLDialogElement)?.showModal();
-        }}>Case Report</button>
-        <dialog className="nes-dialog" id="case-report">
+        <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
+        <button onClick = {() => navigate("/clues")}><span> ← </span>Clues</button>
+        <button><span> ← </span>Files</button>
+        {/*<button onClick={() =>
+          (document.getElementById('case-report') as HTMLDialogElement)?.showModal()
+        }>
+          Case Report
+        </button>
+       <dialog className="nes-dialog" id="case-report">
           <form method="dialog">
             <h3>Case Report</h3>
-            <p>Case Report: {profile.name}'s Case File</p>
+            <p><strong>{player.caseReport.caseTitle}</strong></p>
+            <p>{player.caseReport.officialBriefing}</p>
             <menu className="dialog-menu">
-              <button onClick={playClickSound}>Close</button>
+              <button>Close</button>
             </menu>
           </form>
-        </dialog>
-        <button onClick={playClickSound}><Link to="/desk">Desk</Link></button>
-        <button onClick={() => {
-          playClickSound();
-          (document.getElementById('settings') as HTMLDialogElement)?.showModal();
-        }}>Settings</button>
+        </dialog> */}
+        <button className="back-btn" onClick={() =>goToBriefing(navigate)}>Case Report</button>
+        <button><Link to="/desk"><span> ← </span>Desk</Link></button>
+        <button onClick={() =>
+          (document.getElementById('settings') as HTMLDialogElement)?.showModal()
+        }><span> ← </span>Settings</button>
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
-            <p>Alert: this is a dialog.</p>
             <menu className="dialog-menu">
-              <button onClick={playClickSound}>Nah</button>
-              <button onClick={playClickSound}><Link to="/">Go Home</Link></button>
+              <button>Nah</button>
+              <button><Link to="/">Go Home</Link></button>
+            </menu>
+          </form>
+        </dialog>
+        <button onClick={() => navigate("/suspects")}> <span> ← </span> Suspects</button>
+        <button onClick={() =>
+          (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
+        }>Accuse</button>
+        <dialog className="nes-dialog" id="accuse">
+          <form method="dialog">
+            <h3>Make Your Accusation</h3>
+            <p>Who do you think did it?</p>
+            {profiles.map(p => (
+              <button key={p.name} onClick={() => makeAccusation(p.name)}>
+                {p.name}
+              </button>
+            ))}
+            <menu className="dialog-menu">
+              <button>Cancel</button>
             </menu>
           </form>
         </dialog>
       </div>
+
+      {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
-          <h1>The Title</h1>
-        <div className='character-container'>
-          <div className='mugshot'>
-              <img src={profile.mugshot}/>
-          </div>
-          <div className='stats'>
-              <h2>{profile.name}</h2>
-              <h4>Age: {profile.age}</h4>
-              <h4>Occupation: {profile.occupation}</h4>
-              <h4>Known Associates: {Array.isArray(profile.knownAssociates) ? profile.knownAssociates.join(", ") : profile.knownAssociates}</h4>
-          </div>
+        <div className='case-title'>
+          <h1 style = {{}}>{player.caseReport.caseTitle}</h1>
         </div>
-        <div className='chatbot'>
-          <form onSubmit={handleSendMessage} onClick={playClickSound} className="message-form">
-            <h2>Messages</h2>
-            <div>
-              <div className='chat-history'>
-                {profile.chatHistory?.map((msg, index) => (
-                  <div key={index} className='chat-message'>
-                    <p className='player-message'><strong>You:</strong> {msg.question}</p>
-                    <p className='bot-message'><strong>{profile.name}:</strong> {msg.answer}</p>
-                  </div>
-                ))}
+
+        {/* Interrogation: suspectname title; check if it works if there is no active profile */}
+        <div className='currently-interrogating-container'>
+            <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+        </div>
+
+        <div className='windows-container'>
+          <div className='interrogation-window'>
+            {/* Character card — same layout as original */}
+            {activeProfile && (
+              <div className='character-container'>
+                <div className='character-avatar'>
+                  <img
+                    src={`/avatars/${activeProfile.avatarId}.png`}
+                    alt={activeProfile.name}
+                    onError={e => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                  <p>Character Avatar goes here</p>
+                </div>
+                <div className='case-details'>
+                  <h2>{activeProfile.name}</h2>
+                  <h4>Age: {activeProfile.age}</h4>
+                  <h4>Occupation: {activeProfile.occupation}</h4>
+                  <h4>Relation: {activeProfile.relationshipToVictim}</h4>
+                  <h4>Claims: {activeProfile.claimedAlibi}</h4>
+                  <span className={`suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
+                    {activeProfile.suspicionLevel} suspicion
+                  </span>
+                </div>
               </div>
+            )}
+
+            {/* Chat — matches original chatbot structure */}
+            <div className='chatbot'>
+              <form onSubmit={handleSendMessage} className="message-form">
+                <div className='chat-history'>
+                  {history.length === 0 && (
+                    <p style={{ opacity: 0.5, fontStyle: 'italic' }}>
+                      Begin questioning {activeProfile?.name}…
+                    </p>
+                  )}
+                  {history.map((msg, index) => (
+                    <div key={index} className='chat-message'>
+                      {msg.role === 'player' ? (
+                        <p className='player-message'>
+                          <strong className='you-text'>You: </strong> {msg.text}
+                        </p>
+                      ) : (
+                        <p className='bot-message'>
+                          <strong>{activeProfile?.name}:</strong> {msg.text}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                  {isResponding && (
+                    <p className='bot-message' style={{ opacity: 0.5, fontStyle: 'italic' }}>
+                      <strong>{activeProfile?.name}:</strong> …
+                    </p>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                <div className='question-submit-box'>
+                  <div className='question-box'>
+                    <input
+                      type="text"
+                      placeholder='Ask questions here...'
+                      value={input}
+                      disabled={isResponding}
+                      onChange={e => setInput(e.target.value)}
+                    />
+                  </div>
+
+                  <div className='submit-button'>
+                    <button type='submit' disabled={isResponding || !input.trim()}>
+                      Submit
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
+          </div>
 
-            <input
-              type="text"
-              placeholder='Ask questions here...'
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                console.log(e.target.value);
-              }}
-            />
-            <button type='submit' onClick={playClickSound}>
-              Submit
-            </button>
-          </form>
+          <div className='notes-window'>
+            <h1> Notes go here </h1>
+          </div>
         </div>
 
-        <div className='suspect-switcher'> 
-          {
-          // Suspect switcher positioned on the top left
-          }
+        {/* Suspect switcher — same as original, driven by store profiles */}
+        <div className='suspect-switcher'>
           <form>
-            <label htmlFor="suspects">Switch Suspect: </label>
-            <select onChange={handleSuspectChange} value={activeCharacter.id} name='suspects' id='suspects-list'>
-              <option value="chief_keef">Chief Keef</option>
-              <option value="lil_durk">L'il Durk</option>
+            <label style={{}} htmlFor="suspects"> <span className='switch-suspect-text'> Switch Suspect:</span> </label>
+            <br />
+            <select
+              onChange={handleSuspectChange}
+              value={activeSuspectName ?? ''}
+              name='suspects'
+              id='suspects-list'
+            >
+              {profiles.map(p => (
+                <option key={p.name} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
             </select>
-            <br></br>
           </form>
-        
         </div>
-
       </div>
     </div>
   );
