@@ -1,17 +1,12 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
+import "dotenv/config"
 
-dotenv.config();
 
-const app = express();
-app.use(cors());
 
-const PORT = 5555;
 
-app.get("/api/voice", async (req, res) => {
-  console.log("Route was hit"); 
-  try {
+export default async function talk(text, res) {
+    console.log("talking:", text);
+
+    try {
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${process.env.VOICE_ID}`,
       {
@@ -21,7 +16,7 @@ app.get("/api/voice", async (req, res) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          text: "Agentic Detective is the best!",
+          text: `${text}`,
           model_id: "eleven_multilingual_v2",
         }),
       }
@@ -42,9 +37,5 @@ app.get("/api/voice", async (req, res) => {
     console.error(error);
     res.status(500).send("Server error");
   }
-});
 
-app.listen(PORT, () => {
-  console.log("Server running on port", PORT);
-});
-
+}

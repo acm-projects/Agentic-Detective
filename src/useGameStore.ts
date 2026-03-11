@@ -7,6 +7,7 @@ import { create } from "zustand";
 import { GoogleGenerativeAI, ChatSession } from "@google/generative-ai";
 import type { PlayerSeed, CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
+import { generateAndPlaySpeech } from "./services/ttsService";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -155,7 +156,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     console.log(systemPrompt);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       systemInstruction: systemPrompt,
       generationConfig: { temperature: 0.85 },
     });
@@ -208,8 +209,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         timestamp: Date.now(),
       };
 
+      // Add message to history first
       set(state => ({
-        isResponding: false,
         totalConversationCount: state.totalConversationCount + 1,
         sessions: {
           ...state.sessions,
@@ -220,6 +221,17 @@ export const useGameStore = create<GameState>((set, get) => ({
           },
         },
       }));
+
+      // Generate and play speech asynchronously (don't block UI)
+      const suspectGender = get().player?.characterProfiles.find(
+        p => p.name === activeSuspectName
+      )?.gender ?? "female";
+      generateAndPlaySpeech(responseText, suspectGender).catch(err => {
+        console.error("TTS playback failed:", err);
+      });
+
+      // Mark as no longer responding after message is added
+      set({ isResponding: false });
     } catch (err) {
       console.error("Message failed:", err);
       // Revert optimistic message on failure
@@ -230,7 +242,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           ...state.sessions,
           [activeSuspectName]: {
             ...session,
-            history: session.history,
+            history: session.history.slice(0, -1), // Remove the optimistically added player message
           },
         },
       }));

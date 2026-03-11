@@ -33,6 +33,7 @@ export type AvatarId = typeof AVATAR_POOL[number]["id"];
 export interface Suspect {
   name: string;
   age: number;
+  gender: "male" | "female";
   occupation: string;
   relationshipToVictim: string;
   personality: string;
@@ -56,6 +57,7 @@ export interface Suspect {
 export interface CharacterProfile {
   name: string;
   age: number;
+  gender: "male" | "female";
   occupation: string;
   relationshipToVictim: string;
   personalityBlurb: string;     // Flavourful, not mechanical
@@ -189,6 +191,7 @@ RULES:
 6. conversationsNeededToBreak for the guilty suspect should roughly equal ${estimatedConversations}.
 7. Generate between 2 and 6 clues. All are visible to the player from the start.
 8. The clues are going to be one of the following painting, cipher, letter/note, prints, jewelry, and weapons.
+9. For each suspect, assign a realistic gender: "male" or "female".
 
 Clues:
 1. id: clue_1; jewel
@@ -220,6 +223,7 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
   "suspects": [{
     "name": string,
     "age": number,
+    "gender": "male" | "female",
     "occupation": string,
     "relationshipToVictim": string,
     "personality": string,
@@ -238,6 +242,7 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
   "characterProfiles": [{
     "name": string,
     "age": number,
+    "gender": "male" | "female",
     "occupation": string,
     "relationshipToVictim": string,
     "personalityBlurb": string,
