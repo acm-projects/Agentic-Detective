@@ -5,20 +5,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 :root {
-  --px-bg:        #1a1208;
-  --px-brown:     #8b6914;
-  --px-tan:       #c8a464;
-  --px-paper:     #e8c87a;
-  --px-dark:      #2a1f0a;
-  --px-red:       #cc2200;
-  --px-red-light: #ff4422;
+  --px-bg:        #141414;
+  --px-brown:     #b1afa9;
+  --px-dark:      #191818;
+  --ink-color-light: #333333;
   --px-green:     #2a6632;
   --px-green-lit: #44aa44;
   --px-white:     #f0e8d0;
   --px-gray:      #888070;
   --px-border:    #3a2f14;
-  --px-gold:      #d4a820;
+  --px-gold:      #625111;
   --px-shadow:    rgba(0,0,0,0.8);
+  --bg-paper: #e0dcd3;   /* Vintage dossier beige */
+  --bg-dark: #d1cbb8;    /* Slightly darker beige for contrast */
+  --ink-color: #111111;  /* Almost black for thick outlines */
+  --white: #ffffff;
 }
 
 /* ── Overlay ── */
@@ -51,7 +52,7 @@
 .clue-book {
   position: relative;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1300px;
   min-height: calc(100vh - 80px);
   background: var(--px-paper);
   box-shadow:
@@ -74,7 +75,7 @@
       transparent, transparent 7px,
       rgba(139,105,20,0.04) 7px, rgba(139,105,20,0.04) 8px
     );
-  background-color: var(--px-paper);
+  background-color: var(--bg-paper);
   display: flex;
   flex-direction: column;
 }
@@ -113,14 +114,14 @@
   bottom: -8px;
   left: 0; right: 0;
   height: 4px;
-  background: var(--px-tan);
+  background: var(--bg-dark);
 }
 
 .pixel-title-text {
   font-family: 'Press Start 2P', monospace;
   font-size: 28px;
-  color: var(--px-red);
-  text-shadow: 3px 3px 0 #660000, 6px 6px 0 #330000;
+  color: var(--ink-color);
+  text-shadow: 3px 3px 0 #302f2f, 6px 6px 0 #575757;
   letter-spacing: 6px;
   display: block;
   margin-bottom: 8px;
@@ -130,7 +131,7 @@
   height: 4px;
   background: repeating-linear-gradient(
     90deg,
-    var(--px-red) 0px, var(--px-red) 8px,
+    var(--ink-color) 0px, var(--ink-color) 8px,
     transparent 8px, transparent 12px
   );
   margin: 6px auto;
@@ -154,6 +155,7 @@
   grid-template-columns: 3fr 2fr; /* left grid / right detail */
   gap: 1.5rem;
   align-items: flex-start;
+  height: 100%;
 }
 
 /* ── Clue grid — left column, 2 cols × 3 rows ── */
@@ -163,6 +165,7 @@
   grid-template-rows: .33fr .33fr .33fr;
   gap: 12px;
   align-content: start;
+  
 }
 
 .clue-empty {
@@ -177,10 +180,10 @@
 /* ── Clue card ── */
 .clue-card {
   position: relative;
-  background: var(--px-tan);
+  background: transparent;
   border: none;
   cursor: pointer;
-  padding: 14px 8px 12px;
+  /* padding: 10px 5px 6px; */
   text-align: center;
   box-shadow:
     -2px 0   0 var(--px-border),
@@ -191,6 +194,7 @@
   transition: transform 0.05s steps(2, end), box-shadow 0.05s steps(2, end);
   animation: cardIn 0.3s steps(4, end) both;
   font-family: 'Press Start 2P', monospace;
+  padding: 0px;
   aspect-ratio: 3/2;
   display: flex;
   flex-direction: column;
@@ -226,21 +230,20 @@
 .clue-card.active {
   background: var(--px-brown);
   box-shadow:
-    -2px 0   0 var(--px-red),
-     2px 0   0 var(--px-red),
-     0  -2px 0 var(--px-red),
-     0   2px 0 var(--px-red),
+    -2px 0   0 var(--ink-color),
+     2px 0   0 var(--ink-color),
+     0  -2px 0 var(--ink-color),
+     0   2px 0 var(--ink-color),
      3px 3px 0 var(--px-dark);
 }
 
-.clue-card.decisive { background: #d4b870; }
 
 .clue-card.examined::after {
   content: '✓';
   position: absolute;
   top: 4px;
   left: 6px;
-  font-size: 8px;
+  font-size: 30px;
   color: var(--px-green-lit);
   font-family: 'Press Start 2P', monospace;
 }
@@ -249,12 +252,12 @@
   position: absolute;
   top: -6px;
   right: -6px;
-  background: var(--px-red);
+  background: var(--ink-color);
   color: var(--px-white);
   font-size: 6px;
   padding: 2px 4px;
   letter-spacing: 1px;
-  box-shadow: 2px 2px 0 #660000;
+  box-shadow: 2px 2px 0 #751313;
   animation: blink 1s steps(2, end) infinite;
 }
 
@@ -271,23 +274,44 @@
   color: var(--px-gold);
   text-shadow: 1px 1px 0 #7a5a00;
 }
-
-.pixel-icon-wrap {
+.clue-card-icon {
+  position: relative;
+  width: 150px;      /* Bigger container */
+  height: 150px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
+  margin: 0 auto 0px;  /* center it */
+}
+
+.pixel-icon-locker {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);  /* perfect center */
+  width: 700px;     
+  height: 700px;    
+  object-fit: cover;
+  z-index: 2;      /* Behind pixel icon */
+  image-rendering: pixelated;
+  padding: 0px;
+}
+
+.pixel-icon-wrap {
+  position: relative;
+  z-index: 1;      /* In front */
+  width: 30%;      /* Smaller to sit inside locker */
+  height: 30%;
   margin: 0 auto 8px;
   image-rendering: pixelated;
 }
 
-.pixel-icon-wrap.large {
-  width: 72px;
-  height: 72px;
-}
-
 .pixel-icon-image {
+  object-fit: cover;
+  image-rendering: pixelated;
+    padding: 0px;
+}
+.pixel-icon-locker {
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -295,7 +319,7 @@
 }
 
 .clue-card-name {
-  font-size: 6px;
+  font-size: 10px;
   color: var(--px-border);
   line-height: 1.6;
   letter-spacing: 0.5px;
@@ -304,8 +328,8 @@
 }
 
 .clue-card-location {
-  font-size: 5px;
-  color: var(--px-brown);
+  font-size: 7px;
+  color: var(--ink-color);
   line-height: 1.4;
   letter-spacing: 0.3px;
   word-break: break-word;
@@ -364,10 +388,10 @@
 
 .clue-detail-name {
   font-size: 20px;
-  color: var(--px-paper);
+  color: var(--bg-paper);
   letter-spacing: 1px;
   line-height: 1.6;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 }
 
 .clue-detail-location {
@@ -387,7 +411,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  background: var(--px-red);
+  background: var(--ink-color);
   color: var(--px-white);
   border: none;
   width: 22px;
@@ -402,7 +426,7 @@
   transition: background 0.1s steps(1);
 }
 
-.clue-detail-close:hover { background: var(--px-red-light); }
+.clue-detail-close:hover { background: var(--ink-color-light); }
 
 .clue-detail-divider {
   height: 2px;
@@ -416,7 +440,7 @@
 
 .clue-detail-description {
   font-size: 15px;
-  color: var(--px-tan);
+  color: var(--bg-dark);
   line-height: 2.4;
   letter-spacing: 0.5px;
   position: relative;
@@ -445,15 +469,15 @@
 
 .clue-suspect-tag {
   font-size: 8px;
-  background: rgba(139, 26, 26, 0.3);
-  color: var(--px-red-light);
+  background: rgba(246, 243, 243, 0.9);
+  color: var(--ink-color);
   padding: 4px 10px;
   letter-spacing: 1px;
   box-shadow:
-    -1px 0   0 var(--px-red),
-     1px 0   0 var(--px-red),
-     0  -1px 0 var(--px-red),
-     0   1px 0 var(--px-red);
+    -1px 0   0 var(--ink-color),
+     1px 0   0 var(--ink-color),
+     0  -1px 0 var(--ink-color),
+     0   1px 0 var(--ink-color);
 }
 
 .clue-detail-empty {
@@ -495,7 +519,7 @@
   font-size: 7px;
   letter-spacing: 2px;
   background: var(--px-dark);
-  color: var(--px-tan);
+  color: var(--bg-dark);
   border: none;
   box-shadow:
     -2px 0   0 var(--px-border),
@@ -511,7 +535,7 @@
 
 .back-btn:hover {
   background: var(--px-border);
-  color: var(--px-paper);
+  color: var(--bg-paper);
 }
 
 html, body, #root {
