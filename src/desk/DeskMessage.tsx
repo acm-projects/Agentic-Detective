@@ -17,16 +17,6 @@ import './desk.css';
 function Message() {
   const { phase, goToBriefing } = useGameStore();
   const navigate = useNavigate();
-  const [showCaseReportModal, setShowCaseReportModal] = useState(phase === 'briefing');
-
-  useEffect(() => {
-    if (phase === 'briefing') {
-      setShowCaseReportModal(true);
-    }
-    else {
-      setShowCaseReportModal(false);
-    }
-  }, [phase]);
 
   if (phase === 'generating') {
     return <LoadingScreen />;
@@ -52,12 +42,7 @@ function Message() {
   }
 
   const handleCaseFileClick = () => {
-    setShowCaseReportModal(true);
-    goToBriefing();
-  };
-
-  const handleCloseCaseReport = () => {
-    setShowCaseReportModal(false);
+    navigate('/report');
   };
 
   return (
@@ -133,16 +118,6 @@ function Message() {
         }}
       />
     </div>
-
-    {/* Modal for Case Report */}
-      {showCaseReportModal && (
-        <div className="modal-overlay" onClick={handleCloseCaseReport}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <CaseReportScreen onClose={handleCloseCaseReport} isModal={true} />
-          </div>
-        </div>
-      )}
-
     </>
   );
 }

@@ -16,6 +16,8 @@ interface TTSResponse {
  * @param gender - Gender of the speaker ("male" or "female") to select appropriate voice
  * @returns Promise with audio URL or error
  */
+
+/*
 export async function generateSpeech(text: string, gender: "male" | "female" = "female"): Promise<TTSResponse> {
   const voiceId = gender === "male" ? BOY_VOICE_ID : GIRL_VOICE_ID;
   if (!ELEVEN_LABS_API_KEY) {
@@ -56,12 +58,13 @@ export async function generateSpeech(text: string, gender: "male" | "female" = "
     return { audioUrl: null, error: err instanceof Error ? err.message : "Unknown error" };
   }
 }
-
+*/
 /**
  * Play audio from URL
  * @param audioUrl - The URL of the audio to play
  * @returns Promise that resolves when audio finishes or errors
  */
+/*
 export async function playAudio(audioUrl: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const audio = new Audio(audioUrl);
@@ -75,12 +78,13 @@ export async function playAudio(audioUrl: string): Promise<void> {
     audio.play().catch(reject);
   });
 }
-
+*/
 /**
  * Generate speech from text and play it immediately
  * @param text - The text to convert and play
  * @param gender - Gender of the speaker ("male" or "female")
  */
+/*
 export async function generateAndPlaySpeech(text: string, gender: "male" | "female" = "female"): Promise<void> {
   const { audioUrl, error } = await generateSpeech(text, gender);
   
@@ -96,4 +100,50 @@ export async function generateAndPlaySpeech(text: string, gender: "male" | "fema
       console.error("Playback Error:", err);
     }
   }
+}
+  */
+
+export async function streamSpeech(text: string, gender: "male" | "female" = "female") {
+  const voiceId = gender === "male" ? BOY_VOICE_ID : GIRL_VOICE_ID;
+
+  const response = await fetch(
+    `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}/stream`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "xi-api-key": ELEVEN_LABS_API_KEY,
+        "Accept": "audio/mpeg"
+      },
+      body: JSON.stringify({
+        text,
+        model_id: "eleven_v3",
+        speed: 2,
+      }),
+    }
+  );
+
+  const mediaSource = new MediaSource();
+  const audio = new Audio(URL.createObjectURL(mediaSource));
+
+  mediaSource.addEventListener("sourceopen", async () => {
+    const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+    const reader = response.body!.getReader();
+
+    async function push() {
+      const { done, value } = await reader.read();
+
+      if (done) {
+        mediaSource.endOfStream();
+        return;
+      }
+
+      sourceBuffer.appendBuffer(value);
+      sourceBuffer.addEventListener("updateend", push, { once: true });
+    }
+
+    push();
+  });
+
+  audio.play();
 }
