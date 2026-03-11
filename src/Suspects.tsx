@@ -54,11 +54,11 @@ function Suspects() {
               <div className="suspect-name-section">
                 <h4>NAME</h4>
                 <div className="suspect-info">
-                  <p>{activeProfile?.name.toUpperCase()}</p>
+                  <p>{selectedSuspect?.name.toUpperCase()}</p>
                   <ul>
-                    <li>Age: {activeProfile?.age}</li>
-                    <li>Occupation: {activeProfile?.occupation}</li>
-                    <li>Relationship to Victim: {activeProfile?.relationshipToVictim}</li>
+                    <li>Age: {selectedSuspect?.age}</li>
+                    <li>Occupation: {selectedSuspect?.occupation}</li>
+                    <li>Relationship to Victim: {selectedSuspect?.relationshipToVictim}</li>
                   </ul>
                 </div>
               </div>
@@ -69,23 +69,23 @@ function Suspects() {
                 <div className="polaroid">
                   <div className="polaroid-content">
                     <img
-                      src={`/avatars/${activeProfile?.avatarId}.png`}
-                      alt={activeProfile?.name}
+                      src={`/avatars/${selectedSuspect?.avatarId}.png`}
+                      alt={selectedSuspect?.name}
                       onError={e => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   </div>
-                  <p className="polaroid-label">{activeProfile?.name}</p>
+                  <p className="polaroid-label">{selectedSuspect?.name}</p>
                 </div>
 
                 {/* BioData Section */}
                 <div className="biodata-section">
                   <h4>BIODATA</h4>
                   <ul>
-                    <li>{activeProfile?.personalityBlurb}</li>
-                    <li>"<em>{activeProfile?.claimedAlibi}</em>"</li>
-                    <li>Suspicion: <span className={`suspicion-tag suspicion-${activeProfile?.suspicionLevel}`}>{activeProfile?.suspicionLevel.toUpperCase()}</span></li>
+                    <li>{selectedSuspect?.personalityBlurb}</li>
+                    <li>"<em>{selectedSuspect?.claimedAlibi}</em>"</li>
+                    <li>Suspicion: <span className={`suspicion-tag suspicion-${selectedSuspect?.suspicionLevel}`}>{selectedSuspect?.suspicionLevel.toUpperCase()}</span></li>
                   </ul>
                 </div>
               </div>

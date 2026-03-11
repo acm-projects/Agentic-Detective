@@ -156,7 +156,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     console.log(systemPrompt);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
+      model: "gemini-2.5-flash-lite",
       systemInstruction: systemPrompt,
       generationConfig: { temperature: 0.85 },
     });
