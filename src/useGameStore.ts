@@ -7,7 +7,7 @@ import { create } from "zustand";
 import { GoogleGenerativeAI, ChatSession } from "@google/generative-ai";
 import type { PlayerSeed, CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
-import { generateAndPlaySpeech } from "./services/ttsService";
+import { streamSpeech } from "./services/ttsService";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -226,7 +226,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const suspectGender = get().player?.characterProfiles.find(
         p => p.name === activeSuspectName
       )?.gender ?? "female";
-      generateAndPlaySpeech(responseText, suspectGender).catch(err => {
+      streamSpeech(responseText, suspectGender).catch(err => {
         console.error("TTS playback failed:", err);
       });
 
