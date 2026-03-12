@@ -84,7 +84,7 @@ export async function playAudio(audioUrl: string): Promise<void> {
  * @param text - The text to convert and play
  * @param gender - Gender of the speaker ("male" or "female")
  */
-/*
+
 export async function generateAndPlaySpeech(text: string, gender: "male" | "female" = "female"): Promise<void> {
   const { audioUrl, error } = await generateSpeech(text, gender);
   
@@ -101,7 +101,7 @@ export async function generateAndPlaySpeech(text: string, gender: "male" | "fema
     }
   }
 }
-  */
+
 
 export async function streamSpeech(text: string, gender: "male" | "female" = "female") {
   const voiceId = gender === "male" ? BOY_VOICE_ID : GIRL_VOICE_ID;

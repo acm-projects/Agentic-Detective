@@ -256,7 +256,14 @@ a {
   align-items: center;
   justify-content: center;
   padding: 0.5rem;
-  overflow: hidden;
+  overflow: auto;
+}
+
+/* Ensure the mugshot scales to the new wider box */
+.character-avatar img {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
 }
 
 .case-details {
@@ -270,12 +277,7 @@ a {
   overflow-y: auto; /* Scrollable if claims are too long */
 }
 
-/* Ensure the mugshot scales to the new wider box */
-.character-avatar img {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
-}
+
 
 .character-avatar p {
     font-size: 0.6rem;
