@@ -4,7 +4,6 @@ import type { Clue } from "./caseFile";
 import "./ClueBook.css";
 import { useNavigate } from 'react-router-dom';
 
-
 export default function ClueBook() {
   const { player } = useGameStore();
   const clues = player?.clues ?? [];
@@ -20,7 +19,6 @@ export default function ClueBook() {
   return (
     <div className="clue-book-overlay">
       <div className="clue-book">
-
         {/* Pixel corners */}
         <div className="pixel-corner tl" />
         <div className="pixel-corner tr" />
@@ -36,45 +34,45 @@ export default function ClueBook() {
 
         {/* ── Body: grid left, detail right ── */}
         <div className="clue-book-body">
-
           {/* Left: 2×3 clue grid */}
           <div className="clue-grid">
-            {clues.length === 0 && (
+            {clues.length === 0 ? (
               <div className="clue-empty">NO CLUES COLLECTED YET</div>
+            ) : (
+              clues.slice(0, 6).map((clue, i) => {
+                const isExamined = examined.has(clue.id);
+                const isSelected = selected?.id === clue.id;
+                return (
+                  <button
+                    key={clue.id}
+                    className={`clue-card ${isExamined ? "examined" : ""} ${isSelected ? "active" : ""} ${clue.isDecisive ? "decisive" : ""}`}
+                    onClick={() => handleClueClick(clue)}
+                    style={{ animationDelay: `${i * 0.06}s` }}
+                  >
+                    <div className="clue-card-icon">
+                    <img src={`/clues/locker.png`} alt={`locker img`} className="pixel-icon-locker" />
+                      <PixelIcon index={i} decisive={clue.isDecisive} />
+                    </div>
+                    {!isExamined && <div className="clue-new-badge">NEW</div>}
+                    {clue.isDecisive && <div className="clue-decisive-badge">★</div>}
+                    <div className="clue-card-name">{clue.name}</div>
+                    <div className="clue-card-location">{clue.location}</div>
+                  </button>
+                );
+              })
             )}
-            </div>
-            {clues.slice(0, 6).map((clue, i) => {
-              const isExamined = examined.has(clue.id);
-              const isSelected = selected?.id === clue.id;
-              return (
-                <button
-                  key={clue.id}
-                  className={`clue-card ${isExamined ? "examined" : ""} ${isSelected ? "active" : ""} ${clue.isDecisive ? "decisive" : ""}`}
-                  onClick={() => handleClueClick(clue)}
-                  style={{ animationDelay: `${i * 0.06}s` }}
-                >
-                  <div className="clue-card-icon">
-                    <PixelIcon index={i} decisive={clue.isDecisive} />
-                  </div>
-                  {!isExamined && <div className="clue-new-badge">NEW</div>}
-                  {clue.isDecisive && <div className="clue-decisive-badge">★</div>}
-                  <div className="clue-card-name">{clue.name}</div>
-                  <div className="clue-card-location">{clue.location}</div>
-                </button>
-              );
-            })}
           </div>
 
           {/* Right: detail panel */}
           {selected ? (
             <div className="clue-detail">
               <div className="clue-detail-icon-large">
-                  <PixelIcon
-                    index={clues.findIndex(c => c.id === selected.id)}
-                    decisive={selected.isDecisive}
-                    large
-                  />
-                </div>
+                <PixelIcon
+                  index={clues.findIndex(c => c.id === selected.id)}
+                  decisive={selected.isDecisive}
+                  large
+                />
+              </div>
               <div className="clue-detail-header">
                 <div>
                   <div className="clue-detail-name">{selected.name}</div>
@@ -108,9 +106,11 @@ export default function ClueBook() {
               <div className="clue-detail-empty-icon">?</div>
               <div className="clue-detail-empty-text">SELECT A CLUE TO EXAMINE</div>
             </div>
-    
-        )}
+          )}
+        </div>
+
         <button className="back-btn" onClick={() => navigate('/desk')}>Back to desk</button>
+
         {/* Book corners */}
         <div className="pixel-corner bl" />
         <div className="pixel-corner br" />
@@ -119,9 +119,8 @@ export default function ClueBook() {
   );
 }
 
-function PixelIcon({ index, decisive = false, large = false }: { index: number; decisive?: boolean; large?: boolean }) {
-
-  const imagePath = `../public/clues/clue_${index + 1}.png`; // Adjusted path to start from the public directory
+function PixelIcon({ index, decisive = false, large = true }: { index: number; decisive?: boolean; large?: boolean }) {
+  const imagePath = `/clues/clue_${index + 1}.png`; // Fixed: use public folder root path
   return (
     <div className={`pixel-icon-wrap ${large ? "large" : ""} ${decisive ? "decisive" : ""}`}>
       <img src={imagePath} alt={`Clue ${index + 1}`} className="pixel-icon-image" />
