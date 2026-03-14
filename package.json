@@ -12,6 +12,7 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.38.1",
     "@google/generative-ai": "^0.24.1",
     "concurrently": "^9.2.1",
     "cors": "^2.8.6",

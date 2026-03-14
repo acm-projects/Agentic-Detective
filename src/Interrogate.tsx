@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, act } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
+import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from './useGameStore';
+import { StressBar } from './StressBar';
 import './Interrogate.css';
 
 function Interrogate() {
@@ -12,6 +13,7 @@ function Interrogate() {
   const [input, setInput] = useState('');
   //const [isNoteOpen, setIsNoteOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const stressLevel = useActiveSuspectStress();
 
   // Auto-select first suspect on the very first load 
   useEffect(() => {
@@ -121,13 +123,28 @@ function Interrogate() {
               <div className='character-container'>
                 <div className='character-avatar'>
                   <img
-                    src={`/avatars/${activeProfile.avatarId}.png`}
+                    src={`/avatars/${activeProfile.avatarId}.png`} 
                     alt={activeProfile.name}
-                    onError={e => {
+                    onError={e => {{
+                      console.log(activeProfile.avatarId);
+                    }
+                      console.error("Failed to load image at:", (e.target as HTMLImageElement).src);
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
                   <p>Character Avatar goes here</p>
+                  {activeProfile && (
+                    <div className='character-avatar'>
+                      <img
+                        src={`/avatars/${activeProfile.avatarId}.png`}
+                        alt={activeProfile.name}
+                        onError={e => {
+                          (e.target as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                      <StressBar level={stressLevel} />   {/* ← ADD */}
+                    </div>
+                  )}
                 </div>
                 <div className='case-details'>
                   <h2>{activeProfile.name}</h2>

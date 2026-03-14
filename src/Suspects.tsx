@@ -1,106 +1,140 @@
-import { useState, useEffect } from 'react';
 import './Suspects.css';
-import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
-import { Link, useNavigate } from 'react-router-dom';
+import { useGameStore, useActiveSuspectProfile } from './useGameStore';
+import { useNavigate } from 'react-router-dom';
 
 function Suspects() {
-  const [selectedSuspect, setSelectedSuspect] = useState();
   const navigate = useNavigate();
-  const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
-  const profiles = player?.characterProfiles ?? [];
+
+  const {
+    player,
+    activeSuspectName,
+    startInterrogation
+  } = useGameStore();
+
   const activeProfile = useActiveSuspectProfile();
-
-  useEffect(() => {
-    if (!activeSuspectName && profiles.length > 0) {
-      setSelectedSuspect(profiles[0].name);
-    }
-  }, []);
-
+  const profiles = player?.characterProfiles ?? [];
 
   return (
     <div className="suspects-wrapper">
       <div className="suspects-container">
+
         {/* Header */}
         <div className="suspects-header">
-          <h1>THE STUDY OF SHADOWS</h1>
+          <h1>{player?.caseReport?.caseTitle}</h1>
         </div>
 
         {/* Main Layout */}
         <div className="suspects-layout">
-          {/* Left Sidebar - Suspect List */}
+
+          {/* Left Sidebar */}
           <div className="suspects-sidebar">
             <div className="sidebar-header">
               <h3>SUSPECT PAGE</h3>
             </div>
+
             <div className="suspect-list">
               {profiles.map((suspect) => (
                 <button
-                  key={suspect?.id}
-                  className={`suspect-button ${selectedSuspect?.id === suspect?.id ? 'active' : ''}`}
-                  onClick={() => setSelectedSuspect(suspect)}
+                  key={suspect.name}
+                  className={`suspect-button ${
+                    activeSuspectName === suspect.name ? 'active' : ''
+                  }`}
+                  onClick={() => startInterrogation(suspect.name)}
                 >
                   {suspect.name}
                 </button>
               ))}
             </div>
+
             <div>
-              <br /> <br />
+              <br /><br />
             </div>
-            <button 
-              className='back-button'
-              onClick = {() => navigate("/interrogate")}>
-                <span> ← </span>Return to Interrogation
+
+            <button
+              className="back-button"
+              onClick={() => navigate("/interrogate")}
+            >
+              <span> ← </span>Return to Interrogation
+            </button>
+
+            <button
+              className="back-button"
+              onClick={() => navigate("/desk")}
+            >
+              <span> ← </span>Return to Desk
             </button>
           </div>
 
-          {/* Right Main Area - Suspect Details */}
+          {/* Right Panel */}
           <div className="suspects-main">
             <div className="main-header">
               <h3>CASE NOTEPAD</h3>
             </div>
 
             <div className="suspect-details-container">
+
               {/* Name Section */}
               <div className="suspect-name-section">
                 <h4>NAME</h4>
+
                 <div className="suspect-info">
-                  <p>{selectedSuspect?.name.toUpperCase()}</p>
+                  <p>{activeProfile?.name?.toUpperCase()}</p>
+
                   <ul>
-                    <li>Age: {selectedSuspect?.age}</li>
-                    <li>Occupation: {selectedSuspect?.occupation}</li>
-                    <li>Relationship to Victim: {selectedSuspect?.relationshipToVictim}</li>
+                    <li>Age: {activeProfile?.age}</li>
+                    <li>Occupation: {activeProfile?.occupation}</li>
+                    <li>Relationship to Victim: {activeProfile?.relationshipToVictim}</li>
                   </ul>
                 </div>
               </div>
 
-              {/* Polaroid Image and BioData Section */}
+              {/* Polaroid + Bio */}
               <div className="suspect-biodata-section">
-                {/* Polaroid Frame */}
+
+                {/* Polaroid */}
                 <div className="polaroid">
                   <div className="polaroid-content">
                     <img
-                      src={`/avatars/${selectedSuspect?.avatarId}.png`}
-                      alt={selectedSuspect?.name}
-                      onError={e => {
+                      src={`/avatars/${activeProfile?.avatarId}.png`}
+                      alt={activeProfile?.name}
+                      onError={(e) => {
                         (e.target as HTMLImageElement).style.display = 'none';
                       }}
                     />
                   </div>
-                  <p className="polaroid-label">{selectedSuspect?.name}</p>
+
+                  <p className="polaroid-label">
+                    {activeProfile?.name}
+                  </p>
                 </div>
 
-                {/* BioData Section */}
+                {/* Biodata */}
                 <div className="biodata-section">
                   <h4>BIODATA</h4>
+
                   <ul>
-                    <li>{selectedSuspect?.personalityBlurb}</li>
-                    <li>"<em>{selectedSuspect?.claimedAlibi}</em>"</li>
-                    <li>Suspicion: <span className={`suspicion-tag suspicion-${selectedSuspect?.suspicionLevel}`}>{selectedSuspect?.suspicionLevel.toUpperCase()}</span></li>
+                    <li>{activeProfile?.personalityBlurb}</li>
+
+                    <li>
+                      "<em>{activeProfile?.claimedAlibi}</em>"
+                    </li>
+
+                    <li>
+                      Suspicion:
+                      <span
+                        className={`suspicion-tag suspicion-${activeProfile?.suspicionLevel}`}
+                      >
+                        {activeProfile?.suspicionLevel?.toUpperCase()}
+                      </span>
+                    </li>
                   </ul>
+
                 </div>
               </div>
+
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -108,3 +142,4 @@ function Suspects() {
 }
 
 export default Suspects;
+
