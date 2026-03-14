@@ -4,7 +4,7 @@
 // ============================================================
 
 import { create } from "zustand";
-import { GoogleGenerativeAI, ChatSession } from "@google/generative-ai";
+import { GoogleGenerativeAI, ChatSession, SchemaType } from "@google/generative-ai";
 import type { PlayerSeed, CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
 import { streamSpeech } from "./services/ttsService";
@@ -26,6 +26,7 @@ export interface SuspectSession {
   chatSession: ChatSession;
   history: ChatMessage[];
   conversationCount: number;
+  stressLevel: number;
 }
 
 // ─────────────────────────────────────────────
@@ -158,7 +159,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-lite",
       systemInstruction: systemPrompt,
-      generationConfig: { temperature: 0.85 },
+      generationConfig: { 
+        temperature: 0.85, 
+        responseMimeType: "application/json", 
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            response:    { type: SchemaType.STRING },
+            stressLevel: { 
+              type: SchemaType.INTEGER, 
+              description: "A number between 0 and 100. Must reflect cumulative interrogation pressure. Spikes 15-25 on direct hits about the crime, drops 5-10 on successful deflections. Never resets to 0."
+            },},
+        },
+      },
     });
 
     const chatSession = model.startChat({ history: [] });
@@ -172,6 +185,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           chatSession,
            history: [],
           conversationCount: 0,
+          stressLevel: 0,
         },
       },
     }));
@@ -199,9 +213,24 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     try {
       const result = await session.chatSession.sendMessage(text);
-      const responseText = result.response.text();
-      console.log("suspect response");
+      const raw = result.response.text();
+      let responseText = raw;
+      console.log("suspect raw response");
       console.log(responseText);
+      let newStress = session.stressLevel; // default: keep current if parse fails
+
+      try {
+        const cleaned = raw
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/```\s*$/i, "")
+          .trim();
+        const parsed = JSON.parse(cleaned);
+        responseText = String(parsed.response ?? raw);
+        newStress = Math.min(100, Math.max(0, Number(parsed.stressLevel ?? session.stressLevel)));
+      } catch {
+        console.warn("Could not parse suspect JSON reply — using raw text");
+      }
 
       const suspectMessage: ChatMessage = {
         role: "suspect",
@@ -218,6 +247,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             ...session,
             history: [...session.history, playerMessage, suspectMessage],
             conversationCount: session.conversationCount + 1,
+            stressLevel: newStress,   // ← ADD
           },
         },
       }));
@@ -226,9 +256,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       const suspectGender = get().player?.characterProfiles.find(
         p => p.name === activeSuspectName
       )?.gender ?? "female";
+
+      //TTS BELOW!!!!!!
+/*
       streamSpeech(responseText, suspectGender).catch(err => {
         console.error("TTS playback failed:", err);
       });
+*/
+
 
       // Mark as no longer responding after message is added
       set({ isResponding: false });
@@ -308,3 +343,10 @@ export const useActiveSuspectProfile = () =>
       p => p.name === state.activeSuspectName
     ) ?? null;
   });
+
+  export const useActiveSuspectStress = () =>
+  useGameStore(state =>
+    state.activeSuspectName
+      ? (state.sessions[state.activeSuspectName]?.stressLevel ?? 0)
+      : 0
+  );
