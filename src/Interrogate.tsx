@@ -72,7 +72,7 @@ function Interrogate() {
           </form>
         </dialog> */}
         <button className="back-btn" onClick={() =>goToBriefing(navigate)}>Case Report</button>
-        <button><Link to="/desk"><span> ← </span>Desk</Link></button>
+        <button onClick={() => navigate("/desk")}><span> ← </span>Desk</button>
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
         }><span> ← </span>Settings</button>

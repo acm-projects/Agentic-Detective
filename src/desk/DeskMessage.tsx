@@ -88,7 +88,7 @@ function Message() {
             <h3>Make Your Accusation</h3>
             <p>Who do you think did it?</p>
             {profiles.map(p => (
-              <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
+              <button className="accuse" key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
                 {p.name}
               </button>
             ))}

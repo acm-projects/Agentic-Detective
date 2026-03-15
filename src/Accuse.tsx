@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from './useGameStore';
 import './Accuse.css';
@@ -8,6 +8,7 @@ function Accuse() {
   const { accusationResult, resetGame } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
+  const hasPlayedRef = useRef(false);
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('dark'),   120);
@@ -28,6 +29,14 @@ function Accuse() {
   }
 
   const { accusedName, isCorrect, trueKiller, explanation } = accusationResult;
+
+  if (!hasPlayedRef.current) {
+    hasPlayedRef.current = true;
+    const src = isCorrect
+      ? '../assets/correct_accuation.mp3'
+      : '../assets/incorrect_accusation.mp3';
+    new Audio(src).play().catch(err => console.warn('Audio play failed:', err));
+  }
 
   return (
     <div className={`accuse-page ${phase === 'flash' ? 'accuse-flash' : 'accuse-dark'}`}>
