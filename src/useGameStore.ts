@@ -75,8 +75,7 @@ interface GameState {
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
   sendMessage: (text: string) => Promise<void>;
-  makeAccusation: (suspectName: string) => void;
-  resetGame: () => void,
+  makeAccusation: (suspectName: string, navigate: (path: string) => void) => void;  resetGame: () => void,
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -285,24 +284,25 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // ── Player makes their final accusation ──
-  makeAccusation: (accusedName) => {
-    const { backend } = get();
-    if (!backend) return;
+  makeAccusation: (accusedName, navigate) => {
+  const { backend } = get();
+  if (!backend) return;
 
-    const trueKiller = backend.suspects.find(s => s.isGuilty);
-    const isCorrect = accusedName === trueKiller?.name;
+  const trueKiller = backend.suspects.find(s => s.isGuilty);
+  const isCorrect  = accusedName === trueKiller?.name;
 
-    set({
-      phase: "resolved",
-      accusationResult: {
-        accusedName,
-        isCorrect,
-        trueKiller: trueKiller?.name ?? "Unknown",
-        explanation: backend.storyline.trueSequenceOfEvents,
-      },
-    });
-  },
+  set({
+    phase: "resolved",
+    accusationResult: {
+      accusedName,
+      isCorrect,
+      trueKiller:  trueKiller?.name ?? "Unknown",
+      explanation: backend.storyline.trueSequenceOfEvents,
+    },
+  });
 
+  navigate("/accuse");   // ← navigate AFTER state is set
+},
   // ── Reset everything for a new game ──
   
   resetGame: () =>

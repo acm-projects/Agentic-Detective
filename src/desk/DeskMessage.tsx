@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGameStore } from '../useGameStore';
 import cluebookImg from './assets/cluebook.png';
 import cigaretteImg from './assets/cigarette.png';
 import caseFileImg from './assets/case-file.png';
@@ -12,12 +11,13 @@ import deskBgImg from './assets/desk-bg-new.png';
 import LoadingScreen from '../LoadingScreen';
 import CaseReportScreen from '../CaseReportScreen';
 import phoneImg from './assets/cellphone7.webp';
+import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from '../useGameStore';
 import './desk.css';
 
 function Message() {
-  const { phase, goToBriefing } = useGameStore();
+  const { phase, goToBriefing, makeAccusation, player } = useGameStore();
   const navigate = useNavigate();
-
+  const profiles = player?.characterProfiles ?? [];
   if (phase === 'generating') {
     return <LoadingScreen />;
   }
@@ -77,10 +77,26 @@ function Message() {
 
         {/* 4. GUN */}
         <img 
+          className='evidence-item'
           src={gunImg} 
           alt="Gun" 
-          style={{ ...itemStyle, width: '280px', top: '70px', left: '78%', transform: 'rotate(15deg)' }} 
+          style={{ ...itemStyle, width: '280px', top: '70px', left: '78%', transform: 'rotate(15deg)' }}
+          onClick={() => (document.getElementById('accuse') as HTMLDialogElement)?.showModal()} 
         />
+        <dialog className="nes-dialog" id="accuse">
+          <form method="dialog">
+            <h3>Make Your Accusation</h3>
+            <p>Who do you think did it?</p>
+            {profiles.map(p => (
+              <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
+                {p.name}
+              </button>
+            ))}
+            <menu className="dialog-menu">
+              <button>Cancel</button>
+            </menu>
+          </form>
+        </dialog>
 
         {/* 5. NOTEBOOK */}
         <img 

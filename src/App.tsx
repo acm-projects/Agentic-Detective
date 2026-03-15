@@ -7,6 +7,7 @@ import './App.css';
 import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
+import Accuse from './Accuse.tsx';
 
 function App() {
 
@@ -20,6 +21,7 @@ function App() {
       <Route path="/interrogate" element={<Interrogate />} />
       <Route path="/clues" element={<ClueBook />} />
       <Route path="/suspects" element={<Suspects />} />
+      <Route path="/accuse" element={<Accuse />} />
     </Routes>
     </>
   )
