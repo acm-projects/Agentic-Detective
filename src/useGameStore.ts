@@ -196,7 +196,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
       },
     }));
-
+    
     try {
       const result = await session.chatSession.sendMessage(text);
       const responseText = result.response.text();
@@ -222,6 +222,16 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
       }));
 
+      const caseId = get().player?.caseReport?.caseId;
+      fetch(`http://localhost:3000/case/${caseId}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          suspectName: activeSuspectName,
+          messages: [...session.history, playerMessage, suspectMessage],
+        }),
+      }).catch(() => {});
+
       // Generate and play speech asynchronously (don't block UI)
       const suspectGender = get().player?.characterProfiles.find(
         p => p.name === activeSuspectName
@@ -229,7 +239,6 @@ export const useGameStore = create<GameState>((set, get) => ({
       generateAndPlaySpeech(responseText, suspectGender).catch(err => {
         console.error("TTS playback failed:", err);
       });
-
       // Mark as no longer responding after message is added
       set({ isResponding: false });
     } catch (err) {
@@ -266,8 +275,21 @@ export const useGameStore = create<GameState>((set, get) => ({
         explanation: backend.storyline.trueSequenceOfEvents,
       },
     });
+    const caseId = get().player?.caseReport?.caseId;
+    fetch(`http://localhost:3000/case/${caseId}/outcome`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        accusedName,
+        isCorrect,
+        trueKiller: trueKiller?.name ?? "Unknown",
+        explanation: backend.storyline.trueSequenceOfEvents,
+      }),
+    }).catch(() => {});
+
   },
 
+  
   // ── Reset everything for a new game ──
   
   resetGame: () =>

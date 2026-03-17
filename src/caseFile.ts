@@ -326,18 +326,19 @@ const raw: CaseFileRaw = JSON.parse(sanitized);
 
 
 try {
-  await fetch("http://localhost:3000/save-case", {
+  await fetch("http://localhost:3000/case/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       caseId:            raw.caseReport.caseId,
-      caseTitle:         raw.caseReport.caseTitle,
-      suspects:          raw.suspects,
+      caseReport:        raw.caseReport,
+      clues:             raw.clues,
       characterProfiles: raw.characterProfiles,
     }),
   });
+  console.log("[MongoDB] Case saved");
 } catch (err) {
-  console.warn("[save-case] Could not reach Express server — skipping save:", err);
+  console.warn("[MongoDB] Could not save case:", err);
 }
 
   const backend: CaseFileBackend = {
