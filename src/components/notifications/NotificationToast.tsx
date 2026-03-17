@@ -8,7 +8,7 @@ const TYPE_ICONS: Record<NotificationType, string> = {
 }
  
 const TYPE_LABELS: Record<NotificationType, string> = {
-  mail:   'New correspondence',
+  mail:   'New Mail Has Arrived',
 }
 
 function CountdownRing({
@@ -41,7 +41,7 @@ function CountdownRing({
       <circle
         cx="18" cy="18" r={r}
         fill="none"
-        stroke={pct > 0.4 ? '#8b6914' : '#8b2a14'}
+        stroke={pct > 0.4 ? '#04c82c' : '#8b2a14'}
         strokeWidth="2.5"
         strokeDasharray={`${dash} ${circ}`}
         strokeLinecap="round"
@@ -89,7 +89,7 @@ function Toast({ notification }: ToastProps) {
       </div>
  
       <div className={styles.toastRight}>
-        <CountdownRing createdAt={notification.createdAt} expiresAt={notification.expiresAt} />
+        <CountdownRing createdAt={notification.createdAt} expiresAt={notification.expiresAt + 1000000} />
         <button className={styles.dismissBtn} onClick={handleDismiss} title="Dismiss">×</button>
       </div>
     </div>

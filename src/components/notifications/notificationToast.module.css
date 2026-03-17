@@ -1,5 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+
 /* ── Container ───────────────────────────────────────────────────── */
 .toastContainer {
+  /* Variables */
+  --bg-toast: #e0dcd3;
+  --bg-gray: #cbcbcb; 
+  --bg-beige: #ffefd3;
+  --red: #ad0000;
+  --bg-hightext: #9b7700;
+  --ring-color: #8b6914;
+  --bg-subtext: #000000;
+  --bg-subtext2: #1119ff;
+
+
   position: fixed;
   bottom: 28px;
   right: 28px;
@@ -14,22 +28,22 @@
   align-items: flex-start;
   gap: 14px;
   width: 320px;
-  background: #000000;
-  border: 1px solid #3a2e1e;
-  border-left: 3px solid #8b6914;
+  background: var(--bg-beige);
+  border: 1px solid var(--bg-gray);
+  border-top: 4px solid var(--red);
   padding: 14px 14px 14px 16px;
   box-shadow: 0 8px 40px rgba(0,0,0,0.7), 0 0 0 1px rgba(0,0,0,0.5);
   cursor: pointer;
-  font-family: 'IM Fell English', 'Palatino Linotype', Georgia, serif;
+  font-family: 'VT323', 'Palatino Linotype', Georgia, serif;
 
   opacity: 0;
   transform: translateX(20px);
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition: opacity 0.35s ease, transform 0.35s ease, 0.2s;
 }
 
 .toast:hover {
   border-left-color: #c8941a;
-  background: #141210;
+  background: var(--bg-gray);
 }
 
 .toastVisible {
@@ -45,13 +59,13 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: #1a160f;
-  border: 1px solid #3a2e1e;
 }
 
+
+
 .toastIcon {
-  font-size: 14px;
-  color: #8b6914;
+  font-size: 32px;
+  color: var(--red);
 }
 
 /* ── Body ────────────────────────────────────────────────────────── */
@@ -64,24 +78,24 @@
 }
 
 .toastType {
-  font-size: 10px;
+  font-size: 16px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #8b6914;
+  color: var(--bg-subtext);
   margin: 0;
 }
 
 .toastHeadline {
   font-size: 13px;
-  color: #c8b89a;
+  color: #000000;
   margin: 0;
   line-height: 1.4;
-  font-style: italic;
+  font-style: none;
 }
 
 .toastCta {
   font-size: 11px;
-  color: #5a4e3a;
+  color: var(--bg-hightext);
   margin: 4px 0 0;
   letter-spacing: 0.04em;
 }
@@ -101,13 +115,13 @@
 
 .dismissBtn {
   background: transparent;
-  border: none;
+  border: 1px solid #3a3530;
   color: #3a3530;
   font-size: 16px;
   cursor: pointer;
   line-height: 1;
-  padding: 0;
-  width: 20px;
+  padding: 2;
+  width: 40px;
   height: 20px;
   display: flex;
   align-items: center;
@@ -117,4 +131,5 @@
 
 .dismissBtn:hover {
   color: #8a7f6e;
+  background-color: var(--red);
 }

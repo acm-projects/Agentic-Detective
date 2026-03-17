@@ -14,7 +14,7 @@ import type {
 const SCHEDULE_CONFIG = {
     firstNotificationWindow: [5_000, 8_000] as [number, number], // 120, 180
     cooldown: 10_000, // 90
-    toastLifetime: 30_000, // Toast: a gui element that shows up, then disappears; 30
+    toastLifetime: 3000_000, // Toast: a gui element that shows up, then disappears; 30
     minGameTimeRemaining: 5_000, // 60
 };
 

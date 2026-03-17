@@ -4,15 +4,12 @@ import type { MinigameData } from '../../obj/notificationInterfaces'
 import styles from './MinigameModal.module.css'
 
 const TYPE_TITLES: Record<string, string> = {
-  mail:   'Correspondence Recovered',
-  tip:    'Anonymous Intelligence',
-  report: 'Forensic Evidence',
+  mail:   'Mail Recovered',
+
 }
 
 const MINIGAME_TITLES: Record<string, string> = {
-  cipher: 'Decrypt the Message',
-  wire:   'Reconnect the Circuit',
-  jigsaw: 'Restore the Fragment',
+
   wordle: 'Identify the Keyword',
 }
 

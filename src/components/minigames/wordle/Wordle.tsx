@@ -55,6 +55,7 @@ const KEYBOARD_ROWS = [
 
 export function WordleMinigame({ data, onSuccess, onFailure }: Props) {
   const { answer, maxNumGuesses, hint } = data
+  const [pressedKey, setPressedKey] = useState<string | null>(null)
   const [rows, setRows] = useState<GuessRow[]>(() => Array(maxNumGuesses).fill(null).map(emptyRow))
   const [currentRow, setCurrentRow] = useState(0)
   const [currentCol, setCurrentCol] = useState(0)
@@ -113,6 +114,9 @@ export function WordleMinigame({ data, onSuccess, onFailure }: Props) {
   }, [currentCol, currentRow, rows, answer, maxNumGuesses, onSuccess, onFailure])
 
   const handleKey = useCallback((key: string) => {
+    setPressedKey(key);
+    setTimeout(() => setPressedKey(null), 100);
+
     if (gameOver) return
     if (key === 'ENTER') { submitGuess(); return }
     if (key === '⌫' || key === 'BACKSPACE') {
@@ -178,7 +182,8 @@ export function WordleMinigame({ data, onSuccess, onFailure }: Props) {
               return (
                 <button
                   key={key}
-                  className={`${styles.wordleKey} ${state ? styles[`wordle_${state}`] : ''} ${key.length > 1 ? styles.wordleKeyWide : ''}`}
+                  className={`${styles.wordleKey} ${ pressedKey === key ? styles.wordleKeyActive : '' } 
+                  ${ state ? styles[`wordle_${state}`] : ''} ${key.length > 1 ? styles.wordleKeyWide : ''}`}
                   onClick={() => handleKey(key)}
                 >
                   {key}
