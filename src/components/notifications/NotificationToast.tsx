@@ -73,7 +73,7 @@ function Toast({ notification }: ToastProps) {
     if (audioData) {
       let audio = new Audio(audioData)
       audio.play()
-      return () => audio.pause()
+      return;
     }
   }, [])
  
