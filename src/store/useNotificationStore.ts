@@ -3,7 +3,6 @@ import { immer } from "zustand/middleware/immer";
 import type {
     NotificationPayload,
     Clue,
-    DiscoveredClue,
     WordleData,
     NotificationType,
     MinigameData,
@@ -95,7 +94,6 @@ function generateMinigameData(type: MinigameType): MinigameData {
 interface NotificationState {
     notifications: NotificationPayload[];
     clues: Clue[];
-    discoveredClues: DiscoveredClue[];
     lastFiredAt: number | null;
     nextFireAt: number | null;
     timerPaused: boolean;
@@ -117,20 +115,10 @@ function clearClueNotification(clues: Clue[], clueId: string) {
   }
 }
 
-function buildDiscoveredClues(clues: Clue[]): DiscoveredClue[] {
-  return clues
-    .filter(c => c.discovered)
-    .map(c => ({
-      ...c,
-      discovered: true,
-    }));
-}
-
 export const useNotificationStore = create<NotificationState>()(
   immer((set, get) => ({
     notifications: [],
     clues: [],
-    discoveredClues: [],
     lastFiredAt: null,
     nextFireAt: null,
     timerPaused: false,
@@ -144,7 +132,6 @@ export const useNotificationStore = create<NotificationState>()(
           discovered: Boolean(clue.discovered),
           notificationId: undefined,
         }));
-        s.discoveredClues = buildDiscoveredClues(s.clues);
       })
     },
     
@@ -264,19 +251,8 @@ export const useNotificationStore = create<NotificationState>()(
           if (clue) {
             clue.discovered = true
             discoveredClueId = clue.id;
-
-            const alreadyTracked = s.discoveredClues.some(dc => dc.id === clue.id);
-              if (!alreadyTracked) {
-                s.discoveredClues.push({
-                ...clue,
-                discovered: true,
-            });
-            }
           }
         }
-
-        // Keep discovered clue cache aligned with canonical clue state.
-        s.discoveredClues = buildDiscoveredClues(s.clues);
       })
 
       if (discoveredClueId) {
@@ -320,4 +296,4 @@ export const selectOpenMinigame = (s: NotificationState) =>
   s.notifications.find(n => n.opened && !n.dismissed) ?? null;
  
 export const selectDiscoveredClues = (s: NotificationState) =>
-  s.discoveredClues;
+  s.clues.filter(c => c.discovered);

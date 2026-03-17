@@ -1,20 +1,37 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
 import { useNavigate } from 'react-router';
-import { selectDiscoveredClues, useNotificationStore } from './store/useNotificationStore'
+import { useNotificationStore } from './store/useNotificationStore'
 
 
 export default function ClueBook() {
-  const clues = useNotificationStore(selectDiscoveredClues);
+  const allClues = useNotificationStore(s => s.clues);
+  const clues = useMemo(() => allClues.filter(clue => clue.discovered), [allClues]);
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const clueIds = new Set(clues.map(clue => clue.id));
+
+    setExamined(prev => {
+      const next = new Set(Array.from(prev).filter(id => clueIds.has(id)));
+      const unchanged = prev.size === next.size && Array.from(prev).every(id => next.has(id));
+      return unchanged ? prev : next;
+    });
+
+    if (selected && !clueIds.has(selected.id)) {
+      setSelected(null);
+    }
+  }, [clues, selected]);
 
   const handleClueClick = (clue: Clue) => {
     setSelected(clue);
     setExamined(prev => new Set(prev).add(clue.id));
   };
+
+  const selectedIndex = selected ? clues.findIndex(c => c.id === selected.id) : -1;
 
   return (
     <div className="clue-book-overlay">
@@ -65,11 +82,11 @@ export default function ClueBook() {
           </div>
 
           {/* Right: detail panel */}
-          {selected ? (
+          {selected && selectedIndex >= 0 ? (
             <div className="clue-detail">
               <div className="clue-detail-icon-large">
                 <PixelIcon
-                  index={clues.findIndex(c => c.id === selected.id)}
+                  index={selectedIndex}
                   decisive={selected.isDecisive}
                   large
                 />

@@ -2,7 +2,6 @@
 export type NotificationType = "mail"; // add more types to this later
 export type MinigameType = "wordle";
 import type { Clue } from '../caseFile';
-import type { ClueSeverity } from '../caseFile';
 
 
 
@@ -33,17 +32,6 @@ export interface WordleData {
 /*
   This is the interface for discovered clues, not just all clues in general 
 */
-export interface DiscoveredClue {
-    id: string;
-    name: string;
-    description: string;
-    location?: string;
-    couldImplicateSuspects?: string[];
-    discovered?: boolean;
-    severity: ClueSeverity;
-    notificationId?: string;
-    isDecisive: boolean;
-}
 
 
 export type { Clue }
