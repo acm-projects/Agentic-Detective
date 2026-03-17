@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNotificationStore, selectActiveToast } from "../../store/useNotificationStore";
 import type { NotificationPayload, NotificationType } from "../../obj/notificationInterfaces";
 import styles from "./notificationToast.module.css";
+import notificationSound from "../../../assets/notification_sound.mp3";
 
 const TYPE_ICONS: Record<NotificationType, string> = {
   mail:   '✉',
@@ -60,14 +61,25 @@ function Toast({ notification }: ToastProps) {
   const openNotification = useNotificationStore(s => s.openNotification)
   const dismissNotification = useNotificationStore(s => s.dismissNotification)
   const [visible, setVisible] = useState(false)
+  const [audioData] = useState(notificationSound)
  
   useEffect(() => {
     // Slight delay for entrance animation
     const t = setTimeout(() => setVisible(true), 50)
     return () => clearTimeout(t)
   }, [])
+
+  useEffect(() => {
+    if (audioData) {
+      let audio = new Audio(audioData)
+      audio.play()
+      return () => audio.pause()
+    }
+  }, [])
  
-  const handleOpen = () => openNotification(notification.id)
+  const handleOpen = () => {
+    openNotification(notification.id)
+  }
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation()
     dismissNotification(notification.id)
