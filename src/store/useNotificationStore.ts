@@ -103,6 +103,7 @@ interface NotificationState {
     tick: (elapsed: number, totalGameDuration: number) => void; // for detailed explanation, see definition below
     openNotification: (id: string) => void;
     dismissNotification: (id: string) => void;
+    abandonMinigame: (id: string) => void;
     resolveMinigame: (notificationId: string, success: boolean) => void;
     setTimerPaused: (paused: boolean) => void;
     purgeExpired: () => void;
@@ -130,6 +131,7 @@ export const useNotificationStore = create<NotificationState>()(
         s.clues = clues.map(clue => ({
           ...clue,
           discovered: Boolean(clue.discovered),
+          clueLost: Boolean(clue.clueLost),
           notificationId: undefined,
         }));
       })
@@ -167,7 +169,7 @@ export const useNotificationStore = create<NotificationState>()(
           .map(n => n.clueId)
       )
       const available = state.clues.filter(
-        c => !c.discovered && !pendingClueIds.has(c.id) && !c.notificationId
+        c => !c.discovered && !c.clueLost && !pendingClueIds.has(c.id) && !c.notificationId
       )
       if (available.length === 0) return
  
@@ -224,10 +226,27 @@ export const useNotificationStore = create<NotificationState>()(
       set(s => {
         const n = s.notifications.find((n: { id: string; }) => n.id === id)
         if (n) {
-          n.dismissed = true
+          n.dismissed = true 
           clearClueNotification(s.clues, n.clueId)
         }
         s.timerPaused = false
+      })
+    },
+
+    abandonMinigame(notificationId) {
+      set(s => {
+        const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
+        if (!n) return
+
+        n.dismissed = true
+        s.timerPaused = false
+        clearClueNotification(s.clues, n.clueId)
+
+        const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId)
+        if (clue) {
+          clue.clueLost = true // if clueLost is true, it cannot be fed into a notification again
+          console.log(clue.name, "is lost");
+        }
       })
     },
  
@@ -241,16 +260,23 @@ export const useNotificationStore = create<NotificationState>()(
       let discoveredClueId: string | null = null;
       set(s => {
         const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
-        if (!n) return
-        n.dismissed = true
-        s.timerPaused = false
-        clearClueNotification(s.clues, n.clueId)
+        if (!n) return;
+        n.dismissed = true;
+        s.timerPaused = false;
+        clearClueNotification(s.clues, n.clueId);
  
         if (success) {
           const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId) // cross-check this parameter type
           if (clue) {
-            clue.discovered = true
+            clue.discovered = true;
             discoveredClueId = clue.id;
+          }
+        }
+        else { // maybe replace with abandon
+          const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId);
+          if (clue) {
+            clue.clueLost = true; // if clueLost is true, it cannot be fed into a notification again
+            console.log(clue.name, "is lost");
           }
         }
       })
@@ -266,7 +292,7 @@ export const useNotificationStore = create<NotificationState>()(
     Sets timer to be paused
     */
     setTimerPaused(paused) {
-      set(s => { s.timerPaused = paused })
+      set(s => { s.timerPaused = paused });
     },
  
     /*

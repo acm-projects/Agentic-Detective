@@ -34,10 +34,12 @@ export function MinigameModal() {
   const active = useNotificationStore(selectOpenMinigame)
   const resolveMinigame = useNotificationStore(s => s.resolveMinigame)
   const dismissNotification = useNotificationStore(s => s.dismissNotification)
+  const abandonNotification = useNotificationStore(s => s.abandonMinigame)
 
   if (!active) return null
 
   const handleSuccess = () => resolveMinigame(active.id, true)
+  const handleAbandon = () => abandonNotification(active.id)
   const handleFailure = () => resolveMinigame(active.id, false)
   const handleClose   = () => dismissNotification(active.id)
 
@@ -84,7 +86,7 @@ export function MinigameModal() {
           <span className={styles.footerNote}>
             Solve the puzzle to unlock the evidence.
           </span>
-          <button className={styles.skipBtn} onClick={handleClose}>
+          <button className={styles.skipBtn} onClick={handleAbandon}>
             Abandon
           </button>
         </div>

@@ -116,6 +116,7 @@ export interface Clue {
     severity: ClueSeverity;
     notificationId?: string;
     isDecisive: boolean;
+    clueLost: boolean;   // if clue is lost, it cannot be found again
 };
 
 // ─────────────────────────────────────────────
@@ -292,6 +293,7 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
     "discovered": false, // ensure that this is always false
     "severity": ClueSeverity,
     "isDecisive": boolean, //// True = directly proves something; False = circumstantial
+    "clueLost": boolean // keep this as always false
   }]
 }
 `.trim();
