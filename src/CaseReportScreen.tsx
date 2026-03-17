@@ -1,6 +1,6 @@
 import { useGameStore } from "./useGameStore";
 import "./CaseReportScreen.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { useState, useRef, useCallback, useEffect } from "react";
 
 const LENS_SIZE = 180;   // diameter in px
@@ -14,7 +14,7 @@ type CaseReport = CaseFilePlayer["caseReport"];
 
 export default function CaseReportScreen() {
   const navigate = useNavigate();
-  const { player, proceedToInvestigation } = useGameStore();
+  const { player } = useGameStore();
   const report = player?.caseReport;
 
   const overlayRef = useRef<HTMLDivElement>(null);

@@ -5,9 +5,9 @@
 
 import { create } from "zustand";
 import { GoogleGenerativeAI, ChatSession, SchemaType } from "@google/generative-ai";
-import type { PlayerSeed, CaseFileBackend, CaseFilePlayer } from "./caseFile";
+import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
+import type { PlayerSeed } from "./obj/backendInterfaces";
 import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
-import { streamSpeech } from "./services/ttsService";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -66,6 +66,7 @@ interface GameState {
 
   error: string | null;
   isResponding: boolean;
+  elapsed: number;
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
@@ -76,7 +77,9 @@ interface GameState {
   startInterrogation: (suspectName: string) => void;
   sendMessage: (text: string) => Promise<void>;
   makeAccusation: (suspectName: string) => void;
-  resetGame: () => void,
+  resetGame: () => void;
+  markClueDiscovered: (clueId: string) => void;
+  tickElapsed: () => void;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -97,6 +100,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   accusationResult: null,
   error: null,
   isResponding: false,
+  elapsed: 0,
 
   // ── Merge partial seed updates ──
   setSeed: (partial) =>
@@ -115,7 +119,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     set({ phase: "generating", error: null });
     try {
       const { backend, player } = await generateCaseFile(seed);
-      set({ backend, player, phase: "briefing" });
+      set({ backend, player, phase: "briefing", elapsed: 0 });
+      const { useNotificationStore } = await import("./store/useNotificationStore");
+      useNotificationStore.getState().initClues(player.clues)
       navigate("/report");           // ← instead of set({ phase: "briefing" })
     } catch (err) {
       set({ error: "Failed to generate case.", phase: "setup" });
@@ -252,19 +258,6 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
       }));
 
-      // Generate and play speech asynchronously (don't block UI)
-      const suspectGender = get().player?.characterProfiles.find(
-        p => p.name === activeSuspectName
-      )?.gender ?? "female";
-
-      //TTS BELOW!!!!!!
-/*
-      streamSpeech(responseText, suspectGender).catch(err => {
-        console.error("TTS playback failed:", err);
-      });
-*/
-
-
       // Mark as no longer responding after message is added
       set({ isResponding: false });
     } catch (err) {
@@ -303,6 +296,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
   },
 
+  markClueDiscovered: (clueId) => {
+    set(state => {
+    if (!state.player) return state
+    return {
+      player: {
+        ...state.player,
+        clues: state.player.clues.map(c =>
+          c.id === clueId ? { ...c, discovered: true } : c
+        )
+      }
+    };
+    });
+  },
+
+
+
   // ── Reset everything for a new game ──
   
   resetGame: () =>
@@ -317,7 +326,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       accusationResult: null,
       error: null,
       isResponding: false,
+      elapsed: 0,
     }),
+  
+    // keeps track of elapsed time
+  tickElapsed: () => {
+    set(state => ({ elapsed: state.elapsed + 1 }));
+  },
 }));
 
 // ─────────────────────────────────────────────
@@ -325,12 +340,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 // ─────────────────────────────────────────────
 
 // Current active session's chat history
+const EMPTY_HISTORY: ChatMessage[] = []
+
 export const useActiveHistory = () =>
   useGameStore(state =>
     state.activeSuspectName
-      ? (state.sessions[state.activeSuspectName]?.history ?? [])
-      : []
-  );
+      ? (state.sessions[state.activeSuspectName]?.history ?? EMPTY_HISTORY)
+      : EMPTY_HISTORY // FIX: lift the fallback array outside the selector so it's always the same reference, otherwise new obj created within zustand
+  )
 
 // Safe player data — the only thing UI components should read from
 export const usePlayerData = () => useGameStore(state => state.player);

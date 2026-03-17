@@ -1,0 +1,291 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  background: rgba(9, 8, 7, 0.72);
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  background: #100f0d;
+  border: 1px solid #3a2e1e;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.75);
+  padding: 16px 18px;
+  color: #c8b89a;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.headerMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 12px;
+}
+
+.notifType {
+  color: #8b6914;
+}
+
+.separator {
+  color: #5a4e3a;
+}
+
+.minigameTitle {
+  color: #bfa379;
+}
+
+.closeBtn {
+  background: transparent;
+  border: 1px solid #3a2e1e;
+  color: #8a7f6e;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+}
+
+.ruledLine {
+  margin: 12px 0;
+  border-top: 1px dashed #3a2e1e;
+}
+
+.flavour {
+  margin: 0;
+  color: #8a7f6e;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.minigameArea {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.footerNote {
+  font-size: 12px;
+  color: #8a7f6e;
+}
+
+.skipBtn {
+  background: transparent;
+  border: 1px solid #5a4e3a;
+  color: #c8b89a;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.skipBtn:hover {
+  background: #2a2318;
+}
+
+/* ── Shared minigame wrapper ─────────────────────────────────────── */
+.minigameInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  padding: 4px 0 8px;
+  font-family: 'IM Fell English', 'Palatino Linotype', Georgia, serif;
+}
+
+.hint {
+  font-size: 13px;
+  color: #8a7f6e;
+  text-align: center;
+  font-style: italic;
+  max-width: 380px;
+  line-height: 1.6;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.errorMsg {
+  font-size: 13px;
+  color: #c0392b;
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
+.successMsg {
+  font-size: 14px;
+  color: #7aac6e;
+  text-align: center;
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.submitBtn {
+  background: transparent;
+  border: 1px solid #5a4e3a;
+  color: #c8b89a;
+  padding: 9px 28px;
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.submitBtn:hover {
+  background: #2a2318;
+  color: #e8d5b0;
+}
+.submitBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── Wordle ──────────────────────────────────────────────────────── */
+.wordleGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.wordleRow {
+  display: flex;
+  gap: 5px;
+}
+
+.wordleShake {
+  animation: wordleShake 0.45s ease;
+}
+
+@keyframes wordleShake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-6px); }
+  40%     { transform: translateX(6px); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(4px); }
+}
+
+.wordleTile {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 22px;
+  font-weight: 700;
+  border: 1px solid #2e2820;
+  background: #0e0d0b;
+  color: #c8b89a;
+  letter-spacing: 0.05em;
+  transition: background 0.25s, border-color 0.25s, color 0.25s;
+}
+
+.wordle_tbd {
+  border-color: #5a4e3a;
+  background: #141210;
+}
+
+.wordle_correct {
+  background: #2d4a29;
+  border-color: #4a7a43;
+  color: #a8d4a0;
+  animation: wordleFlip 0.4s ease forwards;
+}
+
+.wordle_present {
+  background: #4a3a10;
+  border-color: #8b6914;
+  color: #d4a830;
+  animation: wordleFlip 0.4s ease forwards;
+}
+
+.wordle_absent {
+  background: #151310;
+  border-color: #1e1c18;
+  color: #3a3530;
+  animation: wordleFlip 0.4s ease forwards;
+}
+
+@keyframes wordleFlip {
+  0%   { transform: rotateX(0deg); }
+  50%  { transform: rotateX(90deg); }
+  100% { transform: rotateX(0deg); }
+}
+
+/* Keyboard */
+.wordleKeyboard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  margin-top: 4px;
+}
+
+.wordleKeyRow {
+  display: flex;
+  gap: 4px;
+}
+
+.wordleKey {
+  min-width: 32px;
+  height: 44px;
+  background: #1a1814;
+  border: 1px solid #2e2820;
+  color: #c8b89a;
+  font-family: 'IM Fell English', Georgia, serif;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  transition: background 0.15s, color 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.wordleKey:hover {
+  background: #2a2318;
+}
+
+.wordleKeyWide {
+  min-width: 52px;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+
+.wordleKey.wordle_correct {
+  background: #2d4a29;
+  border-color: #4a7a43;
+  color: #a8d4a0;
+  animation: none;
+}
+
+.wordleKey.wordle_present {
+  background: #4a3a10;
+  border-color: #8b6914;
+  color: #d4a830;
+  animation: none;
+}
+
+.wordleKey.wordle_absent {
+  background: #151310;
+  border-color: #1e1c18;
+  color: #3a3530;
+  animation: none;
+}

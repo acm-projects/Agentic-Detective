@@ -1,12 +1,12 @@
 import { useState } from "react";
-import { useGameStore } from "./useGameStore";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
+import { selectDiscoveredClues, useNotificationStore } from './store/useNotificationStore'
+
 
 export default function ClueBook() {
-  const { player } = useGameStore();
-  const clues = player?.clues ?? [];
+  const clues = useNotificationStore(selectDiscoveredClues);
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
@@ -48,6 +48,7 @@ export default function ClueBook() {
                     className={`clue-card ${isExamined ? "examined" : ""} ${isSelected ? "active" : ""} ${clue.isDecisive ? "decisive" : ""}`}
                     onClick={() => handleClueClick(clue)}
                     style={{ animationDelay: `${i * 0.06}s` }}
+                    
                   >
                     <div className="clue-card-icon">
                     <img src={`/clues/locker.png`} alt={`locker img`} className="pixel-icon-locker" />
@@ -88,11 +89,11 @@ export default function ClueBook() {
 
               <p className="clue-detail-description">{selected.description}</p>
 
-              {selected.couldImplicateSuspects.length > 0 && (
+              {(selected.couldImplicateSuspects?.length ?? 0) > 0 && (
                 <div className="clue-detail-suspects">
                   <div className="clue-suspects-label">COULD IMPLICATE:</div>
                   <div className="clue-suspects-list">
-                    {selected.couldImplicateSuspects.map(name => (
+                    {selected.couldImplicateSuspects?.map(name => (
                       <span key={name} className="clue-suspect-tag">{name}</span>
                     ))}
                   </div>
@@ -108,8 +109,9 @@ export default function ClueBook() {
             </div>
           )}
         </div>
-
+        <br />
         <button className="back-btn" onClick={() => navigate('/desk')}>Back to desk</button>
+        <button className="back-btn" onClick={() => navigate('/interrogate')}>Back to Interrogation</button>
 
         {/* Book corners */}
         <div className="pixel-corner bl" />
