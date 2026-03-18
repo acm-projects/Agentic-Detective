@@ -38,11 +38,11 @@ function CountdownRing({
  
   return (
     <svg className={styles.ring} width={36} height={36} viewBox="0 0 36 36">
-      <circle cx="18" cy="18" r={r} fill="none" stroke="#2e2820" strokeWidth="2.5" />
+      <circle cx="18" cy="18" r={r} fill="none" stroke="#9d9d9d" strokeWidth="2.5" />
       <circle
         cx="18" cy="18" r={r}
         fill="none"
-        stroke={pct > 0.4 ? '#04c82c' : '#8b2a14'}
+        stroke={pct > 0.4 ? '#04c82c' : '#ff2f00'}
         strokeWidth="2.5"
         strokeDasharray={`${dash} ${circ}`}
         strokeLinecap="round"
@@ -101,7 +101,7 @@ function Toast({ notification }: ToastProps) {
       </div>
  
       <div className={styles.toastRight}>
-        <CountdownRing createdAt={notification.createdAt} expiresAt={notification.expiresAt + 1000000} />
+        <CountdownRing createdAt={notification.createdAt} expiresAt={notification.expiresAt} />
         <button className={styles.dismissBtn} onClick={handleDismiss} title="Dismiss">×</button>
       </div>
     </div>
