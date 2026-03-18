@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGameStore } from "./useGameStore";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
@@ -6,10 +6,25 @@ import { useNavigate } from 'react-router-dom';
 
 export default function ClueBook() {
   const { player } = useGameStore();
-  const clues = player?.clues ?? [];
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+  const [clues, setClues] = useState(player?.clues ?? []);
+
+  useEffect(() => {
+    // If Zustand has clues, use them
+    if (player?.clues?.length) {
+      setClues(player.clues);
+      return;
+    }
+    // Otherwise fall back to fetching from MongoDB
+    const caseId = player?.caseReport?.caseId;
+    if (!caseId) return;
+    fetch(`http://localhost:3000/case/${caseId}/clues`)
+      .then(r => r.json())
+      .then(setClues)
+      .catch(console.warn);
+  }, [player]);
 
   const handleClueClick = (clue: Clue) => {
     setSelected(clue);

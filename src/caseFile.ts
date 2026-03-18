@@ -323,7 +323,7 @@ const sanitized = rawText.replace(
 );
 
 const raw: CaseFileRaw = JSON.parse(sanitized);
-
+localStorage.setItem("lastCaseId", raw.caseReport.caseId);
 
 try {
   await fetch("http://localhost:3000/case/create", {

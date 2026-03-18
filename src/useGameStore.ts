@@ -35,6 +35,7 @@ export interface SuspectSession {
 export type GamePhase =
   | "setup"          // Player entering seed inputs
   | "generating"     // LLM generating the case file
+  | "refreshed"      // When the game needs to be pulled from mongodb
   | "briefing"       // Player reading the case report
   | "investigation"  // Active interrogation / clue review
   | "interrogation"  // Asking questions to the suspects and finding clues
@@ -105,6 +106,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async (navigate: (path: string) => void) => {
+    if (phase== "generating"){
+      
+    }
     const { seed } = get();
     if (!seed || !seed.freeText.trim()) {
       set({ error: "Please enter a case theme before starting." });
@@ -120,6 +124,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ error: "Failed to generate case.", phase: "setup" });
       console.error(err);
     }
+    
   },
 
   // ── Player has read the briefing, move to investigation ──
@@ -176,6 +181,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       },
     }));
   },
+
 
   // ── Send a player message to the active suspect ──
   sendMessage: async (text) => {

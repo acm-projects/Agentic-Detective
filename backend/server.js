@@ -37,7 +37,7 @@ app.use(express.json());
 
 
 app.post('/case/create', async (req, res) => {
-  console.log('[/case/create] reaceived:', req.body.caseId);
+  console.log('[/case/create] received:', req.body.caseId);
   const { caseId, caseReport, clues, characterProfiles } = req.body;
   try {
     await db.collection('cases').insertOne({
@@ -78,6 +78,23 @@ app.post('/case/:caseId/outcome', async (req, res) => {
     );
     res.json({ success: true });
   } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/case/:caseId', async (req, res) => {
+  console.log('!!!!!')
+  console.log('[GET /case/:caseId] looking for:', req.params.caseId);
+  try {
+    const doc = await db.collection('cases').findOne(
+      { caseId: req.params.caseId },
+      { projection: { _id: 0 } }
+    );
+    console.log('[GET /case/:caseId] found:', doc ? 'yes' : 'null');
+    if (!doc) return res.status(404).json({ error: "Case not found" });
+    res.json(doc);
+  } catch (err) {
+    console.error('[GET /case/:caseId] error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
