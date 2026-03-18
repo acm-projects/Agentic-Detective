@@ -33,8 +33,8 @@ function Accuse() {
   if (!hasPlayedRef.current) {
     hasPlayedRef.current = true;
     const src = isCorrect
-      ? '../assets/correct_accuation.mp3'
-      : '../assets/incorrect_accusation.mp3';
+      ? '../assets/freesound_community-handcuffs-94692.mp3'
+      : '../assets/km007-chase-running-9109.mp3';
     new Audio(src).play().catch(err => console.warn('Audio play failed:', err));
   }
 

@@ -85,6 +85,7 @@ export async function playAudio(audioUrl: string): Promise<void> {
  * @param gender - Gender of the speaker ("male" or "female")
  */
 
+/*
 export async function generateAndPlaySpeech(text: string, gender: "male" | "female" = "female"): Promise<void> {
   const { audioUrl, error } = await generateSpeech(text, gender);
   
@@ -101,9 +102,12 @@ export async function generateAndPlaySpeech(text: string, gender: "male" | "fema
     }
   }
 }
+*/
 
-
-export async function streamSpeech(text: string, gender: "male" | "female" = "female") {
+export async function streamSpeech(
+  text: string,
+  gender: "male" | "female" = "female"
+): Promise<void> {
   const voiceId = gender === "male" ? BOY_VOICE_ID : GIRL_VOICE_ID;
 
   const response = await fetch(
@@ -113,37 +117,95 @@ export async function streamSpeech(text: string, gender: "male" | "female" = "fe
       headers: {
         "Content-Type": "application/json",
         "xi-api-key": ELEVEN_LABS_API_KEY,
-        "Accept": "audio/mpeg"
+        Accept: "audio/mpeg",
       },
       body: JSON.stringify({
         text,
         model_id: "eleven_v3",
-        speed: 2,
+        voice_settings: {
+          stability: 0.5,
+          similarity_boost: 0.8,
+          use_speaker_boost: true,
+        },
+        // Key latency setting — send audio as soon as possible
+        optimize_streaming_latency: 4, // 0–4, higher = lower latency, slight quality tradeoff
       }),
     }
   );
 
-  const mediaSource = new MediaSource();
-  const audio = new Audio(URL.createObjectURL(mediaSource));
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err?.detail?.message ?? "ElevenLabs TTS failed");
+  }
 
-  mediaSource.addEventListener("sourceopen", async () => {
-    const sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
-    const reader = response.body!.getReader();
+  return playStream(response);
+}
 
-    async function push() {
-      const { done, value } = await reader.read();
+// Reliable MediaSource queue that handles chunk boundaries correctly
+function playStream(response: Response): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const mediaSource = new MediaSource();
+    const audio = new Audio(URL.createObjectURL(mediaSource));
 
-      if (done) {
-        mediaSource.endOfStream();
-        return;
+    mediaSource.addEventListener("sourceopen", async () => {
+      let sourceBuffer: SourceBuffer;
+
+      try {
+        sourceBuffer = mediaSource.addSourceBuffer("audio/mpeg");
+      } catch (e) {
+        return reject(e);
       }
 
-      sourceBuffer.appendBuffer(value);
-      sourceBuffer.addEventListener("updateend", push, { once: true });
-    }
+      const queue: Uint8Array<ArrayBuffer>[] = [];
+      let appending = false;
+      let streamDone = false;
 
-    push();
+      const flush = () => {
+        if (appending || !queue.length) return;
+        if (sourceBuffer.updating) return; // guard against race
+        appending = true;
+        try {
+          sourceBuffer.appendBuffer(queue.shift()!);
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      sourceBuffer.addEventListener("updateend", () => {
+        appending = false;
+        if (queue.length) {
+          flush();
+        } else if (streamDone) {
+          try { mediaSource.endOfStream(); } catch { /* already closed */ }
+          resolve();
+        }
+      });
+
+      sourceBuffer.addEventListener("error", (e) => reject(e));
+
+      // Start reading chunks
+      const reader = response.body!.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) {
+            streamDone = true;
+            // If nothing is in flight, close immediately
+            if (!appending && !queue.length) {
+              try { mediaSource.endOfStream(); } catch { /* already closed */ }
+              resolve();
+            }
+            break;
+          }
+          queue.push(value);
+          flush();
+        }
+      } catch (e) {
+        reject(e);
+      }
+    }, { once: true });
+
+    // Start playback immediately — audio will buffer naturally
+    audio.play().catch(reject);
   });
-
-  audio.play();
 }

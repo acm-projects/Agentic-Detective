@@ -158,17 +158,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-lite",
       systemInstruction: systemPrompt,
-      generationConfig: { 
-        temperature: 0.85, 
-        responseMimeType: "application/json", 
+      generationConfig: {
+        temperature: 0.9,
+        responseMimeType: "application/json",
         responseSchema: {
           type: SchemaType.OBJECT,
           properties: {
             response:    { type: SchemaType.STRING },
-            stressLevel: { 
-              type: SchemaType.INTEGER, 
-              description: "A number between 0 and 100. Must reflect cumulative interrogation pressure. Spikes 15-25 on direct hits about the crime, drops 5-10 on successful deflections. Never resets to 0."
-            },},
+            stressLevel: { type: SchemaType.INTEGER },
+          },
+          required: ["response", "stressLevel"],  // enforce both fields always present
         },
       },
     });
@@ -211,7 +210,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     }));
 
     try {
-      const result = await session.chatSession.sendMessage(text);
+      const messageWithContext = `[Current stress level: ${session.stressLevel}]\n\n${text}`;
+      const result = await session.chatSession.sendMessage(messageWithContext);
       const raw = result.response.text();
       let responseText = raw;
       console.log("suspect raw response");
@@ -243,12 +243,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         sessions: {
           ...state.sessions,
           [activeSuspectName]: {
-            ...session,
-            history: [...session.history, playerMessage, suspectMessage],
-            conversationCount: session.conversationCount + 1,
-            stressLevel: newStress,   // ← ADD
+            ...state.sessions[activeSuspectName],                   
+            history: [...state.sessions[activeSuspectName].history, suspectMessage],
+            conversationCount: state.sessions[activeSuspectName].conversationCount + 1,
+            stressLevel: newStress,
           },
         },
+        isResponding: false,                                        // combine into one set() call
       }));
 
       // Generate and play speech asynchronously (don't block UI)
@@ -262,10 +263,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         console.error("TTS playback failed:", err);
       });
 */
-
-
-      // Mark as no longer responding after message is added
-      set({ isResponding: false });
+      //tts streamed better\
+/*
+      streamSpeech(responseText, suspectGender).catch(err =>
+        console.error("TTS playback failed:", err)
+      );
+*/
     } catch (err) {
       console.error("Message failed:", err);
       // Revert optimistic message on failure
@@ -276,7 +279,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           ...state.sessions,
           [activeSuspectName]: {
             ...session,
-            history: session.history.slice(0, -1), // Remove the optimistically added player message
+            history: session.history,
           },
         },
       }));
