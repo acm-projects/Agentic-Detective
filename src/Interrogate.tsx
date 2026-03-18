@@ -1,12 +1,30 @@
-import { useState, useEffect, useRef, act } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from './useGameStore';
 import { StressBar } from './StressBar';
+import { useNotificationStore } from './store/useNotificationStore'
+import { useNotificationScheduler } from './services/useNotificationScheduler'
+import { NotificationToast } from './components/notifications/NotificationToast'
+import { MinigameModal } from './components/minigames/MinigameModal'
 import './Interrogate.css';
+
+
 
 function Interrogate() {
   const navigate = useNavigate();
-  const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
+  const { 
+    player, 
+    activeSuspectName, 
+    isResponding, 
+    elapsed,
+    startInterrogation, 
+    proceedToInvestigation, 
+    sendMessage, 
+    makeAccusation, 
+    goToBriefing,
+    tickElapsed,
+  } = useGameStore();
+
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
   const profiles = player?.characterProfiles ?? [];
@@ -21,6 +39,17 @@ function Interrogate() {
       startInterrogation(profiles[0].name);
     }
   }, []);
+
+  // timer effect and scheduler
+  const timerPaused = useNotificationStore(s => s.timerPaused)
+
+  useEffect(() => {
+    if (timerPaused) return
+    const id = setInterval(tickElapsed, 1000)
+    return () => clearInterval(id)
+  }, [timerPaused, player])
+
+  useNotificationScheduler(elapsed, 600_000, !!player)
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -235,7 +264,9 @@ function Interrogate() {
           </form>
         </div>
       </div>
-    </div>
+      <NotificationToast />
+      <MinigameModal />
+      </div>
   );
 }
 

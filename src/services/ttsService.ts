@@ -5,11 +5,6 @@ const ELEVEN_LABS_API_KEY = import.meta.env.VITE_ELEVEN_LABS_API_KEY;
 const GIRL_VOICE_ID = import.meta.env.VITE_GIRL_VOICE_ID; // Default voice ID - you can customize this per suspect
 const BOY_VOICE_ID = import.meta.env.VITE_BOY_VOICE_ID; // Another voice option
 
-interface TTSResponse {
-  audioUrl: string | null;
-  error: string | null;
-}
-
 /**
  * Convert text to speech using Eleven Labs API
  * @param text - The text to convert to speech

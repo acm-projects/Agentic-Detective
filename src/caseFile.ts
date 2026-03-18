@@ -23,6 +23,9 @@ export const AVATAR_POOL = [
   { id: "avatar_04", description: "grey hair, glasses, long nose, blue sweater vest, medium thick eyebrows" }
 ] as const;
 
+export type ClueSeverity = "low" | "medium" | "high";
+
+
 export type AvatarId = typeof AVATAR_POOL[number]["id"];
 
 
@@ -94,14 +97,27 @@ export interface CaseReport {
 //  All clues are visible from the start.
 // ─────────────────────────────────────────────
 
-export interface Clue {
+/*export interface Clue {
   id: string;                         // e.g. "clue_bar_receipt" — matches Contradiction.exposedByClueId
   name: string;
   description: string;
   location: string;                   // Specific spot in the scene
   couldImplicateSuspects: string[];   // Ambiguous by design — may point to multiple suspects
   isDecisive: boolean;                // True = directly proves something; False = circumstantial
-}
+}*/
+
+export interface Clue {
+    id: string;
+    name: string;
+    description: string;
+    location?: string;
+    couldImplicateSuspects?: string[];
+    discovered?: boolean;
+    severity: ClueSeverity;
+    notificationId?: string;
+    isDecisive: boolean;
+    clueLost: boolean;   // if clue is lost, it cannot be found again
+};
 
 // ─────────────────────────────────────────────
 //  RAW OUTPUT (assembled from LLM)
@@ -317,8 +333,11 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
     "name": string,
     "description": string,
     "location": string,
-    "couldImplicateSuspects": [string],
-    "isDecisive": boolean
+    "couldImplicateSuspects": string[],
+    "discovered": false, // ensure that this is always false
+    "severity": ClueSeverity,
+    "isDecisive": boolean, //// True = directly proves something; False = circumstantial
+    "clueLost": boolean // keep this as always false
   }]
 }
 `.trim();

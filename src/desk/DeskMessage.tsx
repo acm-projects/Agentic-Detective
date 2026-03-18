@@ -9,13 +9,12 @@ import pencilImg from './assets/pencil.png';
 import plantImg from './assets/plant.png';
 import deskBgImg from './assets/desk-bg-new.png';
 import LoadingScreen from '../LoadingScreen';
-import CaseReportScreen from '../CaseReportScreen';
 import phoneImg from './assets/cellphone7.webp';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from '../useGameStore';
 import './desk.css';
 
 function Message() {
-  const { phase, goToBriefing, makeAccusation, player } = useGameStore();
+  const { phase, goToBriefing, makeAccusation, player  } = useGameStore();
   const navigate = useNavigate();
   const profiles = player?.characterProfiles ?? [];
   if (phase === 'generating') {
