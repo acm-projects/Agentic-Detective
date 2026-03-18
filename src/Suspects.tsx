@@ -1,6 +1,6 @@
 import './Suspects.css';
 import { useGameStore, useActiveSuspectProfile } from './useGameStore';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 function Suspects() {
   const navigate = useNavigate();

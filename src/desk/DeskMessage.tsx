@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { useGameStore } from '../useGameStore';
 import cluebookImg from './assets/cluebook.png';
 import cigaretteImg from './assets/cigarette.png';
@@ -10,12 +9,11 @@ import pencilImg from './assets/pencil.png';
 import plantImg from './assets/plant.png';
 import deskBgImg from './assets/desk-bg-new.png';
 import LoadingScreen from '../LoadingScreen';
-import CaseReportScreen from '../CaseReportScreen';
 import phoneImg from './assets/cellphone7.webp';
 import './desk.css';
 
 function Message() {
-  const { phase, goToBriefing } = useGameStore();
+  const { phase } = useGameStore();
   const navigate = useNavigate();
 
   if (phase === 'generating') {
