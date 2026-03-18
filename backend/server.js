@@ -1,12 +1,9 @@
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import charData from "./data/characters.json" with { type: "json" };
-import fs from 'fs';
-import path from 'path';
-
-
-dotenv.config();
+import fs from 'node:fs';
+import path from 'node:path';
 const app = express();
 const port = 3000;
 

@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useGameStore } from "./useGameStore";
 import "./NotesPage.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 // ── Types ──
 interface SuspectNote {

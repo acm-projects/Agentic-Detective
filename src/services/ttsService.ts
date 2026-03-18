@@ -5,11 +5,6 @@ const ELEVEN_LABS_API_KEY = import.meta.env.VITE_ELEVEN_LABS_API_KEY;
 const GIRL_VOICE_ID = import.meta.env.VITE_GIRL_VOICE_ID; // Default voice ID - you can customize this per suspect
 const BOY_VOICE_ID = import.meta.env.VITE_BOY_VOICE_ID; // Another voice option
 
-interface TTSResponse {
-  audioUrl: string | null;
-  error: string | null;
-}
-
 /**
  * Convert text to speech using Eleven Labs API
  * @param text - The text to convert to speech
@@ -87,20 +82,7 @@ export async function playAudio(audioUrl: string): Promise<void> {
 
 /*
 export async function generateAndPlaySpeech(text: string, gender: "male" | "female" = "female"): Promise<void> {
-  const { audioUrl, error } = await generateSpeech(text, gender);
-  
-  if (error) {
-    console.error("TTS Error:", error);
-    return;
-  }
-
-  if (audioUrl) {
-    try {
-      await playAudio(audioUrl);
-    } catch (err) {
-      console.error("Playback Error:", err);
-    }
-  }
+  await streamSpeech(text, gender);
 }
 */
 
@@ -132,6 +114,26 @@ export async function streamSpeech(
       }),
     }
   );
+
+  if (!response.ok) {
+    const err = await response.text();
+    console.error("TTS API Error:", response.status, err);
+    return;
+  }
+
+  // Safari and some browsers don't support audio/mpeg in MediaSource — fall back to blob
+  const canStreamMpeg =
+    typeof MediaSource !== "undefined" &&
+    MediaSource.isTypeSupported("audio/mpeg");
+
+  if (!canStreamMpeg) {
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.onended = () => URL.revokeObjectURL(url);
+    audio.play().catch(e => console.error("TTS play error:", e));
+    return;
+  }
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
