@@ -20,11 +20,7 @@ function App() {
       <Route path="/clues" element={<ClueBook />} />
       <Route path="/interrogate" element={<Interrogate />} />
       <Route path="/suspects" element={<Suspects />} />
-<<<<<<< HEAD
-      <Route path="/clues2" element={<CluesPageTest />} />
       <Route path="/accuse" element={<Accuse />} />
-=======
->>>>>>> main
     </Routes>
     </>
   )
