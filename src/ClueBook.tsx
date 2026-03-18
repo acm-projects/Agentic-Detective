@@ -106,16 +106,27 @@ export default function ClueBook() {
 
               <p className="clue-detail-description">{selected.description}</p>
 
-              {(selected.couldImplicateSuspects?.length ?? 0) > 0 && (
-                <div className="clue-detail-suspects">
-                  <div className="clue-suspects-label">COULD IMPLICATE:</div>
-                  <div className="clue-suspects-list">
-                    {selected.couldImplicateSuspects?.map(name => (
-                      <span key={name} className="clue-suspect-tag">{name}</span>
-                    ))}
+              {(() => {
+                const suspects = Array.isArray(selected.couldImplicateSuspects)
+                  ? selected.couldImplicateSuspects
+                  : typeof selected.couldImplicateSuspects === "string"
+                  ? (selected.couldImplicateSuspects as string)
+                      .split(",")
+                      .map(s => s.trim())
+                      .filter(Boolean)
+                  : [];
+
+                return suspects.length > 0 ? (
+                  <div className="clue-detail-suspects">
+                    <div className="clue-suspects-label">COULD IMPLICATE:</div>
+                    <div className="clue-suspects-list">
+                      {suspects.map(name => (
+                        <span key={name} className="clue-suspect-tag">{name}</span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                ) : null;
+              })()}
 
               <div className="clue-detail-scanlines" />
             </div>

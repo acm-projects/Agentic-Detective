@@ -8,7 +8,7 @@ import { GoogleGenerativeAI, ChatSession, SchemaType } from "@google/generative-
 import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import type { PlayerSeed } from "./obj/backendInterfaces";
 import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
-
+import { streamSpeech } from "./services/ttsService";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ─────────────────────────────────────────────
