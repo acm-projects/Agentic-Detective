@@ -3,7 +3,6 @@ import Message from './desk/DeskMessage.tsx';
 import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
 import Suspects from './Suspects.tsx';
-import CluesPageTest from './components/cluesPage/CluesPageTest.tsx';
 import './App.css';
 import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
@@ -19,9 +18,7 @@ function App() {
       <Route path="/investigate" element={<NotesPage />} />
       <Route path="/clues" element={<ClueBook />} />
       <Route path="/interrogate" element={<Interrogate />} />
-      <Route path="/clues" element={<ClueBook />} />
       <Route path="/suspects" element={<Suspects />} />
-      <Route path="/clues2" element={<CluesPageTest />} />
     </Routes>
     </>
   )
