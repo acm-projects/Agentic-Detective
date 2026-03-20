@@ -64,17 +64,19 @@ function NewGame() {
       />
       <header>
         <Show when="signed-out">
-          <SignInButton mode="redirect">
+          <SignInButton mode="modal">
             <button className="detective-button" style={{ marginRight: '10px' }}>Sign In</button>
           </SignInButton>
-          <SignUpButton mode="redirect">
+          <SignUpButton mode="modal">
             <button className="detective-button">Sign Up</button>
           </SignUpButton>
         </Show>
         <Show when="signed-in">
-          <UserButton userProfileMode="navigation" userProfileUrl="/user-profile" />
+          Hello, 
+          <UserButton userProfileMode="modal" showName />
         </Show>
       </header>
+      
       <h1 className="title">Agentic Detective</h1>
       <p className="subtitle">Welcome to the game you create for yourself!</p>
       <button
