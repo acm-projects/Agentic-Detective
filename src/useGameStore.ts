@@ -87,6 +87,9 @@ const DEFAULT_SEED: PlayerSeed = {
   difficulty: 5,
   duration: 20,
   intensity: 5,
+  userId: "",
+  sessionId: "",
+  isSignedIn: false,
 };
 
 export const useGameStore = create<GameState>((set, get) => ({

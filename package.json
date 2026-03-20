@@ -12,6 +12,9 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run server\""
   },
   "dependencies": {
+    "@clerk/react": "^6.1.1",
+    "@clerk/react-router": "^3.0.5",
+    "@clerk/ui": "^1.2.2",
     "@elevenlabs/elevenlabs-js": "^2.38.1",
     "@google/generative-ai": "^0.24.1",
     "concurrently": "^9.2.1",
@@ -22,6 +25,7 @@
     "nes.css": "^2.2.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-router": "^7.13.1",
     "react-router-dom": "^7.13.1",
     "zustand": "^5.0.11"
   },

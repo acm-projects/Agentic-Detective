@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useGameStore } from "./useGameStore";
 import { useNavigate } from 'react-router';
+import { Show, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/react-router';
 
 function NewGame() {
-  const { setSeed, startCase } = useGameStore();
+    const { setSeed, startCase } = useGameStore();
     const navigate = useNavigate();
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -13,6 +14,12 @@ function NewGame() {
     const [intensity, setIntensity] = useState(5); // Default value
     const [difficulty, setDifficulty] = useState(5); // Default value
     const [isMuted, setIsMuted] = useState(false);
+
+    const { userId, sessionId, isSignedIn } = useAuth();
+    console.log("User Id:", userId);
+    console.log("Session Id:", sessionId);
+    console.log("Is Signed In:", isSignedIn);
+
 
     // Setup background music on mount
     useEffect(() => {
@@ -55,6 +62,19 @@ function NewGame() {
         src="/assets/9jackjack8-the-triple-move-adventure-spy-jazz-409674.mp3"
         loop
       />
+      <header>
+        <Show when="signed-out">
+          <SignInButton mode="redirect">
+            <button className="detective-button" style={{ marginRight: '10px' }}>Sign In</button>
+          </SignInButton>
+          <SignUpButton mode="redirect">
+            <button className="detective-button">Sign Up</button>
+          </SignUpButton>
+        </Show>
+        <Show when="signed-in">
+          <UserButton userProfileMode="navigation" userProfileUrl="/user-profile" />
+        </Show>
+      </header>
       <h1 className="title">Agentic Detective</h1>
       <p className="subtitle">Welcome to the game you create for yourself!</p>
       <button
@@ -118,7 +138,10 @@ function NewGame() {
             freeText: personalization,        // "1920s jazz club", "remote Antarctic base", etc
             difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
-            intensity: intensity 
+            intensity: intensity,
+            userId: userId ?? undefined,
+            sessionId: sessionId ?? undefined,
+            isSignedIn: isSignedIn ? true : false,
           }) 
           startCase(navigate);
           navigate('/desk');

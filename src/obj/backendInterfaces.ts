@@ -7,6 +7,9 @@ export interface PlayerSeed {
   difficulty: number;   // 1–10 slider ("on a scale of 1 to 10")
   duration: number;     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
   intensity: number;    // 1–10 slider (goriness / darkness)
+  userId: string;
+  sessionId: string;
+  isSignedIn: boolean;
 }
 
 // ─────────────────────────────────────────────
