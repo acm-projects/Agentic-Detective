@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from './useGameStore';
+import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress, type ChatMessage } from './useGameStore';
 import { StressBar } from './StressBar';
 import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
@@ -39,7 +39,6 @@ function Interrogate() {
   useEffect(() => {
     console.log("got into useEffect1")
     console.log(activeSuspectName, " ", profiles)
-    if (!activeSuspectName && profiles.length > 0) {
     if (profiles.length === 0) return;
 
     const hasValidActiveSuspect =
@@ -51,7 +50,7 @@ function Interrogate() {
     }
   }, [activeSuspectName, profiles, startInterrogation]);
 
-  // timer effect and scheduler
+  // timer efxct and scheduler
   const timerPaused = useNotificationStore(s => s.timerPaused)
 
   useEffect(() => {
@@ -109,37 +108,25 @@ function Interrogate() {
 
   // If no case has been generated yet, redirect home
   if (!player) {
-     // Fetch saved history from MongoDB to restore context
-  const caseId = player.caseReport.caseId;
+  const caseId = localStorage.getItem("lastCaseId") || "";
   fetch(`http://localhost:3000/case/${caseId}`)
   .then(r => {
     if (!r.ok) {
-      throw new Error(`Failed to fetch case data: ${r.statusText}`);
+      throw new Error(`Failed to fetch case data: ${r.statusText || 'Unknown Error'}`);
     }
     return r.json();
   })
-    .then(doc => {
-      const savedHistory: ChatMessage[] = doc.chatHistory?.[suspectName] ?? [];
-      const chatSession = model.startChat({ history: [] });
-
-      set(state => ({
-        activeSuspectName: suspectName,
-        sessions: {
-          ...state.sessions,
-          [suspectName]: {
-            suspectName,
-            chatSession,
-            history: savedHistory, // ← restore from MongoDB
-            conversationCount: savedHistory.length / 2,
-          },
-        },
-      }));
-    })
-    .catch(err => {
-      console.error("Error fetching case data:", err);
-});
-
-
+  .then(doc => {
+    if (activeSuspectName) {
+      startInterrogation(activeSuspectName);
+    }
+  })
+  .catch(err => {
+    console.error("Error fetching case data:", err);
+  });
+    
+    
+    
     console.log("No case generated yet")
     return (
       <div className="interrogate-container">

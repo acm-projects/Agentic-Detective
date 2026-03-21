@@ -1,11 +1,12 @@
-import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
-import { MongoClient } from 'mongodb';
-
 dotenv.config();
 
-import 'dotenv/config';
+import express from 'express';
+import cors from 'cors';
+import { MongoClient } from 'mongodb';
+
+
+
 import charData from "./data/characters.json" with { type: "json" };
 import fs from 'node:fs';
 import path from 'node:path';

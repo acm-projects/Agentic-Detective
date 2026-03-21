@@ -114,10 +114,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async (navigate: (path: string) => void) => {
-    if (phase== "generating"){
-      
-    }
-    const { seed } = get();
+    const { seed, phase } = get();
+    if (phase === "generating") return;
+
     if (!seed || !seed.freeText.trim()) {
       set({ error: "Please enter a case theme before starting." });
       alert("Please enter a case theme before starting.");
