@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from 'react-router';
+import { Routes, Route } from 'react-router';
 import Message from './desk/DeskMessage.tsx';
 import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
@@ -8,7 +8,7 @@ import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
 import Accuse from './Accuse.tsx';
-import { SignIn, SignUp, UserProfile, UserButton } from '@clerk/react-router';
+import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
 
 function App() {
 

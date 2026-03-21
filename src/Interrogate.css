@@ -37,6 +37,68 @@ a {
   text-decoration: none;
 }
 
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--ink-color);
+  border: 3px solid var(--white);
+  box-shadow: 4px 4px 0 var(--ink-color);
+}
+
+.auth-actions-signed-in {
+  gap: 0.45rem;
+  align-items: center;
+}
+
+.auth-actions-signed-in,
+.auth-actions-signed-in * {
+  color: var(--white) !important;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.58rem;
+  text-transform: uppercase
+}
+
+.signed-in-greeting {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.58rem;
+  color: var(--white);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  margin: 0;
+}
+
+.auth-actions-signed-in .cl-userButtonBox,
+.auth-actions-signed-in .cl-userButtonTrigger,
+.auth-actions-signed-in .cl-userButtonOuterIdentifier {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.user-button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.58rem;
+  padding: 0.6rem 0.9rem;
+  border: 2px solid var(--white);
+  background: var(--ink-color);
+  color: var(--white);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.user-button:hover {
+  background: var(--white);
+  color: var(--ink-color);
+}
+
+.user-button:active {
+  transform: translate(2px, 2px);
+}
+
 .game-container {
   display: flex;
   flex-direction: row;
@@ -161,6 +223,42 @@ a {
     linear-gradient(45deg, rgba(17,17,17,0.03) 25%, transparent 25%, transparent 75%, rgba(17,17,17,0.03) 75%, rgba(17,17,17,0.03));
   background-size: 60px 60px;
   background-position: 0 0, 30px 30px;
+}
+
+.interrogate-subcontainer {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.interrogate-subsubcontainer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.user-icon {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  margin-top: 1rem;
+  min-width: 210px;
+}
+
+@media (max-width: 980px) {
+  .interrogate-subcontainer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-icon {
+    margin-top: 0;
+    min-width: 0;
+    align-self: flex-end;
+  }
 }
 
 /* ── Headers ── */
@@ -521,4 +619,10 @@ a {
   border: 3px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
   cursor: pointer;
+  transition: 0.2s;
+}
+
+.dialog-menu button:hover {
+  background: var(--ink-color);
+  color: var(--white);
 }

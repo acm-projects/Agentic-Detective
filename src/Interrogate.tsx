@@ -6,12 +6,14 @@ import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
+import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
 import './Interrogate.css';
 
 
 
 function Interrogate() {
   const navigate = useNavigate();
+  const { signOut } = useClerk();
   const { 
     player, 
     activeSuspectName, 
@@ -33,12 +35,17 @@ function Interrogate() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
 
-  // Auto-select first suspect on the very first load 
+  // Default to the first suspect whenever profiles become available.
   useEffect(() => {
-    if (!activeSuspectName && profiles.length > 0) {
+    if (profiles.length === 0) return;
+
+    const hasValidActiveSuspect =
+      !!activeSuspectName && profiles.some(p => p.name === activeSuspectName);
+
+    if (!hasValidActiveSuspect) {
       startInterrogation(profiles[0].name);
     }
-  }, []);
+  }, [activeSuspectName, profiles, startInterrogation]);
 
   // timer effect and scheduler
   const timerPaused = useNotificationStore(s => s.timerPaused)
@@ -69,6 +76,32 @@ function Interrogate() {
     await sendMessage(text);
   }
 
+  const handleConfirmSignOut = async () => {
+    (document.getElementById('signout-warning') as HTMLDialogElement)?.close();
+    await signOut();
+  };
+
+  useEffect(() => {
+    const handlePotentialSignOutClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      // Intercept Clerk's built-in sign-out actions in both popover and profile modal.
+      const signOutTrigger = target.closest('button, a') as HTMLElement | null;
+      if (!signOutTrigger) return;
+
+      const label = signOutTrigger.textContent?.trim().toLowerCase() ?? '';
+      if (!label.includes('sign out')) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      (document.getElementById('signout-warning') as HTMLDialogElement)?.showModal();
+    };
+
+    document.addEventListener('click', handlePotentialSignOutClick, true);
+    return () => document.removeEventListener('click', handlePotentialSignOutClick, true);
+  }, []);
+
   // If no case has been generated yet, redirect home
   if (!player) {
     return (
@@ -82,6 +115,7 @@ function Interrogate() {
     <div className='game-container'>
       {/* ── Nav bar — matches original structure ── */}
       <div className='navigate'>
+        
         <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
         <button onClick = {() => navigate("/clues")}><span> ← </span>Clues</button>
         <button><span> ← </span>Files</button>
@@ -136,13 +170,51 @@ function Interrogate() {
 
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
-        <div className='case-title'>
-          <h1 style = {{}}>{player.caseReport.caseTitle}</h1>
-        </div>
+        <div className='interrogate-subcontainer'>
+          <div className='interrogate-subsubcontainer'>
+            <div className='case-title'>
+              <h1 style = {{}}>{player.caseReport.caseTitle}</h1>
+            </div>
 
-        {/* Interrogation: suspectname title; check if it works if there is no active profile */}
-        <div className='currently-interrogating-container'>
-            <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+            {/* Interrogation: suspectname title; check if it works if there is no active profile */}
+            <div className='currently-interrogating-container'>
+                <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+            </div>
+          </div>
+          
+          <div className='user-icon'>
+            <Show when="signed-out">
+              <div className="auth-actions">
+                <SignInButton mode="modal">
+                  <button className="user-button">Sign In</button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="user-button">Sign Up</button>
+                </SignUpButton>
+              </div>
+            </Show>
+            <Show when="signed-in">
+              <div className="auth-actions auth-actions-signed-in">
+                <span className="signed-in-greeting">Hello,</span>
+                <UserButton userProfileMode="modal" showName appearance={{
+                  options: {
+                    shimmer: false,
+                  }
+                }}/>
+              </div>
+            </Show>
+          </div>
+          <dialog className="nes-dialog" id="signout-warning">
+            <form method="dialog">
+              <h3>Leave Account?</h3>
+              <p>You are about to sign out from this device. Do you want to stay signed in or leave?</p>
+              <p>You will lose all progress if you choose to sign out.</p>
+              <menu className="dialog-menu">
+                <button type="submit">Stay</button>
+                <button type="button" onClick={handleConfirmSignOut}>Leave</button>
+              </menu>
+            </form>
+          </dialog>
         </div>
 
         <div className='windows-container'>
