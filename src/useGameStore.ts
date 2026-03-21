@@ -36,6 +36,7 @@ export interface SuspectSession {
 export type GamePhase =
   | "setup"          // Player entering seed inputs
   | "generating"     // LLM generating the case file
+  | "refreshed"      // When the game needs to be pulled from mongodb
   | "briefing"       // Player reading the case report
   | "investigation"  // Active interrogation / clue review
   | "interrogation"  // Asking questions to the suspects and finding clues
@@ -113,6 +114,9 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async (navigate: (path: string) => void) => {
+    if (phase== "generating"){
+      
+    }
     const { seed } = get();
     if (!seed || !seed.freeText.trim()) {
       set({ error: "Please enter a case theme before starting." });
@@ -130,6 +134,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ error: "Failed to generate case.", phase: "setup" });
       console.error(err);
     }
+    
   },
 
   // ── Player has read the briefing, move to investigation ──
@@ -199,6 +204,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }));
   },
 
+
   // ── Send a player message to the active suspect ──
   sendMessage: async (text) => {
     const { activeSuspectName, sessions } = get();
@@ -218,7 +224,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
       },
     }));
-
+    
     try {
       const messageWithContext = `[Current stress level: ${session.stressLevel}]\n\n${text}`;
       const result = await session.chatSession.sendMessage(messageWithContext);
@@ -259,8 +265,18 @@ export const useGameStore = create<GameState>((set, get) => ({
             stressLevel: newStress,
           },
         },
-        isResponding: false,                                        // combine into one set() call
+        isResponding: false,
       }));
+
+      const caseId = get().player?.caseReport?.caseId;
+      fetch(`http://localhost:3000/case/${caseId}/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          suspectName: activeSuspectName,
+          messages: [...session.history, playerMessage, suspectMessage],
+        }),
+      }).catch(() => {});
 
       // Generate and play speech asynchronously (don't block UI)
       const suspectGender = get().player?.characterProfiles.find(
@@ -310,6 +326,17 @@ export const useGameStore = create<GameState>((set, get) => ({
       explanation: backend.storyline.trueSequenceOfEvents,
     },
   });
+  const caseId = get().player?.caseReport?.caseId;
+    fetch(`http://localhost:3000/case/${caseId}/outcome`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        accusedName,
+        isCorrect,
+        trueKiller: trueKiller?.name ?? "Unknown",
+        explanation: backend.storyline.trueSequenceOfEvents,
+      }),
+    }).catch(() => {});
 
   navigate("/accuse");   // ← navigate AFTER state is set
 },
@@ -325,9 +352,13 @@ markClueDiscovered: (clueId) => {
         )
       }
     };
+    
     });
+    
+
   },
 
+  
   // ── Reset everything for a new game ──
   
   resetGame: () =>

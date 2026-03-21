@@ -37,6 +37,9 @@ function Interrogate() {
 
   // Default to the first suspect whenever profiles become available.
   useEffect(() => {
+    console.log("got into useEffect1")
+    console.log(activeSuspectName, " ", profiles)
+    if (!activeSuspectName && profiles.length > 0) {
     if (profiles.length === 0) return;
 
     const hasValidActiveSuspect =
@@ -44,6 +47,7 @@ function Interrogate() {
 
     if (!hasValidActiveSuspect) {
       startInterrogation(profiles[0].name);
+      console.log("1st useEffect inside if")
     }
   }, [activeSuspectName, profiles, startInterrogation]);
 
@@ -60,6 +64,7 @@ function Interrogate() {
 
   // Scroll to bottom on new messages
   useEffect(() => {
+    console.log("got into useEffect2")
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
@@ -104,6 +109,38 @@ function Interrogate() {
 
   // If no case has been generated yet, redirect home
   if (!player) {
+     // Fetch saved history from MongoDB to restore context
+  const caseId = player.caseReport.caseId;
+  fetch(`http://localhost:3000/case/${caseId}`)
+  .then(r => {
+    if (!r.ok) {
+      throw new Error(`Failed to fetch case data: ${r.statusText}`);
+    }
+    return r.json();
+  })
+    .then(doc => {
+      const savedHistory: ChatMessage[] = doc.chatHistory?.[suspectName] ?? [];
+      const chatSession = model.startChat({ history: [] });
+
+      set(state => ({
+        activeSuspectName: suspectName,
+        sessions: {
+          ...state.sessions,
+          [suspectName]: {
+            suspectName,
+            chatSession,
+            history: savedHistory, // ← restore from MongoDB
+            conversationCount: savedHistory.length / 2,
+          },
+        },
+      }));
+    })
+    .catch(err => {
+      console.error("Error fetching case data:", err);
+});
+
+
+    console.log("No case generated yet")
     return (
       <div className="interrogate-container">
         No active case. <Link to="/">Go Home</Link>
