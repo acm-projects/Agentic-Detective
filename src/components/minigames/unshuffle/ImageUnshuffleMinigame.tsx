@@ -3,13 +3,10 @@ import type { ImageUnshuffleData } from "../../../obj/notificationInterfaces.ts"
 
 const GRID = 3;
 const TILE_COUNT = GRID * GRID;
-const ROTATIONS = [0, 90, 180, 270];
 
 function makeScrambled(): number[] {
-    return Array.from({ length: TILE_COUNT }, () => {
-        const idx = Math.floor(Math.random() * 3) + 1; // never 0
-        return ROTATIONS[idx];
-    });
+    // Each tile starts at 90, 180, or 270 — never 0
+    return Array.from({ length: TILE_COUNT }, () => (Math.floor(Math.random() * 3) + 1) * 90);
 }
 
 interface Props {
@@ -19,14 +16,16 @@ interface Props {
 }
 
 export function ImageUnshuffleMinigame({ data, onSuccess }: Props) {
+    // cumulative rotation — never clamped, so CSS always animates +90° forward
     const [rotations, setRotations] = useState<number[]>(makeScrambled);
     const [solved, setSolved] = useState(false);
 
     const handleTileClick = useCallback((idx: number) => {
         if (solved) return;
         setRotations(prev => {
-            const next = prev.map((r, i) => i !== idx ? r : (r + 90) % 360);
-            if (next.every(r => r === 0)) {
+            const next = prev.map((r, i) => i !== idx ? r : r + 90);
+            // solved when every tile's cumulative value is a multiple of 360
+            if (next.every(r => r % 360 === 0)) {
                 setSolved(true);
                 setTimeout(() => onSuccess(), 800);
             }
@@ -36,15 +35,13 @@ export function ImageUnshuffleMinigame({ data, onSuccess }: Props) {
 
     return (
         <>
-            {/* Hint */}
             <p style={styles.hint}>{data.hint}</p>
 
-            {/* Grid */}
             <div style={{ ...styles.grid, gridTemplateColumns: `repeat(${GRID}, 1fr)` }}>
                 {rotations.map((rot, idx) => {
                     const col = idx % GRID;
                     const row = Math.floor(idx / GRID);
-                    const isSolved = rot === 0;
+                    const isAligned = rot % 360 === 0;
                     return (
                         <div
                             key={idx}
@@ -57,8 +54,8 @@ export function ImageUnshuffleMinigame({ data, onSuccess }: Props) {
                                 cursor: solved ? 'default' : 'pointer',
                                 outline: solved
                                     ? '2px solid #4ade80'
-                                    : isSolved
-                                        ? '2px solid rgba(74,222,128,0.4)' // subtle green when this tile is at 0°
+                                    : isAligned
+                                        ? '2px solid rgba(74,222,128,0.4)'
                                         : '1px solid rgba(255,255,255,0.15)',
                             }}
                             onClick={() => handleTileClick(idx)}
@@ -67,7 +64,6 @@ export function ImageUnshuffleMinigame({ data, onSuccess }: Props) {
                 })}
             </div>
 
-            {/* Status */}
             <div style={styles.status}>
                 {solved
                     ? <span style={styles.successText}>✓ Evidence recovered — clue unlocked</span>
