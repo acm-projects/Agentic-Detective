@@ -36,7 +36,7 @@ html, body, #root {
 /* ── Page title ── */
 .clue-board-title {
   position: fixed;
-  top: 20px;
+  top: 25px;
   left: 52%;
   transform: translateX(-50%);
   font-family: 'Press Start 2P', monospace;
@@ -56,8 +56,8 @@ html, body, #root {
 /* ── Detail panel — right side ── */
 .clue-detail-panel {
   position: fixed;
-  top: 50%;
-  right: 2%;
+  top: 55%;
+  right: 5%;
   transform: translateY(-50%);
   width: 320px;
   max-height: 80vh;

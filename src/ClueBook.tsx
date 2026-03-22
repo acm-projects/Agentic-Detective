@@ -3,7 +3,7 @@ import { useGameStore } from "./useGameStore";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
 import { useNavigate } from 'react-router-dom';
-import deskBgImg from './assets/chopped.png';
+import deskBgImg from './assets/3chopped.png';
 import printsclueImg from './assets/3printsclue.png';
 import artImg from './assets/1mutedart.png';
 import ciphpolImg from './assets/ciphpol.png';
