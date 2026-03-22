@@ -9,6 +9,7 @@ import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import type { PlayerSeed } from "./obj/backendInterfaces";
 import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
 import { streamSpeech } from "./services/ttsService";
+import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ─────────────────────────────────────────────
@@ -67,6 +68,7 @@ interface GameState {
   error: string | null;
   isResponding: boolean;
   elapsed: number;
+  voiceIds: Record<string, string>;
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
@@ -101,6 +103,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   error: null,
   isResponding: false,
   elapsed: 0,
+  voiceIds: {},
 
   // ── Merge partial seed updates ──
   setSeed: (partial) =>
@@ -109,25 +112,32 @@ export const useGameStore = create<GameState>((set, get) => ({
     })),
 
   // ── Generate the full case from player seed ──
-  startCase: async (navigate: (path: string) => void) => {
-    const { seed } = get();
-    if (!seed || !seed.freeText.trim()) {
-      set({ error: "Please enter a case theme before starting." });
-      alert("Please enter a case theme before starting.");
-      return;
-    }
-    set({ phase: "generating", error: null });
-    try {
-      const { backend, player } = await generateCaseFile(seed);
-      set({ backend, player, phase: "briefing", elapsed: 0 });
-      const { useNotificationStore } = await import("./store/useNotificationStore");
-      useNotificationStore.getState().initClues(player.clues)
-      navigate("/report");           // ← instead of set({ phase: "briefing" })
-    } catch (err) {
-      set({ error: "Failed to generate case.", phase: "setup" });
-      console.error(err);
-    }
-  },
+  startCase: async (navigate) => {
+  const { seed } = get();
+  if (!seed || !seed.freeText.trim()) {
+    set({ error: 'Please enter a case theme before starting.' });
+    alert('Please enter a case theme before starting.');
+    return;
+  }
+  set({ phase: 'generating', error: null });
+
+  try {
+    const { backend, player } = await generateCaseFile(seed);
+
+    // Select voices server-side (non-blocking — falls back to defaults on failure)
+    const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
+
+    set({ backend, player, voiceIds, phase: 'briefing', elapsed: 0 });
+
+    const { useNotificationStore } = await import('./store/useNotificationStore');
+    useNotificationStore.getState().initClues(player.clues);
+    navigate('/report');
+  } catch (err) {
+    set({ error: 'Failed to generate case.', phase: 'setup' });
+    console.error(err);
+  }
+},
+
 
   // ── Player has read the briefing, move to investigation ──
  goToBriefing: (navigate: (path: string) => void) => {
@@ -178,6 +188,9 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
       },
     });
+
+    console.log("[suspect data]", JSON.stringify(suspect, null, 2));
+
 
     const chatSession = model.startChat({ history: [] });
 
@@ -264,12 +277,15 @@ export const useGameStore = create<GameState>((set, get) => ({
         p => p.name === activeSuspectName
       )?.gender ?? "female";
 
-            //tts streamed better\
-/*
-      streamSpeech(responseText, suspectGender).catch(err =>
-        console.error("TTS playback failed:", err)
-      );
-*/
+        
+      //tts streamed better\
+      const voiceId = get().voiceIds[activeSuspectName];
+
+      if (voiceId) {
+        streamSpeech(responseText, voiceId).catch(err =>
+          console.error("TTS playback failed:", err)
+        );
+      }
 
       // Mark as no longer responding after message is added
       set({ isResponding: false });
@@ -340,6 +356,7 @@ markClueDiscovered: (clueId) => {
       error: null,
       isResponding: false,
       elapsed: 0,
+      voiceIds: {},
     }),
   
     // keeps track of elapsed time
@@ -379,4 +396,11 @@ export const useActiveSuspectProfile = () =>
     state.activeSuspectName
       ? (state.sessions[state.activeSuspectName]?.stressLevel ?? 0)
       : 0
+  );
+
+  export const useActiveSuspectVoiceId = () =>
+  useGameStore(state =>
+    state.activeSuspectName
+      ? (state.voiceIds[state.activeSuspectName] ?? null)
+      : null
   );
