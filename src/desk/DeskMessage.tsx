@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../useGameStore';
-import cluebookImg from './assets/cluebook.png';
-import cigaretteImg from './assets/cigarette.png';
-import caseFileImg from './assets/case-file.png';
-import gunImg from './assets/gun.png';
-import notebookImg from './assets/notebook.png';
-import pencilImg from './assets/pencil.png';
-import plantImg from './assets/plant.png';
-import deskBgImg from './assets/desk-bg-new.png';
+import cluebookImg from './assets/themedcluebook.png';
+import cigaretteImg from './assets/newthemedcigarette.png';
+import caseFileImg from './assets/themedcasefile.png';
+import gunImg from './assets/themedgun.png';
+import notebookImg from './assets/themednotebook.png';
+import pencilImg from './assets/themedpencil.png';
+import plantImg from './assets/muchbetterthemedplant.png';
+import deskBgImg from './assets/extranewdesk.png';
 import LoadingScreen from '../LoadingScreen';
 import CaseReportScreen from '../CaseReportScreen';
-import phoneImg from './assets/cellphone7.webp';
+import phoneImg from './assets/2themedcellphone.png';
 import './desk.css';
+import ScrabbleImg from './assets/newscrabble.png'; 
 
 function Message() {
   const { phase, goToBriefing } = useGameStore();
@@ -69,7 +70,7 @@ function Message() {
           className="evidence-item" 
           src={cluebookImg} 
           alt="Clue Book" 
-          style={{ ...itemStyle, width: '390px', top: '110px', left: '55%', transform: 'rotate(-20deg)' }} 
+          style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }} 
           onClick={handleClueBookClick}
         />
 
@@ -78,6 +79,15 @@ function Message() {
           src={cigaretteImg} 
           alt="Cigarette" 
           style={{ ...itemStyle, width: '320px', top: '5px', left: '5%', transform: 'rotate(-50deg)' }} 
+
+        />
+
+        
+        {/* 2. SCRABBLE */}
+        <img 
+          src={ScrabbleImg} 
+          alt="Scrabble" 
+          style={{ ...itemStyle, width: '340px', top: '1px', left: '67%'}} 
 
         />
 
@@ -94,7 +104,7 @@ function Message() {
         <img 
           src={gunImg} 
           alt="Gun" 
-          style={{ ...itemStyle, width: '280px', top: '70px', left: '78%', transform: 'rotate(15deg)' }} 
+          style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 
         />
 
         {/* 5. NOTEBOOK */}
@@ -117,7 +127,7 @@ function Message() {
         <img 
           src={plantImg} 
           alt="Office Plant" 
-          style={{ ...itemStyle, width: '300px', top: '2px', left: '35%', transform: 'rotate(360deg)' }}
+          style={{ ...itemStyle, width: '330px', top: '-12px', left: '30%', transform: 'rotate(360deg)' }}
         />
 
         {/* 12. PHONE */}

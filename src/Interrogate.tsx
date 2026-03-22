@@ -3,24 +3,23 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
 import './Interrogate.css';
 
+
 function Interrogate() {
   const navigate = useNavigate();
-  const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
+  const { player, activeSuspectName, isResponding, startInterrogation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
   const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
-  //const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const [showNotebook, setShowNotebook] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-select first suspect on the very first load 
   useEffect(() => {
     if (!activeSuspectName && profiles.length > 0) {
       startInterrogation(profiles[0].name);
     }
   }, []);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
@@ -38,7 +37,6 @@ function Interrogate() {
     await sendMessage(text);
   }
 
-  // If no case has been generated yet, redirect home
   if (!player) {
     return (
       <div className="interrogate-container">
@@ -49,31 +47,15 @@ function Interrogate() {
 
   return (
     <div className='game-container'>
-      {/* ── Nav bar — matches original structure ── */}
       <div className='navigate'>
-        <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
-        <button onClick = {() => navigate("/clues")}><span> ← </span>Clues</button>
-        <button><span> ← </span>Files</button>
-        {/*<button onClick={() =>
-          (document.getElementById('case-report') as HTMLDialogElement)?.showModal()
-        }>
-          Case Report
-        </button>
-       <dialog className="nes-dialog" id="case-report">
-          <form method="dialog">
-            <h3>Case Report</h3>
-            <p><strong>{player.caseReport.caseTitle}</strong></p>
-            <p>{player.caseReport.officialBriefing}</p>
-            <menu className="dialog-menu">
-              <button>Close</button>
-            </menu>
-          </form>
-        </dialog> */}
-        <button className="back-btn" onClick={() =>goToBriefing(navigate)}>Case Report</button>
+        <button onClick={() => navigate("/clues")}><span> ← </span>Clues</button>
+        <button className="nav-case-btn" onClick={() => goToBriefing(navigate)}>Case Report</button>
         <button><Link to="/desk"><span> ← </span>Desk</Link></button>
+
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
         }><span> ← </span>Settings</button>
+
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
@@ -83,10 +65,13 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
-        <button onClick={() => navigate("/suspects")}> <span> ← </span> Suspects</button>
+
+        <button onClick={() => navigate("/suspects")}><span> ← </span>Suspects</button>
+
         <button onClick={() =>
           (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
         }>Accuse</button>
+
         <dialog className="nes-dialog" id="accuse">
           <form method="dialog">
             <h3>Make Your Accusation</h3>
@@ -103,20 +88,15 @@ function Interrogate() {
         </dialog>
       </div>
 
-      {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
-        <div className='case-title'>
-          <h1 style = {{}}>{player.caseReport.caseTitle}</h1>
-        </div>
+        <div className='case-title' />
 
-        {/* Interrogation: suspectname title; check if it works if there is no active profile */}
         <div className='currently-interrogating-container'>
-            <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+          <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
         </div>
 
         <div className='windows-container'>
           <div className='interrogation-window'>
-            {/* Character card — same layout as original */}
             {activeProfile && (
               <div className='character-container'>
                 <div className='character-avatar'>
@@ -127,22 +107,11 @@ function Interrogate() {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
-                  <p>Character Avatar goes here</p>
-                </div>
-                <div className='case-details'>
-                  <h2>{activeProfile.name}</h2>
-                  <h4>Age: {activeProfile.age}</h4>
-                  <h4>Occupation: {activeProfile.occupation}</h4>
-                  <h4>Relation: {activeProfile.relationshipToVictim}</h4>
-                  <h4>Claims: {activeProfile.claimedAlibi}</h4>
-                  <span className={`suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
-                    {activeProfile.suspicionLevel} suspicion
-                  </span>
+                  <div className="avatar-overlay" />
                 </div>
               </div>
             )}
 
-            {/* Chat — matches original chatbot structure */}
             <div className='chatbot'>
               <form onSubmit={handleSendMessage} className="message-form">
                 <div className='chat-history'>
@@ -182,7 +151,6 @@ function Interrogate() {
                       onChange={e => setInput(e.target.value)}
                     />
                   </div>
-
                   <div className='submit-button'>
                     <button type='submit' disabled={isResponding || !input.trim()}>
                       Submit
@@ -193,15 +161,13 @@ function Interrogate() {
             </div>
           </div>
 
-          <div className='notes-window'>
-            <h1> Notes go here </h1>
-          </div>
+          {/* ── Clickable notebook (invisible, sits over bg image) ── */}
+          <div className='notes-window' onClick={() => setShowNotebook(true)} />
         </div>
 
-        {/* Suspect switcher — same as original, driven by store profiles */}
         <div className='suspect-switcher'>
           <form>
-            <label style={{}} htmlFor="suspects"> <span className='switch-suspect-text'> Switch Suspect:</span> </label>
+            <label htmlFor="suspects"><span className='switch-suspect-text'>Switch Suspect:</span></label>
             <br />
             <select
               onChange={handleSuspectChange}
@@ -210,14 +176,47 @@ function Interrogate() {
               id='suspects-list'
             >
               {profiles.map(p => (
-                <option key={p.name} value={p.name}>
-                  {p.name}
-                </option>
+                <option key={p.name} value={p.name}>{p.name}</option>
               ))}
             </select>
           </form>
         </div>
       </div>
+
+      {/* ── Notebook / Suspect Details Modal ── */}
+      {showNotebook && (
+        <div className="notebook-modal-overlay" onClick={() => setShowNotebook(false)}>
+          <div className="notebook-modal" onClick={e => e.stopPropagation()}>
+            <button className="notebook-modal-close" onClick={() => setShowNotebook(false)}>✕</button>
+            <h2 className="notebook-modal-title">SUSPECT PROFILE</h2>
+            <div className="notebook-modal-list">
+              {activeProfile && (
+                <div className="notebook-suspect-card">
+                  <div className="notebook-suspect-header">
+                    <img
+                      src={`/avatars/${activeProfile.avatarId}.png`}
+                      alt={activeProfile.name}
+                      className="notebook-suspect-avatar"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                    />
+                    <div>
+                      <div className="notebook-suspect-name">{activeProfile.name}</div>
+                      <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>
+                      <div className={`notebook-suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
+                        {activeProfile.suspicionLevel.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="notebook-suspect-divider" />
+                  <div className="notebook-suspect-field"><span>Relation:</span> {activeProfile.relationshipToVictim}</div>
+                  <div className="notebook-suspect-field"><span>Alibi:</span> {activeProfile.claimedAlibi}</div>
+                  <div className="notebook-suspect-field"><span>Notes:</span> {activeProfile.personalityBlurb}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
