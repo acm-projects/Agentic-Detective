@@ -1,16 +1,16 @@
 import { useNotificationStore, selectOpenMinigame } from '../../store/useNotificationStore'
 import { WordleMinigame } from './wordle/Wordle'
+import { ImageUnshuffleMinigame } from './unshuffle/ImageUnshuffleMinigame'  // ← new
 import type { MinigameData } from '../../obj/notificationInterfaces'
 import styles from './MinigameModal.module.css'
 
 const TYPE_TITLES: Record<string, string> = {
-  mail:   'Mail Recovered',
-
+  mail: 'Mail Recovered',
 }
 
 const MINIGAME_TITLES: Record<string, string> = {
-
-  wordle: 'Identify the Keyword',
+  wordle:           'Identify the Keyword',
+  'image-unshuffle': 'Reconstruct the Evidence',  // ← new
 }
 
 function MinigameRenderer({
@@ -22,11 +22,13 @@ function MinigameRenderer({
   onSuccess: () => void
   onFailure: () => void
 }) {
-  switch (data.kind) { // add other minigame cases here
+  switch (data.kind) {
     case 'wordle':
       return <WordleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />
+    case 'image-unshuffle':                        // ← new
+      return <ImageUnshuffleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />
     default:
-      return null;
+      return null
   }
 }
 
@@ -45,10 +47,7 @@ export function MinigameModal() {
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
-      <div
-        className={styles.modal}
-        onClick={e => e.stopPropagation()}
-      >
+      <div className={styles.modal} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerMeta}>
@@ -60,18 +59,13 @@ export function MinigameModal() {
               {MINIGAME_TITLES[active.minigameType] ?? 'Puzzle'}
             </span>
           </div>
-          <button className={styles.closeBtn} onClick={handleClose}>
-            ✕
-          </button>
+          <button className={styles.closeBtn} onClick={handleClose}>✕</button>
         </div>
 
-        {/* Divider */}
         <div className={styles.ruledLine} />
 
-        {/* Flavour text */}
         <p className={styles.flavour}>{active.flavorText}</p>
 
-        {/* Minigame */}
         <div className={styles.minigameArea}>
           <MinigameRenderer
             data={active.minigameData}
@@ -80,7 +74,6 @@ export function MinigameModal() {
           />
         </div>
 
-        {/* Footer */}
         <div className={styles.ruledLine} />
         <div className={styles.footer}>
           <span className={styles.footerNote}>

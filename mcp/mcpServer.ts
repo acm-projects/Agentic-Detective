@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const ELEVENLABS_API_KEY = process.env.ELEVEN_LABS_API_KEY ?? "";
+const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY ?? "";
 const ELEVENLABS_BASE    = "https://api.elevenlabs.io/v1";
 const PREFERRED_MODELS   = ["eleven_multilingual_v2", "eleven_turbo_v2_5", "eleven_v2_5_flash"];
 
