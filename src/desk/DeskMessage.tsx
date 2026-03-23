@@ -16,19 +16,9 @@ import './desk.css';
 import ScrabbleImg from './assets/newscrabble.png'; 
 
 function Message() {
-  const { phase, goToBriefing } = useGameStore();
+  const { phase, goToBriefing, makeAccusation, player  } = useGameStore();
   const navigate = useNavigate();
-  const [showCaseReportModal, setShowCaseReportModal] = useState(phase === 'briefing');
-
-  useEffect(() => {
-    if (phase === 'briefing') {
-      setShowCaseReportModal(true);
-    }
-    else {
-      setShowCaseReportModal(false);
-    }
-  }, [phase]);
-
+  const profiles = player?.characterProfiles ?? [];
   if (phase === 'generating') {
     return <LoadingScreen />;
   }
@@ -53,12 +43,7 @@ function Message() {
   }
 
   const handleCaseFileClick = () => {
-    setShowCaseReportModal(true);
-    goToBriefing();
-  };
-
-  const handleCloseCaseReport = () => {
-    setShowCaseReportModal(false);
+    navigate('/report');
   };
 
   return (
@@ -102,6 +87,7 @@ function Message() {
 
         {/* 4. GUN */}
         <img 
+          className='evidence-item'
           src={gunImg} 
           alt="Gun" 
           style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 
@@ -143,16 +129,6 @@ function Message() {
         }}
       />
     </div>
-
-    {/* Modal for Case Report */}
-      {showCaseReportModal && (
-        <div className="modal-overlay" onClick={handleCloseCaseReport}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <CaseReportScreen onClose={handleCloseCaseReport} isModal={true} />
-          </div>
-        </div>
-      )}
-
     </>
   );
 }

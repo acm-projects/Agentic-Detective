@@ -5,6 +5,14 @@
   --bg-dark: #d1cbb8;
   --ink-color: #111111;
   --white: #ffffff;
+  --px-bg:        #141414;
+  --px-brown:     #b1afa9;
+  --px-dark:      #191818;
+  --px-green-lit: #44aa44;
+  --px-white:     #f0e8d0;
+  --px-gray:      #888070;
+  --px-border:    #3a2f14;
+  --px-gold:      #c8a000;
 }
 
 html, body {
@@ -193,6 +201,8 @@ a {
 }
 
 /* ── Content Windows ── */
+
+
 .windows-container {
   display: flex;
   flex-direction: row;
@@ -222,7 +232,7 @@ a {
   margin-top: auto;
   width: 80%;
   position: relative;
-  right: -22rem;
+  right: -26.5rem;
   align-items: flex-start;
   bottom: -1.8rem;
 }
@@ -236,37 +246,13 @@ a {
   font-size: 1.1rem;
   line-height: 1.1;
   overflow-y: auto;
-  max-height: 300px;
-}
-
-.character-avatar {
-  flex: 0 0 270px;
-  position: relative;
-  border: clear;
-  box-shadow: clear;
-  background-size: 143%;
-  background-position: center -24px;
-  background-repeat: no-repeat;
-  overflow: hidden;
-  height: 300px;
-  right: -4.3rem;
-  top: 1rem;
-}
-
-.avatar-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image: url("./assets/blinkingportraitgirl.gif");
-  background-size: 100%;
-  background-repeat: no-repeat;
-  background-position: top 40% left 50%;
 }
 
 .character-avatar img {
-  height: 100%;
+  height: 250px;   /* make it bigger */
   width: auto;
   object-fit: contain;
+  image-rendering: pixelated; /* keeps pixel style clean */
 }
 
 .character-avatar p {
@@ -318,7 +304,7 @@ a {
   margin-top: auto;
   position: relative;
   z-index: 2;
-  top: 4rem;
+  top: 2rem;
   left: 16rem;
   width: 75%;
 }
@@ -434,7 +420,7 @@ a {
   margin-bottom: 0;
   margin-right: 2.5rem;
   height: 50%;
-  top: 4rem;
+  top: 2rem;
   cursor: pointer;
   transition: opacity 0.1s;
 }
@@ -571,7 +557,6 @@ a {
 }
 
 .notebook-suspect-meta {
-  font-size: 0.5rem;
   color: #555;
   margin-bottom: 6px;
   font-family: 'VT323', monospace;
@@ -615,3 +600,187 @@ a {
   letter-spacing: 1px;
   margin-right: 6px;
 }
+
+/* ══════════════════════════════════════════
+   CLUE DETAIL PANEL
+   ══════════════════════════════════════════ */
+
+.clue-detail {
+  position: fixed;
+  top: 50%;
+  right: 5%;
+  transform: translateY(-50%);
+  width: 320px;
+  max-height: 80vh;
+  background: var(--px-dark);
+  box-shadow:
+    -2px 0   0 var(--px-border),
+     2px 0   0 var(--px-border),
+     0  -2px 0 var(--px-border),
+     0   2px 0 var(--px-border),
+    inset 0 0 0 2px rgba(255,255,255,0.03);
+  padding: 28px 24px;
+  overflow-y: auto;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: detailIn 0.2s steps(4, end) both;
+}
+
+@keyframes detailIn {
+  from { opacity: 0; transform: translateY(-50%) translateX(12px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+.clue-detail-empty {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.clue-detail-empty-icon {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 48px;
+  color: var(--px-gray);
+  opacity: 0.2;
+  text-align: center;
+}
+
+.clue-detail-empty-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--px-gray);
+  letter-spacing: 2px;
+  opacity: 0.4;
+  text-align: center;
+}
+
+.clue-detail-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    transparent, transparent 3px,
+    rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+}
+
+.clue-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 4px;
+}
+
+.clue-detail-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--ink-color);
+  color: var(--px-white);
+  border: none;
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0 #660000;
+  z-index: 2;
+}
+
+.clue-detail-close:hover { background: #333; }
+
+.clue-detail-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: var(--px-white);
+  letter-spacing: 1px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-location {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--px-gray);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-decisive {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--px-gold);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-divider {
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--px-brown) 0px, var(--px-brown) 6px,
+    transparent 6px, transparent 10px
+  );
+  margin: 14px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-description {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--bg-dark);
+  line-height: 2.2;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-suspects {
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-suspects-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--px-gray);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.clue-suspects-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clue-suspect-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  background: rgba(246, 243, 243, 0.9);
+  color: var(--ink-color);
+  padding: 4px 8px;
+  letter-spacing: 1px;
+  box-shadow:
+    -1px 0   0 var(--ink-color),
+     1px 0   0 var(--ink-color),
+     0  -1px 0 var(--ink-color),
+     0   1px 0 var(--ink-color);
+}
+

@@ -1,24 +1,52 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
+import { Link, useNavigate } from 'react-router';
+import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from './useGameStore';
+import { StressBar } from './StressBar';
+import { useNotificationStore } from './store/useNotificationStore'
+import { useNotificationScheduler } from './services/useNotificationScheduler'
+import { NotificationToast } from './components/notifications/NotificationToast'
+import { MinigameModal } from './components/minigames/MinigameModal'
 import './Interrogate.css';
 
+// ✅ IMPORT YOUR GIF
+import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
+
+// ✅ MAP (so it still works with avatarId system)
+const avatarMap: Record<string, string> = {
+  default: blinkingPortraitGirl,
+};
 
 function Interrogate() {
   const navigate = useNavigate();
-  const { player, activeSuspectName, isResponding, startInterrogation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
+  const { 
+    player, activeSuspectName, isResponding, elapsed,
+    startInterrogation, proceedToInvestigation, sendMessage, 
+    makeAccusation, goToBriefing, tickElapsed,
+  } = useGameStore();
+
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
   const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
   const [showNotebook, setShowNotebook] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const stressLevel = useActiveSuspectStress();
 
   useEffect(() => {
     if (!activeSuspectName && profiles.length > 0) {
       startInterrogation(profiles[0].name);
     }
   }, []);
+
+  const timerPaused = useNotificationStore(s => s.timerPaused)
+
+  useEffect(() => {
+    if (timerPaused) return
+    const id = setInterval(tickElapsed, 1000)
+    return () => clearInterval(id)
+  }, [timerPaused, player])
+
+  useNotificationScheduler(elapsed, 600_000, !!player)
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,9 +76,11 @@ function Interrogate() {
   return (
     <div className='game-container'>
       <div className='navigate'>
+        <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
         <button onClick={() => navigate("/clues")}><span> ← </span>Clues</button>
+
         <button className="nav-case-btn" onClick={() => goToBriefing(navigate)}>Case Report</button>
-        <button><Link to="/desk"><span> ← </span>Desk</Link></button>
+        <button onClick={() => navigate("/desk")}><span> ← </span>Desk</button>
 
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
@@ -66,8 +96,6 @@ function Interrogate() {
           </form>
         </dialog>
 
-        <button onClick={() => navigate("/suspects")}><span> ← </span>Suspects</button>
-
         <button onClick={() =>
           (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
         }>Accuse</button>
@@ -77,7 +105,7 @@ function Interrogate() {
             <h3>Make Your Accusation</h3>
             <p>Who do you think did it?</p>
             {profiles.map(p => (
-              <button key={p.name} onClick={() => makeAccusation(p.name)}>
+              <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
                 {p.name}
               </button>
             ))}
@@ -101,13 +129,11 @@ function Interrogate() {
               <div className='character-container'>
                 <div className='character-avatar'>
                   <img
-                    src={`/avatars/${activeProfile.avatarId}.png`}
+                    src={avatarMap[activeProfile.avatarId] || avatarMap.default}
                     alt={activeProfile.name}
-                    onError={e => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
                   />
                   <div className="avatar-overlay" />
+                  <StressBar level={stressLevel} />
                 </div>
               </div>
             )}
@@ -161,7 +187,6 @@ function Interrogate() {
             </div>
           </div>
 
-          {/* ── Clickable notebook (invisible, sits over bg image) ── */}
           <div className='notes-window' onClick={() => setShowNotebook(true)} />
         </div>
 
@@ -183,7 +208,6 @@ function Interrogate() {
         </div>
       </div>
 
-      {/* ── Notebook / Suspect Details Modal ── */}
       {showNotebook && (
         <div className="notebook-modal-overlay" onClick={() => setShowNotebook(false)}>
           <div className="notebook-modal" onClick={e => e.stopPropagation()}>
@@ -194,10 +218,9 @@ function Interrogate() {
                 <div className="notebook-suspect-card">
                   <div className="notebook-suspect-header">
                     <img
-                      src={`/avatars/${activeProfile.avatarId}.png`}
+                      src={avatarMap[activeProfile.avatarId] || avatarMap.default}
                       alt={activeProfile.name}
                       className="notebook-suspect-avatar"
-                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                     />
                     <div>
                       <div className="notebook-suspect-name">{activeProfile.name}</div>
@@ -217,6 +240,8 @@ function Interrogate() {
           </div>
         </div>
       )}
+      <NotificationToast />
+      <MinigameModal />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router';
 import Message from './desk/DeskMessage.tsx';
 import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
@@ -7,6 +7,7 @@ import './App.css';
 import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
+import Accuse from './Accuse.tsx';
 
 function App() {
 
@@ -18,8 +19,8 @@ function App() {
       <Route path="/investigate" element={<NotesPage />} />
       <Route path="/clues" element={<ClueBook />} />
       <Route path="/interrogate" element={<Interrogate />} />
-      <Route path="/clues" element={<ClueBook />} />
       <Route path="/suspects" element={<Suspects />} />
+      <Route path="/accuse" element={<Accuse />} />
     </Routes>
     </>
   )

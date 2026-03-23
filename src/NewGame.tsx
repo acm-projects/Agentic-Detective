@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { useGameStore } from "./useGameStore";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 
 function NewGame() {
-    const { seed, setSeed, startCase } = useGameStore();
+  const { setSeed, startCase } = useGameStore();
     const navigate = useNavigate();
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -52,7 +52,7 @@ function NewGame() {
       <div className="container">
       <audio
         ref={audioRef}
-        src="/assets/9jackjack8-the-triple-move-adventure-spy-jazz-409674.mp3"
+        src="/assets/mondamusic-spy-detective-robbery-music-491671.mp3"
         loop
       />
       <h1 className="title">Agentic Detective</h1>

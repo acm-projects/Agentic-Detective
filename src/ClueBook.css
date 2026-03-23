@@ -49,12 +49,28 @@ html, body, #root {
   white-space: nowrap;
 }
 
+.clue-book-subtitle {
+  position: fixed;
+  top: 80px;
+  left: 52%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 10px;
+  color: #f0e8d0;
+  text-shadow: 2px 2px 0 #000;
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 3px;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
 .clue-prop-wrap:hover img {
   filter: drop-shadow(0px 0px 6px rgba(255,255,255,0.7)) drop-shadow(0px 0px 16px rgba(255,255,255,0)) drop-shadow(8px 8px 0px rgba(0,0,0,0.5)) !important;
 }
 
-/* ── Detail panel — right side ── */
-.clue-detail-panel {
+/* ── Detail panel ── */
+.clue-detail {
   position: fixed;
   top: 55%;
   right: 5%;
@@ -73,8 +89,35 @@ html, body, #root {
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 0;
   animation: detailIn 0.2s steps(4, end) both;
+}
+
+.clue-detail-empty {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.clue-detail-empty-icon {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 48px;
+  color: var(--px-gray);
+  opacity: 0.2;
+  text-align: center;
+}
+
+.clue-detail-empty-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--px-gray);
+  letter-spacing: 2px;
+  opacity: 0.4;
+  text-align: center;
+}
+
+/* ── Inner wrapper — gives close button a relative parent ── */
+.clue-detail-inner {
+  position: relative;
 }
 
 @keyframes detailIn {
@@ -94,8 +137,8 @@ html, body, #root {
 
 .clue-detail-close {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 0px;
+  right: 0px;
   background: var(--ink-color);
   color: var(--px-white);
   border: none;
@@ -127,6 +170,7 @@ html, body, #root {
   letter-spacing: 1px;
   line-height: 1.6;
   margin-bottom: 6px;
+  margin-right: 28px;
   position: relative;
   z-index: 1;
 }

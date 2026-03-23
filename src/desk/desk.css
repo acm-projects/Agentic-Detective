@@ -65,3 +65,18 @@
   }
 }
 
+.accuse button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.7rem;
+  padding: 1.2em 1.5em;
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  color: var(--ink-color);
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+}

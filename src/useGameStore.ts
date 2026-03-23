@@ -4,11 +4,12 @@
 // ============================================================
 
 import { create } from "zustand";
-import { GoogleGenerativeAI, ChatSession } from "@google/generative-ai";
-import type { PlayerSeed, CaseFileBackend, CaseFilePlayer } from "./caseFile";
+import { GoogleGenerativeAI, ChatSession, SchemaType } from "@google/generative-ai";
+import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
+import type { PlayerSeed } from "./obj/backendInterfaces";
 import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
-import { generateAndPlaySpeech } from "./services/ttsService";
-
+import { streamSpeech } from "./services/ttsService";
+import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ─────────────────────────────────────────────
@@ -26,6 +27,7 @@ export interface SuspectSession {
   chatSession: ChatSession;
   history: ChatMessage[];
   conversationCount: number;
+  stressLevel: number;
 }
 
 // ─────────────────────────────────────────────
@@ -65,6 +67,8 @@ interface GameState {
 
   error: string | null;
   isResponding: boolean;
+  elapsed: number;
+  voiceIds: Record<string, string>;
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
@@ -74,8 +78,10 @@ interface GameState {
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
   sendMessage: (text: string) => Promise<void>;
-  makeAccusation: (suspectName: string) => void;
-  resetGame: () => void,
+  makeAccusation: (suspectName: string, navigate: (path: string) => void) => void;
+  resetGame: () => void;
+  markClueDiscovered: (clueId: string) => void;
+  tickElapsed: () => void;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -96,6 +102,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   accusationResult: null,
   error: null,
   isResponding: false,
+  elapsed: 0,
+  voiceIds: {},
 
   // ── Merge partial seed updates ──
   setSeed: (partial) =>
@@ -104,23 +112,32 @@ export const useGameStore = create<GameState>((set, get) => ({
     })),
 
   // ── Generate the full case from player seed ──
-  startCase: async (navigate: (path: string) => void) => {
-    const { seed } = get();
-    if (!seed || !seed.freeText.trim()) {
-      set({ error: "Please enter a case theme before starting." });
-      alert("Please enter a case theme before starting.");
-      return;
-    }
-    set({ phase: "generating", error: null });
-    try {
-      const { backend, player } = await generateCaseFile(seed);
-      set({ backend, player, phase: "briefing" });
-      navigate("/report");           // ← instead of set({ phase: "briefing" })
-    } catch (err) {
-      set({ error: "Failed to generate case.", phase: "setup" });
-      console.error(err);
-    }
-  },
+  startCase: async (navigate) => {
+  const { seed } = get();
+  if (!seed || !seed.freeText.trim()) {
+    set({ error: 'Please enter a case theme before starting.' });
+    alert('Please enter a case theme before starting.');
+    return;
+  }
+  set({ phase: 'generating', error: null });
+
+  try {
+    const { backend, player } = await generateCaseFile(seed);
+
+    // Select voices server-side (non-blocking — falls back to defaults on failure)
+    const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
+
+    set({ backend, player, voiceIds, phase: 'briefing', elapsed: 0 });
+
+    const { useNotificationStore } = await import('./store/useNotificationStore');
+    useNotificationStore.getState().initClues(player.clues);
+    navigate('/report');
+  } catch (err) {
+    set({ error: 'Failed to generate case.', phase: 'setup' });
+    console.error(err);
+  }
+},
+
 
   // ── Player has read the briefing, move to investigation ──
  goToBriefing: (navigate: (path: string) => void) => {
@@ -158,8 +175,22 @@ export const useGameStore = create<GameState>((set, get) => ({
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-lite",
       systemInstruction: systemPrompt,
-      generationConfig: { temperature: 0.85 },
+      generationConfig: {
+        temperature: 0.9,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: SchemaType.OBJECT,
+          properties: {
+            response:    { type: SchemaType.STRING },
+            stressLevel: { type: SchemaType.INTEGER },
+          },
+          required: ["response", "stressLevel"],  // enforce both fields always present
+        },
+      },
     });
+
+    console.log("[suspect data]", JSON.stringify(suspect, null, 2));
+
 
     const chatSession = model.startChat({ history: [] });
 
@@ -172,6 +203,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           chatSession,
            history: [],
           conversationCount: 0,
+          stressLevel: 0,
         },
       },
     }));
@@ -198,10 +230,26 @@ export const useGameStore = create<GameState>((set, get) => ({
     }));
 
     try {
-      const result = await session.chatSession.sendMessage(text);
-      const responseText = result.response.text();
-      console.log("suspect response");
+      const messageWithContext = `[Current stress level: ${session.stressLevel}]\n\n${text}`;
+      const result = await session.chatSession.sendMessage(messageWithContext);
+      const raw = result.response.text();
+      let responseText = raw;
+      console.log("suspect raw response");
       console.log(responseText);
+      let newStress = session.stressLevel; // default: keep current if parse fails
+
+      try {
+        const cleaned = raw
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/```\s*$/i, "")
+          .trim();
+        const parsed = JSON.parse(cleaned);
+        responseText = String(parsed.response ?? raw);
+        newStress = Math.min(100, Math.max(0, Number(parsed.stressLevel ?? session.stressLevel)));
+      } catch {
+        console.warn("Could not parse suspect JSON reply — using raw text");
+      }
 
       const suspectMessage: ChatMessage = {
         role: "suspect",
@@ -215,20 +263,29 @@ export const useGameStore = create<GameState>((set, get) => ({
         sessions: {
           ...state.sessions,
           [activeSuspectName]: {
-            ...session,
-            history: [...session.history, playerMessage, suspectMessage],
-            conversationCount: session.conversationCount + 1,
+            ...state.sessions[activeSuspectName],                   
+            history: [...state.sessions[activeSuspectName].history, suspectMessage],
+            conversationCount: state.sessions[activeSuspectName].conversationCount + 1,
+            stressLevel: newStress,
           },
         },
+        isResponding: false,                                        // combine into one set() call
       }));
 
       // Generate and play speech asynchronously (don't block UI)
       const suspectGender = get().player?.characterProfiles.find(
         p => p.name === activeSuspectName
       )?.gender ?? "female";
-      generateAndPlaySpeech(responseText, suspectGender).catch(err => {
-        console.error("TTS playback failed:", err);
-      });
+
+        
+      //tts streamed better\
+      const voiceId = get().voiceIds[activeSuspectName];
+
+      if (voiceId) {
+        streamSpeech(responseText, voiceId).catch(err =>
+          console.error("TTS playback failed:", err)
+        );
+      }
 
       // Mark as no longer responding after message is added
       set({ isResponding: false });
@@ -242,7 +299,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           ...state.sessions,
           [activeSuspectName]: {
             ...session,
-            history: session.history.slice(0, -1), // Remove the optimistically added player message
+            history: session.history,
           },
         },
       }));
@@ -250,21 +307,37 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // ── Player makes their final accusation ──
-  makeAccusation: (accusedName) => {
-    const { backend } = get();
-    if (!backend) return;
+  makeAccusation: (accusedName, navigate) => {
+  const { backend } = get();
+  if (!backend) return;
 
-    const trueKiller = backend.suspects.find(s => s.isGuilty);
-    const isCorrect = accusedName === trueKiller?.name;
+  const trueKiller = backend.suspects.find(s => s.isGuilty);
+  const isCorrect  = accusedName === trueKiller?.name;
 
     set({
-      phase: "resolved",
-      accusationResult: {
-        accusedName,
-        isCorrect,
-        trueKiller: trueKiller?.name ?? "Unknown",
-        explanation: backend.storyline.trueSequenceOfEvents,
-      },
+    phase: "resolved",
+    accusationResult: {
+      accusedName,
+      isCorrect,
+      trueKiller:  trueKiller?.name ?? "Unknown",
+      explanation: backend.storyline.trueSequenceOfEvents,
+    },
+  });
+
+  navigate("/accuse");   // ← navigate AFTER state is set
+},
+
+markClueDiscovered: (clueId) => {
+    set(state => {
+    if (!state.player) return state
+    return {
+      player: {
+        ...state.player,
+        clues: state.player.clues.map(c =>
+          c.id === clueId ? { ...c, discovered: true } : c
+        )
+      }
+    };
     });
   },
 
@@ -282,7 +355,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       accusationResult: null,
       error: null,
       isResponding: false,
+      elapsed: 0,
+      voiceIds: {},
     }),
+  
+    // keeps track of elapsed time
+  tickElapsed: () => {
+    set(state => ({ elapsed: state.elapsed + 1 }));
+  },
 }));
 
 // ─────────────────────────────────────────────
@@ -290,12 +370,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 // ─────────────────────────────────────────────
 
 // Current active session's chat history
+const EMPTY_HISTORY: ChatMessage[] = []
+
 export const useActiveHistory = () =>
   useGameStore(state =>
     state.activeSuspectName
-      ? (state.sessions[state.activeSuspectName]?.history ?? [])
-      : []
-  );
+      ? (state.sessions[state.activeSuspectName]?.history ?? EMPTY_HISTORY)
+      : EMPTY_HISTORY // FIX: lift the fallback array outside the selector so it's always the same reference, otherwise new obj created within zustand
+  )
 
 // Safe player data — the only thing UI components should read from
 export const usePlayerData = () => useGameStore(state => state.player);
@@ -308,3 +390,17 @@ export const useActiveSuspectProfile = () =>
       p => p.name === state.activeSuspectName
     ) ?? null;
   });
+
+  export const useActiveSuspectStress = () =>
+  useGameStore(state =>
+    state.activeSuspectName
+      ? (state.sessions[state.activeSuspectName]?.stressLevel ?? 0)
+      : 0
+  );
+
+  export const useActiveSuspectVoiceId = () =>
+  useGameStore(state =>
+    state.activeSuspectName
+      ? (state.voiceIds[state.activeSuspectName] ?? null)
+      : null
+  );
