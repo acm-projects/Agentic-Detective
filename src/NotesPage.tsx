@@ -31,7 +31,7 @@ function now() {
 
 export default function NotesPage() {
   const navigate = useNavigate();
-  const { player, goToBriefing, interrogateSuspects} = useGameStore();
+  const { player, goToBriefing, proceedToInvestigation} = useGameStore();
   const profiles = player?.characterProfiles ?? [];
   const caseReport = player?.caseReport;
 
@@ -304,7 +304,7 @@ export default function NotesPage() {
       <button className="back-btn" onClick={() =>navigate("/clues")}>
         Clues Page
       </button>
-      <button className="back-btn" onClick={() =>interrogateSuspects(navigate)}>
+      <button className="back-btn" onClick={() =>proceedToInvestigation(navigate)}>
         Interrogate
       </button>
       </div>

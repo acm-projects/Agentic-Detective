@@ -9,7 +9,6 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 
 
-
 // ─────────────────────────────────────────────
 //  AVATAR POOL
 //  The LLM reads these descriptions and picks the best match per suspect.
@@ -369,39 +368,65 @@ const rawText = result.response.text()
   .trim();
   console.log(rawText);
 
-// Sanitize bad control characters inside JSON string values
-const sanitized = rawText.replace(
-  /"(?:[^"\\]|\\.)*"/g,
-  (match) => match
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t')
-    .split('')
-    .filter(c => {
-      const code = c.charCodeAt(0);
-      return code >= 32 || code === 10 || code === 13 || code === 9;
-    })
-    .join('')
-);
+  // Sanitize bad control characters inside JSON string values
+  const sanitized = rawText.replace(
+    /"(?:[^"\\]|\\.)*"/g,
+    (match) => match
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r')
+      .replace(/\t/g, '\\t')
+      .split('')
+      .filter(c => {
+        const code = c.charCodeAt(0);
+        return code >= 32 || code === 10 || code === 13 || code === 9;
+      })
+      .join('')
+  );
 
-const raw: CaseFileRaw = JSON.parse(sanitized);
-localStorage.setItem("lastCaseId", raw.caseReport.caseId);
+  const raw: CaseFileRaw = JSON.parse(sanitized);
+  const sessionId = raw.caseReport.caseId;
+  localStorage.setItem("lastSessionId", sessionId);
 
-try {
-  await fetch("http://localhost:3000/case/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      caseId:            raw.caseReport.caseId,
-      caseReport:        raw.caseReport,
-      clues:             raw.clues,
-      characterProfiles: raw.characterProfiles,
-    }),
-  });
-  console.log("[MongoDB] Case saved");
-} catch (err) {
-  console.warn("[MongoDB] Could not save case:", err);
-}
+  // Save to MongoDB iff user is signed in
+  if (seed.isSignedIn && seed.userId != "") {
+    try {
+      await fetch("http://localhost:3000/case/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        
+        // Initial data fed into mongoDB
+        body: JSON.stringify({
+          sessionId: sessionId,
+          userId: seed.userId ?? "",
+
+          seed: {
+            freeText: seed.freeText,
+            difficulty: seed.difficulty,
+            duration: seed.duration,
+            intensity: seed.intensity,
+          },
+
+          game: {
+            phase: "briefing",
+            elapsedSeconds: 0,
+            activeSuspectName: null,
+            totalConversationCount: 0,
+          },
+
+          caseData: {
+            storyline: raw.storyline,
+            suspects: raw.suspects,
+            characterProfiles: raw.characterProfiles,
+            caseReport: raw.caseReport,
+            initialClues: raw.clues,
+          }          
+        }),
+      });
+      console.log("[MongoDB] Case saved");
+    } catch (err) {
+      console.warn("[MongoDB] Could not save case:", err);
+    }
+  };
 
   const backend: CaseFileBackend = {
     storyline: raw.storyline,

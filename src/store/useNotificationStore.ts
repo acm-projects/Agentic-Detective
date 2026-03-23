@@ -12,7 +12,7 @@ import type {
 // Schedule Config
 const SCHEDULE_CONFIG = {
     firstNotificationWindow: [1_000, 2_000] as [number, number], // 120, 180
-    cooldown: 90_000, // 90
+    cooldown: 10_000, // 90
     toastLifetime: 40_000, // Toast: a gui element that shows up, then disappears; 30
     minGameTimeRemaining: 60_000, // 60
 };
@@ -88,6 +88,41 @@ function generateMinigameData(type: MinigameType): MinigameData {
             throw new Error(`Unknown minigame type: ${type}`);
     };
 };
+
+function saveClueProgress(get: any) {
+  const sessionId = localStorage.getItem("lastSessionId") || localStorage.getItem("lastCaseId");
+  
+  if (sessionId) {
+    void import("../useGameStore").then(({ useGameStore }) => {
+      const seed = useGameStore.getState().seed;
+      if (!seed?.isSignedIn || !seed?.userId) return;
+
+      const s = get();
+      const clueState = Object.fromEntries(
+        s.clues.map((clue: Clue) => [
+          clue.id,
+          {
+            discovered: Boolean(clue.discovered),
+            clueLost: Boolean(clue.clueLost),
+          },
+        ])
+      );
+
+      fetch(`http://localhost:3000/case/${sessionId}/progress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: "in_progress",
+          clueState,
+          schedulerState: {
+            lastFiredAt: s.lastFiredAt,
+            nextFireAt: s.nextFireAt,
+            timerPaused: s.timerPaused,
+          }
+        }),
+      }).catch(() => {});
+    });
+}}
 
 // Notification Store
 // Note for self: Any component in the app can read/write from the "store", it is an object that lives outside React
@@ -248,6 +283,8 @@ export const useNotificationStore = create<NotificationState>()(
           console.log(clue.name, "is lost");
         }
       })
+
+      saveClueProgress(get);
     },
  
     /*
@@ -279,6 +316,8 @@ export const useNotificationStore = create<NotificationState>()(
             console.log(clue.name, "is lost");
           }
         }
+
+        saveClueProgress(get);
       })
 
       if (discoveredClueId) {

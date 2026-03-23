@@ -38,7 +38,6 @@ export type GamePhase =
   | "generating"     // LLM generating the case file
   | "refreshed"      // When the game needs to be pulled from mongodb
   | "briefing"       // Player reading the case report
-  | "investigation"  // Active interrogation / clue review
   | "interrogation"  // Asking questions to the suspects and finding clues
   | "accusation"     // Player making their final accusation
   | "resolved";      // Case closed, outcome shown
@@ -73,7 +72,6 @@ interface GameState {
   setSeed: (seed: Partial<PlayerSeed>) => void;
   startCase: (navigate: (path: string) => void) => Promise<void>;
   proceedToInvestigation: (navigate: (path: string) => void) => void;
-  interrogateSuspects: (navigate: (path: string) => void) => void;
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
   sendMessage: (text: string) => Promise<void>;
@@ -96,6 +94,8 @@ const DEFAULT_SEED: PlayerSeed = {
 export const useGameStore = create<GameState>((set, get) => ({
   phase: "setup",
   seed: { ...DEFAULT_SEED },
+
+
   backend: null,
   player: null,
   activeSuspectName: null,
@@ -114,7 +114,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async (navigate: (path: string) => void) => {
-    const { seed, phase } = get();
+    const { seed, phase } = get() as { seed: PlayerSeed, phase: GamePhase };
     if (phase === "generating") return;
 
     if (!seed || !seed.freeText.trim()) {
@@ -142,11 +142,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   navigate("/report");             // ← instead of set({ phase: "briefing" })
   },
   proceedToInvestigation: (navigate) => {
-    set({ phase: "investigation" });
-    navigate("/interrogate");
-  },
-  // ── Open or resume a chat session with a suspect ──
-  interrogateSuspects: (navigate) => {
     set({ phase: "interrogation" });
     navigate("/interrogate");
   },
@@ -157,7 +152,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     // Reuse existing session if already started
     if (sessions[suspectName]) {
-      set({ activeSuspectName: suspectName });
+      set({ phase: "interrogation", activeSuspectName: suspectName });
       return;
     }
 
@@ -189,6 +184,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const chatSession = model.startChat({ history: [] });
 
     set(state => ({
+      phase: "interrogation",
       activeSuspectName: suspectName,
       sessions: {
         ...state.sessions,
@@ -207,6 +203,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   // ── Send a player message to the active suspect ──
   sendMessage: async (text) => {
     const { activeSuspectName, sessions } = get();
+    const { seed } = get() as { seed: PlayerSeed};
     if (!activeSuspectName || !sessions[activeSuspectName] || get().isResponding) return;
 
     const session = sessions[activeSuspectName];
@@ -267,15 +264,51 @@ export const useGameStore = create<GameState>((set, get) => ({
         isResponding: false,
       }));
 
-      const caseId = get().player?.caseReport?.caseId;
-      fetch(`http://localhost:3000/case/${caseId}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          suspectName: activeSuspectName,
-          messages: [...session.history, playerMessage, suspectMessage],
-        }),
-      }).catch(() => {});
+      console.log("send message function reached, before sign in check")
+      // Send data to MongoDB
+      if (seed.isSignedIn && seed.userId != "") {
+        const sessionId =
+          get().player?.caseReport?.caseId ||
+          seed.sessionId ||
+          localStorage.getItem("lastSessionId") ||
+          localStorage.getItem("lastCaseId") ||
+          "";
+        console.log("right before sessionId check, after sign in check")
+        if (sessionId) {
+          const state = get();
+          const suspectSessions = Object.values(state.sessions).map((s) => ({
+            suspectName: s.suspectName,
+            conversationCount: s.conversationCount,
+            currentStress: s.stressLevel,
+            firstInterrogatedAt: null,
+            lastInterrogatedAt: new Date().toISOString(),
+            messages: s.history.map((m) => ({
+              role: m.role,
+              text: m.text,
+              timestamp: m.timestamp,
+            })),
+          }))
+          console.log("right before mongo fetch");
+          fetch(`http://localhost:3000/case/${sessionId}/progress`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              status: state.phase === "resolved" ? "resolved" : "in_progress",
+              game: {
+                phase: state.phase,
+                elapsedSeconds: state.elapsed,
+                activeSuspectName: state.activeSuspectName,
+                totalConversationCount: state.totalConversationCount,
+                seed: state.seed,
+              },
+
+              interrogation: {
+                suspectSessions,
+              }
+            }),
+          }).catch(() => {});
+      }
+    }
 
       // Generate and play speech asynchronously (don't block UI)
       const suspectGender = get().player?.characterProfiles.find(
@@ -310,7 +343,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Player makes their final accusation ──
   makeAccusation: (accusedName, navigate) => {
-  const { backend } = get();
+  const { backend, player } = get();
+  const { seed } = get() as { seed: PlayerSeed};
   if (!backend) return;
 
   const trueKiller = backend.suspects.find(s => s.isGuilty);
@@ -325,18 +359,30 @@ export const useGameStore = create<GameState>((set, get) => ({
       explanation: backend.storyline.trueSequenceOfEvents,
     },
   });
-  const caseId = get().player?.caseReport?.caseId;
-    fetch(`http://localhost:3000/case/${caseId}/outcome`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        accusedName,
-        isCorrect,
-        trueKiller: trueKiller?.name ?? "Unknown",
-        explanation: backend.storyline.trueSequenceOfEvents,
-      }),
-    }).catch(() => {});
-
+  console.log("accusation function called");
+  // Save outcome to MongoDB if signed in
+  if (seed.isSignedIn && seed.userId != "") {
+    const sessionId =
+      get().player?.caseReport?.caseId ||
+      seed.sessionId ||
+      localStorage.getItem("lastSessionId") ||
+      localStorage.getItem("lastCaseId") ||
+      "";
+    console.log("right before mongo fetch");
+    if (sessionId) {
+        fetch(`http://localhost:3000/case/${sessionId}/outcome`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId,
+            caseId: player?.caseReport?.caseId ?? sessionId,
+            accusedName,
+            isCorrect,
+            trueKiller: trueKiller?.name ?? "Unknown",
+            explanation: backend.storyline.trueSequenceOfEvents,
+          }),
+        }).catch(() => {});
+  }}
   navigate("/accuse");   // ← navigate AFTER state is set
 },
 
@@ -351,10 +397,7 @@ markClueDiscovered: (clueId) => {
         )
       }
     };
-    
     });
-    
-
   },
 
   
