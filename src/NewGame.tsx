@@ -3,6 +3,8 @@ import './App.css';
 import { useGameStore } from "./useGameStore";
 import { useNavigate } from 'react-router';
 import { Show, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/react-router';
+import SavedGamesList from './components/savegamelist/SavedGamesList';
+import { FaSave } from "react-icons/fa";
 
 function NewGame() {
     const { setSeed, startCase } = useGameStore();
@@ -73,7 +75,19 @@ function NewGame() {
         </Show>
         <Show when="signed-in">
           Hello, 
-          <UserButton userProfileMode="modal" showName />
+          <UserButton userProfileMode="modal" showName> 
+            <UserButton.UserProfilePage
+              label="Your Saved Games"
+              url="testpage"
+              labelIcon={<FaSave style={{
+                fontSize: '1rem',
+                marginBottom: '0.25rem',
+                verticalAlign: 'middle'
+              }}/>}
+            >
+              <SavedGamesList />
+            </UserButton.UserProfilePage>
+          </UserButton>
         </Show>
       </header>
       

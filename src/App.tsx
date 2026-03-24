@@ -11,63 +11,29 @@ import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
 import Accuse from './Accuse.tsx';
 import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
+import SavedGamesList from './components/savegamelist/SavedGamesList.tsx';
+
+
+
+
 
 function App() {
-  async function getData(){
-    const caseId = localStorage.getItem("lastCaseId");
-    if (!caseId) {
-      console.log("[App] No lastCaseId in localStorage");
-      return;
-    }
-    console.log("[App] Fetching case from MongoDB:", caseId);
-    const response = await fetch(`http://localhost:3000/case/${caseId}`)
-    console.log(response)
-    const doc = await response.json();
-    console.log(doc)
-    console.log("[App] MongoDB returned:", doc);  // ← is doc null? missing fields?
-    if (!doc || doc.error) {
-      console.warn("[App] Bad response from MongoDB:", doc);
-      return;
-    }
-    useGameStore.setState({
-      player: {
-        characterProfiles: doc.characterProfiles,
-        caseReport: doc.caseReport,
-        clues: doc.clues,
-      },
-      backend: {
-        storyline: doc.storyline,
-        suspects: doc.suspects,
-        clues: doc.clues,
-      },
-      phase: doc.status === 'resolved' ? 'resolved' : 'investigation',
-
-  })
-}
-
-
-  useEffect(() => {
-    const { player } = useGameStore.getState();
-    if (player) {
-      console.log("[App] Zustand already has player, skipping fetch");
-      return;
-    }
-  
-    const caseId = localStorage.getItem("lastCaseId");
-    if (!caseId) {
-      console.log("[App] No lastCaseId in localStorage");
-      return;
-    }
-    console.log("[App] Fetching case from MongoDB:", caseId);
-    getData();
-  }, []);
 
   return (<>
     <Routes>
       <Route path="/" element={<NewGame />} />
       <Route path="/sign-in/*" element={<SignIn />} />
       <Route path="/sign-up/*" element={<SignUp />} />
-      <Route path="/user-profile/*" element={<UserProfile />} />
+      <Route path="/user-profile/*" element={
+        <UserProfile> 
+          <UserProfile.Page 
+          label="Your Saved Games" 
+          url="testpage" 
+          labelIcon={<span>🕵️</span>}>
+            <SavedGamesList />
+          </UserProfile.Page>
+        </UserProfile>
+        } />
       <Route path="/desk" element={<Message />} />
       <Route path="/report" element={<CaseReportScreen />} />
       <Route path="/investigate" element={<NotesPage />} />

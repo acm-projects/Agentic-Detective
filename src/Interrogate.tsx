@@ -107,26 +107,7 @@ function Interrogate() {
   }, []);
 
   // If no case has been generated yet, redirect home
-  if (!player) {
-  const caseId = localStorage.getItem("lastCaseId") || "";
-  fetch(`http://localhost:3000/case/${caseId}`)
-  .then(r => {
-    if (!r.ok) {
-      throw new Error(`Failed to fetch case data: ${r.statusText || 'Unknown Error'}`);
-    }
-    return r.json();
-  })
-  .then(doc => {
-    if (activeSuspectName) {
-      startInterrogation(activeSuspectName);
-    }
-  })
-  .catch(err => {
-    console.error("Error fetching case data:", err);
-  });
-    
-    
-    
+  if (!player) {    
     console.log("No case generated yet")
     return (
       <div className="interrogate-container">

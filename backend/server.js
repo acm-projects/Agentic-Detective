@@ -278,6 +278,28 @@ app.get('/case/:sessionId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+// Endpoint to fetch all cases for a particular user
+app.get('/case/user/:userId', async (req, res) => {
+  console.log("User ID case fetching endpoint reached!!!");
+  console.log("userId:", req.params.userId);
+  try {
+    const { userId } = req.params;
+
+    const docs = await db.collection("cases")
+      .find({ userId }, { projection: { _id: 0 } })
+      .sort({ updatedAt: -1 }) // most recent first
+      .toArray();
+
+    if (!docs.length) {
+      return res.status(404).json({ error: "No cases found for this user" });
+    }
+
+    res.json(docs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+})
 /*
 app.post('/case/create', async (req, res) => {
   console.log('[/case/create] received:', req.body.caseId);
