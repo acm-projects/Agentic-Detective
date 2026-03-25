@@ -1,9 +1,9 @@
 import { Routes, Route } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Message from './desk/DeskMessage.tsx';
 import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
-import Suspects from './Suspects.tsx';
+import Suspects from './Suspects0.tsx';
 import './App.css';
 import { useGameStore } from './useGameStore';
 import CaseReportScreen from './CaseReportScreen.tsx';
@@ -11,68 +11,87 @@ import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
 
 function App() {
-  async function getData(){
-    const caseId = localStorage.getItem("lastCaseId");
-    if (!caseId) {
-      console.log("[App] No lastCaseId in localStorage");
-      return;
-    }
-    console.log("[App] Fetching case from MongoDB:", caseId);
-    const response = await fetch(`http://localhost:3000/case/${caseId}`)
-    console.log(response)
-    const doc = await response.json();
-    console.log(doc)
-    console.log("[App] MongoDB returned:", doc);  // ← is doc null? missing fields?
-    if (!doc || doc.error) {
-      console.warn("[App] Bad response from MongoDB:", doc);
-      return;
-    }
-    useGameStore.setState({
-      player: {
-        characterProfiles: doc.characterProfiles,
-        caseReport: doc.caseReport,
-        clues: doc.clues,
-      },
-      backend: {
-        storyline: doc.storyline,
-        suspects: doc.suspects,
-        clues: doc.clues,
-      },
-      phase: doc.status === 'resolved' ? 'resolved' : 'investigation',
-
-  })
-}
-
+  const [isRestoring, setIsRestoring] = useState(() => {
+    // Only show restoring screen if there's actually a saved case to load
+    return !!localStorage.getItem("lastCaseId");
+  });
 
   useEffect(() => {
     const { player } = useGameStore.getState();
+
+    // Already have data — no need to fetch
     if (player) {
-      console.log("[App] Zustand already has player, skipping fetch");
+      setTimeout(() => setIsRestoring(false), 0);
       return;
     }
-  
+
     const caseId = localStorage.getItem("lastCaseId");
     if (!caseId) {
-      console.log("[App] No lastCaseId in localStorage");
+      setTimeout(() => setIsRestoring(false), 0);
       return;
     }
-    console.log("[App] Fetching case from MongoDB:", caseId);
-    getData();
+
+    console.log("[App] Restoring case from MongoDB:", caseId);
+
+    fetch(`http://localhost:3000/case/${caseId}`)
+      .then(r => r.json())
+      .then(doc => {
+        console.log("[App] MongoDB returned:", doc);
+        if (!doc || doc.error) {
+          console.warn("[App] Bad response:", doc);
+          return;
+        }
+        // Restore everything into Zustand BEFORE routes render
+        useGameStore.setState({
+          player: {
+            characterProfiles: doc.characterProfiles,
+            caseReport: doc.caseReport,
+            clues: doc.clues,
+          },
+          backend: {
+            storyline: doc.storyline,
+            suspects: doc.suspects,
+            clues: doc.clues,
+          },
+          phase: doc.status === 'resolved' ? 'resolved' : 'investigation',
+        });
+      })
+      .catch(err => console.warn("[App] fetch failed:", err))
+      .finally(() => setIsRestoring(false)); // always unblock
   }, []);
 
-  return (<>
-    <Routes>
-      <Route path="/" element={<NewGame />} />
-      <Route path="/desk" element={<Message />} />
-      <Route path="/report" element={<CaseReportScreen />} />
-      <Route path="/investigate" element={<NotesPage />} />
-      <Route path="/clues" element={<ClueBook />} />
-      <Route path="/interrogate" element={<Interrogate />} />
-      <Route path="/clues" element={<ClueBook />} />
-      <Route path="/suspects" element={<Suspects />} />
-    </Routes>
+  // Block ALL routes from rendering until Zustand is populated
+  if (isRestoring) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        fontFamily: 'monospace',
+        background: '#0a0805',
+        color: '#c8a464',
+        fontSize: '14px',
+        letterSpacing: '3px',
+      }}>
+        RESTORING SESSION…
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<NewGame />} />
+        <Route path="/desk" element={<Message />} />
+        <Route path="/report" element={<CaseReportScreen />} />
+        <Route path="/investigate" element={<NotesPage />} />
+        <Route path="/clues" element={<ClueBook />} />
+        <Route path="/interrogate" element={<Interrogate />} />
+        <Route path="/suspects" element={<Suspects />} />
+      </Routes>
     </>
-  )
+  );
 }
 
 export default App;

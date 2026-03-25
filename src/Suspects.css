@@ -1,42 +1,33 @@
-/* Importing Press Start 2P for headings/pixel vibe 
-  Importing VT323 for readable 70s terminal/typewriter body text 
-*/
+/* ═══════════════════════════════════════════════════════
+   Suspects.css — full file, pixel/dossier theme
+   Fonts: Press Start 2P (headings), VT323 (body)
+═══════════════════════════════════════════════════════ */
+
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 
 :root {
-  --bg-paper: #e0dcd3;   /* Vintage dossier beige */
-  --bg-dark: #d1cbb8;    /* Slightly darker beige for contrast */
-  --ink-color: #111111;  /* Almost black for thick outlines */
+  --bg-paper: #e0dcd3;
+  --bg-dark:  #d1cbb8;
+  --ink-color: #111111;
   --white: #ffffff;
+
+  /* tag palette — vivid enough to read on beige */
+  --tag-neutral:    #4a3f2f;
+  --tag-suspicious: #c0392b;
+  --tag-cleared:    #1e7e34;
+  --tag-alibi:      #1a5296;
 }
 
-/* Base Styles */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  width: 100vw;
-  background-color: var(--bg-paper);
-  color: var(--ink-color);
-  font-family: 'VT323', monospace;
-  overflow: hidden;
-}
-
-* {
-  cursor: url('https://unpkg.com/nes.css/assets/cursor.png'), auto;
-  box-sizing: border-box;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
+/* ─── Layout shell ──────────────────────────────────── */
 
 .suspects-wrapper {
   display: flex;
   height: 100vh;
   width: 100vw;
   background-color: var(--bg-paper);
+  font-family: 'VT323', monospace;
+  color: var(--ink-color);
+  box-sizing: border-box;
 }
 
 .suspects-container {
@@ -46,18 +37,21 @@ a {
   height: 100%;
   padding: 1.5em;
   gap: 1em;
+  box-sizing: border-box;
 }
 
-/* Header with Case Title */
+/* ─── Header ────────────────────────────────────────── */
+
 .suspects-header {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .suspects-header h1 {
   font-family: 'Press Start 2P', cursive;
-  font-size: 1.8rem;
+  font-size: 1.4rem;
   text-transform: uppercase;
   background: var(--bg-paper);
   padding: 0.2em 0.5em;
@@ -67,61 +61,146 @@ a {
   margin: 0;
 }
 
-/* Main Layout Container */
+/* ─── Two-column layout ─────────────────────────────── */
+
 .suspects-layout {
   display: flex;
   flex-direction: row;
   gap: 2em;
   flex: 1;
+  min-height: 0; /* lets children scroll independently */
 }
 
-/* Left Sidebar */
+/* ─── Sidebar — FIXED width always ─────────────────── */
+
 .suspects-sidebar {
+  /* fixed width — never changes regardless of active panel */
+  width: 220px;
+  min-width: 220px;
+  max-width: 220px;
+  flex-shrink: 0;
+
   display: flex;
   flex-direction: column;
-  width: 110%;
   background-color: var(--white);
   border: 4px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
   padding: 1em;
-  gap: 1em;
+  gap: 0;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.sidebar-header {
+  margin-bottom: 0.6em;
 }
 
 .sidebar-header h3 {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.7rem;
+  font-size: 0.55rem;
   text-transform: uppercase;
-  color: var(--white);
-  margin: 0 0 0.8em 0;
-  padding-bottom: 0.8em;
+  color: var(--ink-color);
+  margin: 0 0 0.6em 0;
+  padding-bottom: 0.6em;
   border-bottom: 3px solid var(--ink-color);
 }
+
+/* ─── Suspect + Case Notes buttons ─────────────────── */
 
 .suspect-list {
   display: flex;
   flex-direction: column;
-  gap: 1em;
-  overflow-y: auto;
+  gap: 0.5em;
+  flex: 1;
 }
 
+/* shared base for all sidebar selection buttons */
 .suspect-button {
-  padding: 1em 1em;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  padding: 0.65em 0.75em;
   background-color: var(--bg-paper);
   border: 3px solid var(--ink-color);
   box-shadow: 3px 3px 0 var(--ink-color);
   font-family: 'VT323', monospace;
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   color: var(--ink-color);
   cursor: pointer;
-  transition: all 0.1s;
   text-align: left;
   text-transform: uppercase;
+  transition: transform 0.08s, box-shadow 0.08s, background-color 0.08s, color 0.08s;
+  box-sizing: border-box;
+}
+
+.suspect-button:hover {
+  background-color: var(--ink-color);
+  color: var(--white);
+  border-color: var(--white);
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink-color);
+}
+
+/* Active: filled black, white text — no blue, just the pixel theme */
+.suspect-button.active {
+  background-color: var(--ink-color);
+  color: var(--white);
+  border-color: var(--white);
+  box-shadow: 3px 3px 0 var(--bg-dark);
+  transform: translate(2px, 2px);
+}
+
+.suspect-button-name {
+  flex: 1;
+  line-height: 1.1;
+}
+
+.suspect-button-icon {
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* Case Notes button — same shape, slightly styled label */
+.case-notes-btn {
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+}
+
+/* thin rule between Case Notes and suspect list */
+.sidebar-divider {
+  height: 3px;
+  background: var(--ink-color);
+  margin: 0.6em 0;
+  flex-shrink: 0;
+}
+
+/* tag dot on suspect names */
+.suspect-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1.5px solid var(--ink-color);
+  margin-left: auto;
+}
+
+/* ─── Sidebar nav buttons ───────────────────────────── */
+
+.sidebar-nav {
+  margin-top: auto;
+  padding-top: 0.75em;
+  border-top: 3px solid var(--ink-color);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  flex-shrink: 0;
 }
 
 .back-button {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.7rem;
-  padding: 1.2em 1.5em; /* Increased horizontal padding for a better "runway" */
+  font-size: 0.52rem;
+  padding: 0.9em 1em;
   background: var(--bg-paper);
   border: 3px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
@@ -131,29 +210,15 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s, 0.1s;
+  transition: transform 0.1s, box-shadow 0.1s, background-color 0.1s, color 0.1s;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .back-button:hover {
   background: var(--ink-color);
   color: var(--white);
-  border: 3px solid var(--white);
-}
-
-.back-button span {
-  display: inline-block;
-  width: 0;
-  opacity: 0;
-  overflow: hidden;
-  white-space: nowrap; /* Keeps the arrow on one line while expanding */
-  transition: width 0.3s ease, opacity 0.2s ease, margin-right 0.3s ease;
-  pointer-events: none; /* Ensures the span doesn't interfere with clicks */
-}
-
-.back-button:hover span {
-  width: 25px;       /* Adjust this based on your font size */
-  opacity: 1;
-  margin-right: 8px; /* Adds space between arrow and text only on hover */
+  border-color: var(--white);
 }
 
 .back-button:active {
@@ -161,52 +226,44 @@ a {
   box-shadow: 0px 0px 0 var(--ink-color);
 }
 
-.suspect-button:hover {
-  background-color: var(--ink-color);
-  color: var(--white);
-  border: 3px solid var(--white);
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0 var(--ink-color);
-}
+/* ─── Main panel ────────────────────────────────────── */
 
-.suspect-button.active {
-  background-color: var(--ink-color);
-  color: var(--white);
-  border: 3px solid var(--white);
-  box-shadow: 3px 3px 0 var(--white);
-}
-
-/* Right Main Area */
 .suspects-main {
   display: flex;
   flex-direction: column;
   flex: 1;
+  min-width: 0; /* prevent flex blowout */
   background-color: var(--white);
   border: 4px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
   padding: 1.5em;
   gap: 1.5em;
   overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.main-header {
+  flex-shrink: 0;
 }
 
 .main-header h3 {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   color: var(--ink-color);
-  margin: 0 0 1em 0;
-  padding-bottom: 0.8em;
+  margin: 0 0 0.8em 0;
+  padding-bottom: 0.6em;
   border-bottom: 3px solid var(--ink-color);
 }
 
-/* Suspect Details Container */
+/* ─── Suspect details ───────────────────────────────── */
+
 .suspect-details-container {
   display: flex;
   flex-direction: column;
   gap: 1.5em;
 }
 
-/* Name Section */
 .suspect-name-section {
   border-bottom: 3px dashed var(--ink-color);
   padding-bottom: 1em;
@@ -214,19 +271,19 @@ a {
 
 .suspect-name-section h4 {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   text-transform: uppercase;
   color: var(--ink-color);
-  margin: 0 0 0.8em 0;
-  border-bottom: 2px solid var(--ink-color);
+  margin: 0 0 0.6em 0;
   padding-bottom: 0.3em;
+  border-bottom: 2px solid var(--ink-color);
 }
 
 .suspect-info p {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--ink-color);
-  margin: 0 0 0.8em 0;
+  margin: 0 0 0.6em 0;
   text-transform: uppercase;
 }
 
@@ -240,10 +297,10 @@ a {
   font-family: 'VT323', monospace;
   font-size: 1.1rem;
   color: var(--ink-color);
-  margin-bottom: 0.4em;
+  margin-bottom: 0.3em;
 }
 
-/* BioData Section */
+/* Polaroid + biodata row */
 .suspect-biodata-section {
   display: flex;
   flex-direction: row;
@@ -251,16 +308,15 @@ a {
   align-items: flex-start;
 }
 
-/* Polaroid Styling */
+/* Polaroid */
 .polaroid {
   display: flex;
   flex-direction: column;
   background-color: var(--white);
   border: 8px solid var(--white);
-  box-shadow: 0 4px 6px rgba(17, 17, 17, 0.3);
-  padding: 0;
-  min-width: 200px;
-  /* Slight rotation for authenticity */
+  box-shadow: 0 4px 6px rgba(17,17,17,0.3);
+  min-width: 160px;
+  max-width: 160px;
   transform: rotate(-2deg);
   flex-shrink: 0;
 }
@@ -283,27 +339,27 @@ a {
   font-family: 'VT323', monospace;
   font-size: 1rem;
   color: var(--ink-color);
-  margin: 0.8em 0.8em 0 0.8em;
+  margin: 0.5em 0.5em 0;
   text-align: right;
   font-style: italic;
-  padding-bottom: 0.8em;
+  padding-bottom: 0.6em;
 }
 
-/* BioData Info */
+/* Biodata */
 .biodata-section {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.8em;
+  gap: 0.6em;
 }
 
 .biodata-section h4 {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   text-transform: uppercase;
   color: var(--ink-color);
   margin: 0;
-  padding-bottom: 0.5em;
+  padding-bottom: 0.4em;
   border-bottom: 2px solid var(--ink-color);
 }
 
@@ -315,40 +371,272 @@ a {
 
 .biodata-section li {
   font-family: 'VT323', monospace;
-  font-size: 1rem;
+  font-size: 1.05rem;
   color: var(--ink-color);
-  margin-bottom: 0.6em;
+  margin-bottom: 0.5em;
   line-height: 1.4;
 }
 
 .biodata-section em {
   font-style: italic;
-  color: var(--ink-color);
 }
 
-/* Suspicion Tag Styling */
-.suspicion-tag {
-  display: inline-block;
-  padding: 0.3em 0.6em;
+/* ─── Assessment tag row ────────────────────────────── */
+
+.tag-row {
+  margin: 0.3em 0 0.5em;
+}
+
+.tag-row-label {
+  display: block;
   font-family: 'Press Start 2P', cursive;
   font-size: 0.5rem;
   text-transform: uppercase;
+  color: var(--ink-color);
+  margin-bottom: 0.5em;
+}
+
+.tag-btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4em;
+}
+
+.tag-btn {
+  padding: 0.3em 0.7em;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
   border: 2px solid var(--ink-color);
   box-shadow: 2px 2px 0 var(--ink-color);
-  margin-left: 0.3em;
-}
-
-.suspicion-tag.suspicion-low {
-  background-color: #90EE90;
+  background: var(--bg-paper);
   color: var(--ink-color);
+  transition: transform 0.08s, box-shadow 0.08s, background 0.08s, color 0.08s;
 }
 
-.suspicion-tag.suspicion-medium {
-  background-color: #FFD700;
-  color: var(--ink-color);
+.tag-btn:hover {
+  background: var(--bg-dark);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink-color);
 }
 
-.suspicion-tag.suspicion-high {
-  background-color: #FF6B6B;
+/* Active: solid fill with the tag's own color, white text, pixel shadow */
+.tag-btn.active {
+  background: var(--tag-color, var(--ink-color));
   color: var(--white);
+  border-color: var(--ink-color);
+  box-shadow: 2px 2px 0 var(--ink-color);
+  transform: translate(2px, 2px);
+}
+
+/* ─── Notes section ─────────────────────────────────── */
+
+.Notes-section h4 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  color: var(--ink-color);
+  margin: 0 0 0.5em 0;
+  padding-bottom: 0.3em;
+  border-bottom: 2px solid var(--ink-color);
+}
+
+.notepad-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  box-shadow: 3px 3px 0 var(--ink-color);
+  padding: 0.6em 0.75em;
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  resize: vertical;
+  color: var(--ink-color);
+}
+
+.notepad-textarea:focus {
+  outline: none;
+  box-shadow: 5px 5px 0 var(--ink-color);
+}
+
+.notepad-char-count {
+  font-family: 'VT323', monospace;
+  font-size: 0.85rem;
+  color: var(--ink-color);
+  opacity: 0.45;
+  text-align: right;
+  margin-top: 0.2em;
+}
+
+/* ─── Case Scratchpad panel ─────────────────────────── */
+
+.case-scratchpad {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.scratchpad-input-row {
+  display: flex;
+  gap: 0.75em;
+  align-items: flex-start;
+  flex-shrink: 0;
+}
+
+.scratchpad-input {
+  flex: 1;
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  padding: 0.6em 0.75em;
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  box-shadow: 3px 3px 0 var(--ink-color);
+  resize: none;
+  color: var(--ink-color);
+}
+
+.scratchpad-input:focus {
+  outline: none;
+  box-shadow: 5px 5px 0 var(--ink-color);
+}
+
+.scratchpad-add-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1em;
+  padding: 0.6em 1em;
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.48rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: var(--ink-color);
+  white-space: nowrap;
+  transition: transform 0.08s, box-shadow 0.08s, background 0.08s, color 0.08s;
+}
+
+.scratchpad-add-btn:hover {
+  background: var(--ink-color);
+  color: var(--white);
+  border-color: var(--white);
+}
+
+.scratchpad-add-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0 0 0 var(--ink-color);
+}
+
+.scratchpad-hint {
+  font-size: 0.55rem;
+  opacity: 0.5;
+  font-family: 'VT323', monospace;
+  font-weight: 400;
+}
+
+.scratchpad-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65em;
+  overflow-y: auto;
+}
+
+.scratchpad-empty {
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  color: var(--ink-color);
+  opacity: 0.45;
+  font-style: italic;
+}
+
+.scratchpad-note {
+  position: relative;
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  box-shadow: 3px 3px 0 var(--ink-color);
+  padding: 0.75em 0.9em 0.5em;
+}
+
+.scratchpad-note.pinned {
+  background: var(--bg-dark);
+  box-shadow: 4px 4px 0 var(--ink-color);
+}
+
+.pin-indicator {
+  position: absolute;
+  top: 0.4em;
+  right: 0.6em;
+  font-size: 0.85rem;
+}
+
+.scratchpad-note-text {
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+  line-height: 1.5;
+  color: var(--ink-color);
+  margin: 0 1.5em 0.5em 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.scratchpad-note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 2px dashed var(--ink-color);
+  padding-top: 0.35em;
+  margin-top: 0.1em;
+}
+
+.scratchpad-note-time {
+  font-family: 'VT323', monospace;
+  font-size: 0.9rem;
+  opacity: 0.5;
+}
+
+.scratchpad-note-actions {
+  display: flex;
+  gap: 0.4em;
+}
+
+.note-action-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.4rem;
+  background: var(--white);
+  border: 2px solid var(--ink-color);
+  box-shadow: 2px 2px 0 var(--ink-color);
+  padding: 0.3em 0.6em;
+  cursor: pointer;
+  color: var(--ink-color);
+  text-transform: uppercase;
+  transition: transform 0.08s, box-shadow 0.08s, background 0.08s, color 0.08s;
+}
+
+.note-action-btn:hover {
+  background: var(--ink-color);
+  color: var(--white);
+  border-color: var(--white);
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink-color);
+}
+
+.note-action-btn.delete:hover {
+  background: #c0392b;
+  color: var(--white);
+  border-color: var(--white);
+}
+
+.note-action-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink-color);
 }

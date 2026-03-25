@@ -35,7 +35,6 @@ export interface SuspectSession {
 export type GamePhase =
   | "setup"          // Player entering seed inputs
   | "generating"     // LLM generating the case file
-  | "refreshed"      // When the game needs to be pulled from mongodb
   | "briefing"       // Player reading the case report
   | "investigation"  // Active interrogation / clue review
   | "interrogation"  // Asking questions to the suspects and finding clues
@@ -56,6 +55,7 @@ interface GameState {
   activeSuspectName: string | null;
   sessions: Record<string, SuspectSession>;
   totalConversationCount: number;
+  notes: CaseFilePlayer | null;  
 
   accusationResult: {
     accusedName: string;
@@ -69,6 +69,7 @@ interface GameState {
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
+  gameType: (text: string) => Promise<void>;
   startCase: (navigate: (path: string) => void) => Promise<void>;
   proceedToInvestigation: (navigate: (path: string) => void) => void;
   interrogateSuspects: (navigate: (path: string) => void) => void;
@@ -86,11 +87,14 @@ const DEFAULT_SEED: PlayerSeed = {
   intensity: 5,
 };
 
+
 export const useGameStore = create<GameState>((set, get) => ({
   phase: "setup",
+  gameType: {},
   seed: { ...DEFAULT_SEED },
   backend: null,
   player: null,
+  notes: null,
   activeSuspectName: null,
   sessions: {},
   totalConversationCount: 0,
@@ -106,9 +110,6 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async (navigate: (path: string) => void) => {
-    if (phase== "generating"){
-      
-    }
     const { seed } = get();
     if (!seed || !seed.freeText.trim()) {
       set({ error: "Please enter a case theme before starting." });

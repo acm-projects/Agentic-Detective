@@ -4,11 +4,12 @@ import { useGameStore } from "./useGameStore";
 import { useNavigate } from 'react-router-dom';
 
 function NewGame() {
-    const { seed, setSeed, startCase } = useGameStore();
+    const { seed, setSeed, startCase, gameType } = useGameStore();
     const navigate = useNavigate();
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const [personalization, setPersonalization] = useState('');
+    const [resumeCaseId, setcaseId] = useState('');
     const [timePeriod, setTimePeriod] = useState(10); // Default value
     const [intensity, setIntensity] = useState(5); // Default value
     const [difficulty, setDifficulty] = useState(5); // Default value
@@ -119,6 +120,24 @@ function NewGame() {
             difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
             intensity: intensity 
+          }) 
+          startCase(navigate);
+          navigate('/desk');
+        }} >
+        SOLVE! 
+      </button>
+      <div></div>
+      <input
+        type="text"
+        value={resumeCaseId}
+        onChange={(e) => setcaseId(e.target.value)}
+        placeholder="Enter CaseId to resume Gameplay!"
+        className="input"
+      />
+      <button className="detective-button" onClick={()=>{
+          playClickSound();
+          setSeed({
+            freeText: resumeCaseId,        // "1920s jazz club", "remote Antarctic base", etc
           }) 
           startCase(navigate);
           navigate('/desk');

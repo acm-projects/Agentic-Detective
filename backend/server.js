@@ -46,6 +46,7 @@ app.post('/case/create', async (req, res) => {
       status: 'in_progress',
       caseReport,
       clues,
+      notes: {},
       characterProfiles,
       chatHistory: {},
       outcome: null,
@@ -83,18 +84,75 @@ app.post('/case/:caseId/outcome', async (req, res) => {
 });
 
 app.get('/case/:caseId', async (req, res) => {
-  console.log('!!!!!')
-  console.log('[GET /case/:caseId] looking for:', req.params.caseId);
+  if (!db) {
+    console.error('[GET] db is null — MongoDB not connected');
+    return res.status(500).json({ error: "Database not connected" });
+  }
+  //console.log('[GET /case/:caseId] looking for:', req.params.caseId);
   try {
     const doc = await db.collection('cases').findOne(
       { caseId: req.params.caseId },
       { projection: { _id: 0 } }
     );
-    console.log('[GET /case/:caseId] found:', doc ? 'yes' : 'null');
+    //console.log('[GET /case/:caseId] found:', doc ? 'yes' : 'null');
     if (!doc) return res.status(404).json({ error: "Case not found" });
     res.json(doc);
   } catch (err) {
     console.error('[GET /case/:caseId] error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/case/:caseId/suspectNotes', async (req, res) => {
+  const { suspectName, suspectNotes } = req.body;
+
+  try {
+    const safeName = suspectName.replaceAll('.', '_'); // ✅ fix dot issue
+
+    const result = await db.collection('cases').updateOne(
+      { caseId: req.params.caseId },
+      { $set: { [`notes.${safeName}`]: suspectNotes } }
+    );
+    console.log("caseId:", req.params.caseId);
+    console.log("body:", req.body);
+    console.log("UPDATE RESULT:", result); // 🔥 debug
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+
+});
+
+app.post('/case/:caseId/caseNotes', async (req, res) => {
+  const { caseNotes } = req.body;
+  try {
+    await db.collection('cases').updateOne(
+      { caseId: req.params.caseId },
+      { $set: { caseNotes: { caseNotes } } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/case/:caseId/notes', async (req, res) => {
+  const { suspectName } = req.query;
+  if(!suspectName){}
+  try {
+    const doc = await db.collection('cases').findOne(
+      { caseId: req.params.caseId },
+      { projection: { _id: 0, notes: 1 } }
+    );
+
+    if (!doc) return res.status(404).json({ error: "Case not found" });
+
+    const suspectNotes = doc.notes?.[suspectName] || null;
+
+    res.json({ suspectNotes });
+  } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });

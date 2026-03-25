@@ -3,36 +3,85 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
 import './Interrogate.css';
 
+
+
+
+
 function Interrogate() {
   const navigate = useNavigate();
-  const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
+  const {
+    notes,
+    player,
+    backend,
+    activeSuspectName,
+    isResponding,
+    startInterrogation,
+    proceedToInvestigation,
+    sendMessage,
+    makeAccusation,
+    goToBriefing,
+  } = useGameStore();
+
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
   const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
-  //const [isNoteOpen, setIsNoteOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const setSuspectNote = useGameStore(state => state.setSuspectNote);
+  const suspectNotes = useGameStore(state => state.notes.suspectNotes);
 
-  // Auto-select first suspect on the very first load 
+  // ── Auto-select first suspect ONLY when both player AND backend exist ──
   useEffect(() => {
-    console.log("got into useEffect1")
-    console.log(activeSuspectName, " ", profiles)
-    if (!activeSuspectName && profiles.length > 0) {
-      startInterrogation(profiles[0].name);
-      console.log("1st useEffect inside if")
-    }
-  }, []);
+    // Guard: do nothing if backend or profiles not ready yet
+    if (!backend || !backend.suspects) return;
+    if (!player || profiles.length === 0) return;
+    if (activeSuspectName) return; // already selected
 
-  // Scroll to bottom on new messages
+    startInterrogation(profiles[0].name);
+  }, [backend, profiles.length, activeSuspectName]);
+
+  // ── Scroll to bottom on new messages ──
   useEffect(() => {
-    console.log("got into useEffect2")
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
+
+
   const handleSuspectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    if (!backend || !backend.suspects) return; // guard
     startInterrogation(e.target.value);
     setInput('');
   };
+
+  useEffect(() => {
+
+    const caseId = localStorage.getItem("lastCaseId");
+    if(!activeSuspectName){
+      console.log("[Interrogate Notes] Suspect name not found!")
+      return
+    }
+  
+    fetch(`http://localhost:3000/case/${caseId}/notes?suspectName=${encodeURIComponent(activeSuspectName)}`)
+    .then(r => r.json())
+    .then(data => {
+      console.log("Fetched notes:", data);
+      setNotes(data.suspectNotes || "");
+    })
+    .catch(err => console.warn("fetch failed:", err));
+}, [activeSuspectName]);
+        // Restore everything into Zustand BEFORE routes render
+        useGameStore.setState((state) => ({
+          ...state,
+          caseData: {
+            characterProfiles: doc.characterProfiles,
+            caseReport: doc.caseReport,
+            clues: doc.clues,
+          },
+          phase: doc.status === 'resolved' ? 'resolved' : 'investigation',
+        }));
+      })
+      .catch(err => console.warn("Interrogate Notes] fetch failed:", err))
+  }, []);
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault();
@@ -42,40 +91,8 @@ function Interrogate() {
     await sendMessage(text);
   }
 
-  // If no case has been generated yet, redirect home
+  // ── No case at all ──
   if (!player) {
-     // Fetch saved history from MongoDB to restore context
-  const caseId = player.caseReport.caseId;
-  fetch(`http://localhost:3000/case/${caseId}`)
-  .then(r => {
-    if (!r.ok) {
-      throw new Error(`Failed to fetch case data: ${r.statusText}`);
-    }
-    return r.json();
-  })
-    .then(doc => {
-      const savedHistory: ChatMessage[] = doc.chatHistory?.[suspectName] ?? [];
-      const chatSession = model.startChat({ history: [] });
-
-      set(state => ({
-        activeSuspectName: suspectName,
-        sessions: {
-          ...state.sessions,
-          [suspectName]: {
-            suspectName,
-            chatSession,
-            history: savedHistory, // ← restore from MongoDB
-            conversationCount: savedHistory.length / 2,
-          },
-        },
-      }));
-    })
-    .catch(err => {
-      console.error("Error fetching case data:", err);
-});
-
-
-    console.log("No case generated yet")
     return (
       <div className="interrogate-container">
         No active case. <Link to="/">Go Home</Link>
@@ -85,31 +102,24 @@ function Interrogate() {
 
   return (
     <div className='game-container'>
-      {/* ── Nav bar — matches original structure ── */}
+      {/* ── Nav bar ── */}
       <div className='navigate'>
-        <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
-        <button onClick = {() => navigate("/clues")}><span> ← </span>Clues</button>
+        <button onClick={() => proceedToInvestigation(navigate)}>
+          <span> ← </span>Notes
+        </button>
+        <button onClick={() => navigate("/clues")}>
+          <span> ← </span>Clues
+        </button>
         <button><span> ← </span>Files</button>
-        {/*<button onClick={() =>
-          (document.getElementById('case-report') as HTMLDialogElement)?.showModal()
-        }>
+        <button className="back-btn" onClick={() => goToBriefing(navigate)}>
           Case Report
         </button>
-       <dialog className="nes-dialog" id="case-report">
-          <form method="dialog">
-            <h3>Case Report</h3>
-            <p><strong>{player.caseReport.caseTitle}</strong></p>
-            <p>{player.caseReport.officialBriefing}</p>
-            <menu className="dialog-menu">
-              <button>Close</button>
-            </menu>
-          </form>
-        </dialog> */}
-        <button className="back-btn" onClick={() =>goToBriefing(navigate)}>Case Report</button>
-        <button><Link to="/desk"><span> ← </span>Desk</Link></button>
+        <button onClick={() => navigate('/desk')}> ← Desk</button>
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
-        }><span> ← </span>Settings</button>
+        }>
+          <span> ← </span>Settings
+        </button>
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
@@ -119,10 +129,14 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
-        <button onClick={() => navigate("/suspects")}> <span> ← </span> Suspects</button>
+        <button onClick={() => navigate("/suspects")}>
+          <span> ← </span>Suspects
+        </button>
         <button onClick={() =>
           (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
-        }>Accuse</button>
+        }>
+          Accuse
+        </button>
         <dialog className="nes-dialog" id="accuse">
           <form method="dialog">
             <h3>Make Your Accusation</h3>
@@ -142,18 +156,18 @@ function Interrogate() {
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
         <div className='case-title'>
-          <h1 style = {{}}>{player.caseReport.caseTitle}</h1>
+          <h1>{player.caseReport.caseTitle}</h1>
         </div>
 
-        {/* Interrogation: suspectname title; check if it works if there is no active profile */}
         <div className='currently-interrogating-container'>
-            <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+          <h1>INTERROGATING: {activeProfile?.name?.toUpperCase() ?? '...'}</h1>
         </div>
 
         <div className='windows-container'>
           <div className='interrogation-window'>
-            {/* Character card — same layout as original */}
-            {activeProfile && (
+
+            {/* Character card — only render when activeProfile exists */}
+            {activeProfile ? (
               <div className='character-container'>
                 <div className='character-avatar'>
                   <img
@@ -176,15 +190,23 @@ function Interrogate() {
                   </span>
                 </div>
               </div>
+            ) : (
+              <div className='character-container'>
+                <p style={{ opacity: 0.5, fontStyle: 'italic' }}>
+                  Loading suspect…
+                </p>
+              </div>
             )}
 
-            {/* Chat — matches original chatbot structure */}
+            {/* Chat */}
             <div className='chatbot'>
               <form onSubmit={handleSendMessage} className="message-form">
                 <div className='chat-history'>
                   {history.length === 0 && (
                     <p style={{ opacity: 0.5, fontStyle: 'italic' }}>
-                      Begin questioning {activeProfile?.name}…
+                      {activeProfile
+                        ? `Begin questioning ${activeProfile.name}…`
+                        : 'Loading suspect…'}
                     </p>
                   )}
                   {history.map((msg, index) => (
@@ -214,13 +236,15 @@ function Interrogate() {
                       type="text"
                       placeholder='Ask questions here...'
                       value={input}
-                      disabled={isResponding}
+                      disabled={isResponding || !activeProfile}
                       onChange={e => setInput(e.target.value)}
                     />
                   </div>
-
                   <div className='submit-button'>
-                    <button type='submit' disabled={isResponding || !input.trim()}>
+                    <button
+                      type='submit'
+                      disabled={isResponding || !input.trim() || !activeProfile}
+                    >
                       Submit
                     </button>
                   </div>
@@ -230,14 +254,19 @@ function Interrogate() {
           </div>
 
           <div className='notes-window'>
-            <h1> Notes go here </h1>
+            <h1>Notes go here</h1>
+            <p>
+            {suspectNotes?.[activeSuspectName] || "No notes yet"}
+            </p>
           </div>
         </div>
 
-        {/* Suspect switcher — same as original, driven by store profiles */}
+        {/* Suspect switcher */}
         <div className='suspect-switcher'>
           <form>
-            <label style={{}} htmlFor="suspects"> <span className='switch-suspect-text'> Switch Suspect:</span> </label>
+            <label htmlFor="suspects">
+              <span className='switch-suspect-text'>Switch Suspect:</span>
+            </label>
             <br />
             <select
               onChange={handleSuspectChange}

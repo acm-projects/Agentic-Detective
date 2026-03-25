@@ -3,10 +3,35 @@ import './Suspects.css';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile } from './useGameStore';
 import { Link, useNavigate } from 'react-router-dom';
 
+interface SuspectNote {
+  suspectName: string;
+  avatarId: string;
+  note: string;
+  tag: "neutral" | "suspicious" | "cleared" | "alibi";
+}
+
+interface CaseNote {
+  id: number;
+  text: string;
+  pinned: boolean;
+  timestamp: string;
+}
+
+const TAG_CONFIG = {
+  neutral:    { label: "Neutral",    color: "#4a3f2f" },
+  suspicious: { label: "Suspicious", color: "#8b1a1a" },
+  cleared:    { label: "Cleared",    color: "#1a4a2f" },
+  alibi:      { label: "Alibi",      color: "#1a2f4a" },
+};
+
+function now() {
+  return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
 function Suspects() {
   const [selectedSuspect, setSelectedSuspect] = useState();
   const navigate = useNavigate();
-  const { player, activeSuspectName, isResponding, startInterrogation, proceedToInvestigation, sendMessage, makeAccusation, goToBriefing } = useGameStore();
+  const { player, activeSuspectName } = useGameStore();
   const profiles = player?.characterProfiles ?? [];
   const activeProfile = useActiveSuspectProfile();
 
@@ -22,15 +47,17 @@ function Suspects() {
       <div className="suspects-container">
         {/* Header */}
         <div className="suspects-header">
-          <h1>THE STUDY OF SHADOWS</h1>
+          <h1>{player.caseReport.caseTitle}</h1>
         </div>
+
+
 
         {/* Main Layout */}
         <div className="suspects-layout">
           {/* Left Sidebar - Suspect List */}
           <div className="suspects-sidebar">
             <div className="sidebar-header">
-              <h3>SUSPECT PAGE</h3>
+              <h3>{player.caseReport.caseTitle}</h3>
             </div>
             <div className="suspect-list">
               {profiles.map((suspect) => (
@@ -95,8 +122,30 @@ function Suspects() {
                   <ul>
                     <li>{selectedSuspect?.personalityBlurb}</li>
                     <li>"<em>{selectedSuspect?.claimedAlibi}</em>"</li>
-                    <li>Suspicion: <span className={`suspicion-tag suspicion-${selectedSuspect?.suspicionLevel}`}>{selectedSuspect?.suspicionLevel.toUpperCase()}</span></li>
+                    <div className="tag-row">
+                    <span className="tag-row-label">Your assessment:</span>
+                    {(Object.keys(TAG_CONFIG) as Array<keyof typeof TAG_CONFIG>).map(tag => (
+                      <button
+                        key={tag}
+                        className={`tag-btn ${activeSuspectNote.tag === tag ? "active" : ""}`}
+                        style={{
+                          "--tag-color": TAG_CONFIG[tag].color,
+                        } as React.CSSProperties}
+                        onClick={() => updateSuspectNote(activeSuspect, { tag })}
+                      >
+                        {TAG_CONFIG[tag].label}
+                      </button>
+                    ))}
+                  </div>
+                    <li>Suspicion: 
+                      <span className={
+                        `suspicion-tag suspicion-${selectedSuspect?.suspicionLevel}`}>
+                          {selectedSuspect?.suspicionLevel.toUpperCase()}</span></li>
                   </ul>
+                <div className="Notes-section">
+                <h4>Notes</h4>
+
+                </div>
                 </div>
               </div>
             </div>
