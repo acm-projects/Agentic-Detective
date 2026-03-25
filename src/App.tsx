@@ -10,6 +10,7 @@ import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
 import Accuse from './Accuse.tsx';
+import CaseResolvedErrorScreen from './components/CaseResolvedErrorScreen.tsx';
 import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
 import SavedGamesList from './components/savegamelist/SavedGamesList.tsx';
 
@@ -24,16 +25,7 @@ function App() {
       <Route path="/" element={<NewGame />} />
       <Route path="/sign-in/*" element={<SignIn />} />
       <Route path="/sign-up/*" element={<SignUp />} />
-      <Route path="/user-profile/*" element={
-        <UserProfile> 
-          <UserProfile.Page 
-          label="Your Saved Games" 
-          url="testpage" 
-          labelIcon={<span>🕵️</span>}>
-            <SavedGamesList />
-          </UserProfile.Page>
-        </UserProfile>
-        } />
+      <Route path="/user-profile/*" element={<UserProfile />} />
       <Route path="/desk" element={<Message />} />
       <Route path="/report" element={<CaseReportScreen />} />
       <Route path="/investigate" element={<NotesPage />} />
@@ -41,6 +33,7 @@ function App() {
       <Route path="/interrogate" element={<Interrogate />} />
       <Route path="/suspects" element={<Suspects />} />
       <Route path="/accuse" element={<Accuse />} />
+      <Route path="/case-already-resolved-error" element={<CaseResolvedErrorScreen />} />
     </Routes>
     </>
   )

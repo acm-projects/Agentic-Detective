@@ -7,7 +7,8 @@ import SavedGamesList from './components/savegamelist/SavedGamesList';
 import { FaSave } from "react-icons/fa";
 
 function NewGame() {
-    const { setSeed, startCase } = useGameStore();
+  const setSeed = useGameStore((s) => s.setSeed);
+  const startCase = useGameStore((s) => s.startCase);
     const navigate = useNavigate();
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -17,10 +18,7 @@ function NewGame() {
     const [difficulty, setDifficulty] = useState(5); // Default value
     const [isMuted, setIsMuted] = useState(false);
 
-    const { userId, sessionId, isSignedIn } = useAuth();
-    console.log("User Id:", userId);
-    console.log("Session Id:", sessionId);
-    console.log("Is Signed In:", isSignedIn);
+    const { userId, isSignedIn } = useAuth();
 
 
     // Setup background music on mount
@@ -155,11 +153,10 @@ function NewGame() {
             difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
             intensity: intensity,
-            userId: userId ?? undefined,
-            sessionId: sessionId ?? undefined,
+            userId: userId ?? undefined, // cross check whether this should be undefined or ""
             isSignedIn: isSignedIn ? true : false,
           }) 
-          startCase(navigate);
+          startCase(navigate); // check for userId here
           navigate('/desk');
         }} >
         SOLVE! 

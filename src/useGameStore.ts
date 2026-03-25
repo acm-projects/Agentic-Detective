@@ -7,7 +7,7 @@ import { create } from "zustand";
 import { GoogleGenerativeAI, ChatSession, SchemaType } from "@google/generative-ai";
 import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import type { PlayerSeed } from "./obj/backendInterfaces";
-import { generateCaseFile, buildSuspectSystemPrompt } from "./caseFile";
+import { generateCaseFile, feedCaseFile, buildSuspectSystemPrompt } from "./caseFile";
 import { streamSpeech } from "./services/ttsService";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
@@ -23,7 +23,7 @@ export interface ChatMessage {
 
 export interface SuspectSession {
   suspectName: string;
-  chatSession: ChatSession;
+  chatSession: ChatSession | null;
   history: ChatMessage[];
   conversationCount: number;
   stressLevel: number;
@@ -56,6 +56,8 @@ interface GameState {
   activeSuspectName: string | null;
   sessions: Record<string, SuspectSession>;
   totalConversationCount: number;
+  currentSessionId: string;
+  selectedCase: any | null;
 
   accusationResult: {
     accusedName: string;
@@ -79,6 +81,9 @@ interface GameState {
   resetGame: () => void;
   markClueDiscovered: (clueId: string) => void;
   tickElapsed: () => void;
+  setCurrentSessionId: (sessionId: string) => void; // This function can only be called when the user is signed in
+  setSelectedCase: (caseDoc: any) => void;
+  setSessions: (sessions: Record<string, SuspectSession>) => void;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -87,7 +92,6 @@ const DEFAULT_SEED: PlayerSeed = {
   duration: 20,
   intensity: 5,
   userId: "",
-  sessionId: "",
   isSignedIn: false,
 };
 
@@ -101,6 +105,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   activeSuspectName: null,
   sessions: {},
   totalConversationCount: 0,
+  currentSessionId: "",
+  selectedCase: null,
   accusationResult: null,
   error: null,
   isResponding: false,
@@ -114,44 +120,105 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Generate the full case from player seed ──
   startCase: async (navigate: (path: string) => void) => {
-    const { seed, phase } = get() as { seed: PlayerSeed, phase: GamePhase };
+    const { seed, phase, currentSessionId, selectedCase } = get() as {
+      seed: PlayerSeed;
+      phase: GamePhase;
+      currentSessionId: string;
+      selectedCase: any;
+    };
+
     if (phase === "generating") return;
 
-    if (!seed || !seed.freeText.trim()) {
+    const isReloadFlow = Boolean(currentSessionId && selectedCase);
+
+    if (!isReloadFlow && (!seed || !seed.freeText.trim())) {
       set({ error: "Please enter a case theme before starting." });
       alert("Please enter a case theme before starting.");
       return;
     }
     set({ phase: "generating", error: null });
-    try {
-      const { backend, player } = await generateCaseFile(seed);
-      set({ backend, player, phase: "briefing", elapsed: 0 });
-      const { useNotificationStore } = await import("./store/useNotificationStore");
-      useNotificationStore.getState().initClues(player.clues)
-      navigate("/report");           // ← instead of set({ phase: "briefing" })
-    } catch (err) {
-      set({ error: "Failed to generate case.", phase: "setup" });
-      console.error(err);
+
+    if (!isReloadFlow) {
+      try {
+        const { backend, player } = await generateCaseFile(seed);
+        set({ backend, player, phase: "briefing", elapsed: 0 });
+        const { useNotificationStore } = await import("./store/useNotificationStore");
+        useNotificationStore.getState().initClues(player.clues)
+        navigate("/report");           // ← instead of set({ phase: "briefing" })
+      } catch (err) {
+        set({ error: "Failed to generate case.", phase: "setup" });
+        console.error(err);
+      }
+    } else {
+        // Reloading existing case from selected save.
+        try {
+          const { backend, player, restoredSessions } = await feedCaseFile(selectedCase);
+
+          const gameState = selectedCase?.game ?? {};
+          const restoredPhase = (gameState.phase as GamePhase) ?? "briefing";
+          const savedIsResolved =
+            selectedCase?.status === "resolved" ||
+            restoredPhase === "resolved" ||
+            Boolean(selectedCase?.outcome?.accusedName);
+
+          const restoredAccusationResult = selectedCase?.outcome?.accusedName
+            ? {
+                accusedName: selectedCase.outcome.accusedName,
+                isCorrect: Boolean(selectedCase.outcome.isCorrect),
+                trueKiller: String(selectedCase.outcome.trueKiller ?? "Unknown"),
+                explanation: String(selectedCase.outcome.explanation ?? ""),
+              }
+            : null;
+
+          set({
+            backend,
+            player,
+            sessions: restoredSessions as unknown as Record<string, SuspectSession>,
+            activeSuspectName: gameState.activeSuspectName ?? null,
+            totalConversationCount: Number(gameState.totalConversationCount ?? 0),
+            elapsed: Number(gameState.elapsedSeconds ?? 0),
+            phase: savedIsResolved ? "resolved" : restoredPhase,
+            accusationResult: restoredAccusationResult,
+          });
+
+          const { useNotificationStore } = await import("./store/useNotificationStore");
+          useNotificationStore.getState().initClues(player.clues);
+
+          if (savedIsResolved) {
+            navigate("/case-already-resolved-error");
+            return;
+          }
+
+          navigate("/report");
+        } catch (err) {
+          set({ error: "Failed to feed case details from MongoDB.", phase: "setup" });
+          console.error(err);
+        }
+        
     }
+
+
     
   },
 
   // ── Player has read the briefing, move to investigation ──
- goToBriefing: (navigate: (path: string) => void) => {
-  set({ phase: "briefing" });
-  navigate("/report");             // ← instead of set({ phase: "briefing" })
-  },
-  proceedToInvestigation: (navigate) => {
-    set({ phase: "interrogation" });
-    navigate("/interrogate");
-  },
+  goToBriefing: (navigate: (path: string) => void) => {
+    set({ phase: "briefing" });
+    navigate("/report");             // ← instead of set({ phase: "briefing" })
+    },
+    proceedToInvestigation: (navigate) => {
+      set({ phase: "interrogation" });
+      navigate("/interrogate");
+    },
 
   startInterrogation: (suspectName) => {
     const { backend, player, sessions } = get();
     if (!backend || !player) return;
 
-    // Reuse existing session if already started
-    if (sessions[suspectName]) {
+    const existingSession = sessions[suspectName];
+
+    // Reuse existing session only if live chatSession is already valid.
+    if (existingSession && existingSession.chatSession !== null) {
       set({ phase: "interrogation", activeSuspectName: suspectName });
       return;
     }
@@ -160,9 +227,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!suspect) return;
 
     const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport);
-
-    console.log("system prompt");
-    console.log(systemPrompt);
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash-lite",
@@ -176,12 +240,22 @@ export const useGameStore = create<GameState>((set, get) => ({
             response:    { type: SchemaType.STRING },
             stressLevel: { type: SchemaType.INTEGER },
           },
-          required: ["response", "stressLevel"],  // enforce both fields always present
+          required: ["response", "stressLevel"],
         },
       },
     });
 
-    const chatSession = model.startChat({ history: [] });
+    // Feed restored history so the model has conversation continuity after reload.
+    const history = (existingSession?.history ?? [])
+      .filter(m => m.text && m.text.trim().length > 0)
+      .map(m => ({
+        role: m.role === "player" ? "user" : "model",
+        parts: [{ text: m.text }],
+      }));
+
+    const chatSession = model.startChat({ 
+      history
+    });
 
     set(state => ({
       phase: "interrogation",
@@ -189,11 +263,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       sessions: {
         ...state.sessions,
         [suspectName]: {
+          // preserve existing history/stress if session was restored from mongo
+          ...(existingSession ?? {}),
           suspectName,
-          chatSession,
-           history: [],
-          conversationCount: 0,
-          stressLevel: 0,
+          chatSession, // ✅ always a valid ChatSession now
+          history: existingSession?.history ?? [],
+          conversationCount: existingSession?.conversationCount ?? 0,
+          stressLevel: existingSession?.stressLevel ?? 0,
         },
       },
     }));
@@ -206,7 +282,17 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { seed } = get() as { seed: PlayerSeed};
     if (!activeSuspectName || !sessions[activeSuspectName] || get().isResponding) return;
 
-    const session = sessions[activeSuspectName];
+    // Restored saves can have chatSession = null until interrogation is re-opened.
+    if (sessions[activeSuspectName].chatSession === null) {
+      get().startInterrogation(activeSuspectName);
+    }
+
+    const session = get().sessions[activeSuspectName];
+    if (!session || session.chatSession === null) {
+      set({ error: "Could not initialize interrogation session. Please reopen this suspect and try again." });
+      return;
+    }
+
     const playerMessage: ChatMessage = { role: "player", text, timestamp: Date.now() };
 
     // Optimistically add player message and lock input
@@ -267,12 +353,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       console.log("send message function reached, before sign in check")
       // Send data to MongoDB
       if (seed.isSignedIn && seed.userId != "") {
+        
         const sessionId =
-          get().player?.caseReport?.caseId ||
-          seed.sessionId ||
+          get().currentSessionId ||
+          get().player?.caseReport?.caseId || // Fallback
           localStorage.getItem("lastSessionId") ||
           localStorage.getItem("lastCaseId") ||
           "";
+
         console.log("right before sessionId check, after sign in check")
         if (sessionId) {
           const state = get();
@@ -288,8 +376,9 @@ export const useGameStore = create<GameState>((set, get) => ({
               timestamp: m.timestamp,
             })),
           }))
+
           console.log("right before mongo fetch");
-          fetch(`http://localhost:3000/case/${sessionId}/progress`, {
+          fetch(`http://localhost:3000/cases/${sessionId}/progress`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -363,14 +452,14 @@ export const useGameStore = create<GameState>((set, get) => ({
   // Save outcome to MongoDB if signed in
   if (seed.isSignedIn && seed.userId != "") {
     const sessionId =
+      get().currentSessionId ||
       get().player?.caseReport?.caseId ||
-      seed.sessionId ||
       localStorage.getItem("lastSessionId") ||
       localStorage.getItem("lastCaseId") ||
       "";
     console.log("right before mongo fetch");
     if (sessionId) {
-        fetch(`http://localhost:3000/case/${sessionId}/outcome`, {
+        fetch(`http://localhost:3000/cases/${sessionId}/outcome`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -386,7 +475,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   navigate("/accuse");   // ← navigate AFTER state is set
 },
 
-markClueDiscovered: (clueId) => {
+  markClueDiscovered: (clueId) => {
     set(state => {
     if (!state.player) return state
     return {
@@ -422,6 +511,15 @@ markClueDiscovered: (clueId) => {
   tickElapsed: () => {
     set(state => ({ elapsed: state.elapsed + 1 }));
   },
+
+  // Sidenote: session ID is equivalent to case ID
+  setCurrentSessionId: (sessionId) => {
+    set({ currentSessionId: sessionId });
+  },
+
+  setSelectedCase: (caseDoc) => set({ selectedCase: caseDoc }), // stores caseDoc from mongo in zustand
+
+  setSessions: (sessions) => set({ sessions }),
 }));
 
 // ─────────────────────────────────────────────
@@ -431,7 +529,7 @@ markClueDiscovered: (clueId) => {
 // Current active session's chat history
 const EMPTY_HISTORY: ChatMessage[] = []
 
-export const useActiveHistory = () =>
+export const useActiveHistory = () => // fix to account for rebuilt case details
   useGameStore(state =>
     state.activeSuspectName
       ? (state.sessions[state.activeSuspectName]?.history ?? EMPTY_HISTORY)

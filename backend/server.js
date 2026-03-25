@@ -78,9 +78,9 @@ function buildInitialSuspectSessions(suspects = []) {
 };
 
 // ── Routes ──
-app.post('/case/create', async (req, res) => {
+app.post('/cases/create', async (req, res) => {
   try {
-    console.log('[/case/create] received:', req.body.sessionId);
+    console.log('[/cases/create] received:', req.body.sessionId);
     const now = nowIso();
     const {
       sessionId,
@@ -177,7 +177,7 @@ app.post('/case/create', async (req, res) => {
 
 // Case records are now based on sessionId instead of caseId
 // This is a general POST route that updates every update in the player's gameplay (if any)
-app.post('/case/:sessionId/progress', async (req, res) => {
+app.post('/cases/:sessionId/progress', async (req, res) => {
   try {
     const { sessionId } = req.params;
     const {
@@ -222,7 +222,7 @@ app.post('/case/:sessionId/progress', async (req, res) => {
 });
 
 // Endpoint dedicated to the outcome decision after accusastion
-app.post('/case/:sessionId/outcome', async (req, res) => {
+app.post('/cases/:sessionId/outcome', async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { 
@@ -261,8 +261,8 @@ app.post('/case/:sessionId/outcome', async (req, res) => {
   }
 });
 
-// GET Method to get case data
-app.get('/case/:sessionId', async (req, res) => {
+// GET Method to get case data from session id
+app.get('/cases/:sessionId', async (req, res) => {
   try {
     const doc = await db.collection("cases").findOne(
       { sessionId: req.params.sessionId },
@@ -280,7 +280,7 @@ app.get('/case/:sessionId', async (req, res) => {
 });
 
 // Endpoint to fetch all cases for a particular user
-app.get('/case/user/:userId', async (req, res) => {
+app.get('/cases/user/:userId', async (req, res) => {
   console.log("User ID case fetching endpoint reached!!!");
   console.log("userId:", req.params.userId);
   try {

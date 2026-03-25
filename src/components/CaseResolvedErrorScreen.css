@@ -1,0 +1,82 @@
+.resolved-screen {
+  min-height: 100vh;
+  width: min(92vw, 720px);
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.resolved-card {
+  width: min(100%, 560px);
+  border: 2px solid #3f3f3f;
+  background:
+    linear-gradient(180deg, rgba(76, 0, 8, 0.328), rgba(7, 0, 0, 0.9) 22%),
+    #000000;
+  box-shadow:
+    0 18px 42px rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+  padding: 28px;
+  text-align: center;
+}
+
+.resolved-status-text {
+  margin: 0;
+  color: #ff4747;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-family: "VT323", sans-serif;
+  font-size: 1rem;
+}
+
+.resolved-title {
+  margin: 8px 0 12px;
+  color: #dc2c2c;
+  font-family: "VT323", serif;
+  font-size: clamp(2rem, 3.2vw, 2.8rem);
+  line-height: 1.2;
+}
+
+.resolved-message {
+  margin: 0 0 22px;
+  color: #cfcfcf;
+  font-family: "VT323", monospace;
+  font-style: italic;
+  font-size: 1.5rem;
+  line-height: 1.45;
+}
+
+.resolved-home-btn {
+  border: 1px solid #ffffff;
+  background: #f06d6d;
+  color: #161616;
+  padding: 10px 18px;
+  font-family: "Press Start 2P", cursive;
+  font-size: 0.68rem;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.1s ease, box-shadow 0.1s ease;
+}
+
+.resolved-home-btn:hover {
+  transform: translateY(1px);
+  filter: brightness(0.95);
+  background-color: #ffffff;
+  border-color: #f06d6d
+}
+
+.resolved-home-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+@media (max-width: 560px) {
+  .resolved-card {
+    padding: 22px 16px;
+  }
+
+  .resolved-home-btn {
+    width: 100%;
+    font-size: 0.62rem;
+    line-height: 1.3;
+  }
+}

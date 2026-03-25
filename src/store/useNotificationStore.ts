@@ -108,7 +108,7 @@ function saveClueProgress(get: any) {
         ])
       );
 
-      fetch(`http://localhost:3000/case/${sessionId}/progress`, {
+      fetch(`http://localhost:3000/cases/${sessionId}/progress`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
