@@ -180,7 +180,7 @@ function Suspects() {
                         <button className="tag-row-label tag-row" onClick={async () => {
                            const caseId = player?.caseReport?.caseId;
                            if (!caseId) return;
-                           await fetch(`http://localhost:3000/case/${caseId}/suspectNotes`, {
+                           await fetch(`http://localhost:3000/case/${sessionId}/suspectNotes`, {
                             method: "POST",
                             headers: {
                               "Content-Type": "application/json",

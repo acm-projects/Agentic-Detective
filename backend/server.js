@@ -221,6 +221,49 @@ app.post('/cases/:sessionId/progress', async (req, res) => {
   }
 });
 
+app.post('/case/:sessionId/suspectNotes', async (req, res) => {
+  const { suspectName, suspectNotes } = req.body;
+
+  try {
+    const safeName = suspectName.replaceAll('.', '_'); 
+
+    const result = await db.collection('cases').updateOne(
+      { sessionId: req.params.caseId },
+      { $set: { [`notes.${safeName}`]: suspectNotes } }
+    );
+    console.log("caseId:", req.params.caseId);
+    console.log("body:", req.body);
+    console.log("UPDATE RESULT:", result); 
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+
+});
+
+
+app.get('/case/:sessionId/notes', async (req, res) => {
+  const { suspectName } = req.query;
+  if(!suspectName){}
+  try {
+    const doc = await db.collection('cases').findOne(
+      { sessionId: req.params.caseId },
+      { projection: { _id: 0, notes: 1 } }
+    );
+
+    if (!doc) return res.status(404).json({ error: "Case not found" });
+
+    const suspectNotes = doc.notes?.[suspectName] || null;
+
+    res.json({ suspectNotes });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // Endpoint dedicated to the outcome decision after accusastion
 app.post('/cases/:sessionId/outcome', async (req, res) => {
   try {
