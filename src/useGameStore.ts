@@ -18,7 +18,9 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 export interface ChatMessage {
   role: "player" | "suspect";
-  text: string;
+  text: string;           // raw LLM string (includes injected evidence)
+  displayText: string;    // what the player typed — shown in chat
+  displayClues?: { id: string; name: string }[];
   timestamp: number;
 }
 
@@ -77,7 +79,11 @@ interface GameState {
   interrogateSuspects: (navigate: (path: string) => void) => void;
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
-  sendMessage: (text: string) => Promise<void>;
+ sendMessage: (
+  text: string,
+  displayText: string,
+  displayClues?: { id: string; name: string }[]
+) => Promise<void>;
   makeAccusation: (suspectName: string, navigate: (path: string) => void) => void;
   resetGame: () => void;
   markClueDiscovered: (clueId: string) => void;
@@ -210,12 +216,18 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   // ── Send a player message to the active suspect ──
-  sendMessage: async (text) => {
+  sendMessage: async (text, displayText, displayClues) => {
     const { activeSuspectName, sessions } = get();
     if (!activeSuspectName || !sessions[activeSuspectName] || get().isResponding) return;
 
     const session = sessions[activeSuspectName];
-    const playerMessage: ChatMessage = { role: "player", text, timestamp: Date.now() };
+    const playerMessage: ChatMessage = {
+      role: "player",
+      text,           // full injected LLM string
+      displayText,
+      displayClues,
+      timestamp: Date.now(),
+    };
 
     // Optimistically add player message and lock input
     set(state => ({
@@ -254,6 +266,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const suspectMessage: ChatMessage = {
         role: "suspect",
         text: responseText,
+        displayText: responseText,  // suspects have no separate display text
         timestamp: Date.now(),
       };
 

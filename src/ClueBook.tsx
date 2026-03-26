@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useContext } from "react";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
 import { useNavigate } from 'react-router';
 import { useNotificationStore } from './store/useNotificationStore'
-
+import { AudioContext } from './App';
 
 export default function ClueBook() {
   const allClues = useNotificationStore(s => s.clues);
@@ -11,6 +11,7 @@ export default function ClueBook() {
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+  const { isMuted, setIsMuted } = useContext(AudioContext);
 
   useEffect(() => {
     const clueIds = new Set(clues.map(clue => clue.id));
@@ -65,10 +66,9 @@ export default function ClueBook() {
                     className={`clue-card ${isExamined ? "examined" : ""} ${isSelected ? "active" : ""} ${clue.isDecisive ? "decisive" : ""}`}
                     onClick={() => handleClueClick(clue)}
                     style={{ animationDelay: `${i * 0.06}s` }}
-                    
                   >
                     <div className="clue-card-icon">
-                    <img src={`/clues/locker.png`} alt={`locker img`} className="pixel-icon-locker" />
+                      <img src={`/clues/locker.png`} alt={`locker img`} className="pixel-icon-locker" />
                       <PixelIcon index={i} decisive={clue.isDecisive} />
                     </div>
                     {!isExamined && <div className="clue-new-badge">NEW</div>}
@@ -85,11 +85,7 @@ export default function ClueBook() {
           {selected && selectedIndex >= 0 ? (
             <div className="clue-detail">
               <div className="clue-detail-icon-large">
-                <PixelIcon
-                  index={selectedIndex}
-                  decisive={selected.isDecisive}
-                  large
-                />
+                <PixelIcon index={selectedIndex} decisive={selected.isDecisive} large />
               </div>
               <div className="clue-detail-header">
                 <div>
@@ -137,6 +133,17 @@ export default function ClueBook() {
             </div>
           )}
         </div>
+
+        {/* Music toggle */}
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0', fontSize: 13 }}>
+          <input
+            type="checkbox"
+            checked={isMuted}
+            onChange={e => setIsMuted(e.target.checked)}
+          />
+          Mute Music
+        </label>
+
         <br />
         <button className="back-btn" onClick={() => navigate('/desk')}>Back to desk</button>
         <button className="back-btn" onClick={() => navigate('/interrogate')}>Back to Interrogation</button>
@@ -150,7 +157,7 @@ export default function ClueBook() {
 }
 
 function PixelIcon({ index, decisive = false, large = true }: { index: number; decisive?: boolean; large?: boolean }) {
-  const imagePath = `/clues/clue_${index + 1}.png`; // Fixed: use public folder root path
+  const imagePath = `/clues/clue_${index + 1}.png`;
   return (
     <div className={`pixel-icon-wrap ${large ? "large" : ""} ${decisive ? "decisive" : ""}`}>
       <img src={imagePath} alt={`Clue ${index + 1}`} className="pixel-icon-image" />
