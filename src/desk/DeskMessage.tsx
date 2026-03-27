@@ -87,7 +87,6 @@ function Message() {
 
         {/* 4. GUN */}
         <img 
-          className='evidence-item'
           src={gunImg} 
           alt="Gun" 
           style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 

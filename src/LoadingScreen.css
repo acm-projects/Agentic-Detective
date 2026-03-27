@@ -20,6 +20,7 @@
   inset: 0;
   background: url('./assets/loadingimage.png') center/1100px no-repeat;
   opacity: 0.25;
+  pointer-events: none; /* ← fix: let clicks pass through to the spinner */
 }
 
 .loading-container {

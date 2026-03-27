@@ -29,7 +29,6 @@ export default function ClueBook() {
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
-  const { isMuted, setIsMuted } = useContext(AudioContext);
 
   useEffect(() => {
     const clueIds = new Set(clues.map(clue => clue.id));

@@ -251,16 +251,33 @@ export const useGameStore = create<GameState>((set, get) => ({
       let newStress = session.stressLevel; // default: keep current if parse fails
 
       try {
+        // Strip markdown code fences
         const cleaned = raw
           .replace(/^```json\s*/i, "")
           .replace(/^```\s*/i, "")
           .replace(/```\s*$/i, "")
           .trim();
-        const parsed = JSON.parse(cleaned);
-        responseText = String(parsed.response ?? raw);
+
+        // Try to extract a JSON object even if there's trailing garbage
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        const jsonStr = jsonMatch ? jsonMatch[0] : cleaned;
+
+        const parsed = JSON.parse(jsonStr);
+
+        // Ensure response is a plain string with no JSON artifacts
+        const rawResponse = parsed.response;
+        if (typeof rawResponse === "string") {
+          responseText = rawResponse;
+        } else {
+          // parsed.response missing or not a string — strip stress JSON from raw as last resort
+          responseText = raw.replace(/["\s]*stressLevel["\s]*:[\s\d]+\}?\s*$/i, "").trim();
+        }
+
         newStress = Math.min(100, Math.max(0, Number(parsed.stressLevel ?? session.stressLevel)));
       } catch {
-        console.warn("Could not parse suspect JSON reply — using raw text");
+        console.warn("Could not parse suspect JSON reply — stripping stress artifact from raw text");
+        // Fallback: strip any trailing stressLevel JSON fragment from raw
+        responseText = raw.replace(/["\s]*stressLevel["\s]*:[\s\d]+\}?\s*$/i, "").trim();
       }
 
       const suspectMessage: ChatMessage = {
