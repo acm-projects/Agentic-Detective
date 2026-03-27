@@ -220,7 +220,7 @@ app.post('/cases/:sessionId/progress', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
+/* SUSPECT NOTES ENDPOINT, FIX LATER
 app.post('/case/:sessionId/suspectNotes', async (req, res) => {
   const { suspectName, suspectNotes } = req.body;
 
@@ -242,7 +242,7 @@ app.post('/case/:sessionId/suspectNotes', async (req, res) => {
   }
 
 });
-
+*/
 
 app.get('/case/:sessionId/notes', async (req, res) => {
   const { suspectName } = req.query;
