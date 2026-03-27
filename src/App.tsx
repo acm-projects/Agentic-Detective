@@ -10,7 +10,7 @@ import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
 import Accuse from './Accuse.tsx';
-import CaseResolvedErrorScreen from './components/CaseResolvedErrorScreen.tsx';
+import CaseResolvedErrorScreen from './components/CaseResolvedErrorScreen/CaseResolvedErrorScreen.tsx';
 import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
 import SavedGamesList from './components/savegamelist/SavedGamesList.tsx';
 
