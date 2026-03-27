@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import './LoadingScreen.css';
+import vinyl from './assets/7logo.png';
 
 const AUDIO_SRC = '/assets/dejcomin-electronic-ambient-music-chill-mix-downtempo-background-dejcoart-430828.mp3';
 
@@ -10,10 +11,7 @@ export default function LoadingScreen() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoSpinRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastAngleRef = useRef<number | null>(null);
-  const rotationRef = useRef(0); // live ref to avoid stale closure in handlers
-
-  // Sync rotation state → ref
-  useEffect(() => { rotationRef.current = rotation; }, [rotation]);
+  const spinnerRef = useRef<HTMLDivElement>(null);
 
   // Init audio
   useEffect(() => {
@@ -47,13 +45,10 @@ export default function LoadingScreen() {
     return Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI);
   };
 
-  const spinnerRef = useRef<HTMLDivElement>(null);
-
   const onDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault();
     setIsDragging(true);
     lastAngleRef.current = getAngle(e, spinnerRef.current!);
-
     // Resume audio on first interaction (handles autoplay block)
     audioRef.current?.play().catch(() => {});
   }, []);
@@ -74,14 +69,10 @@ export default function LoadingScreen() {
       // Scrub audio based on rotation speed
       const audio = audioRef.current;
       if (audio && audio.duration) {
-        // Map drag speed (delta deg/frame) → playback rate
-        // delta > 0 = forward spin, delta < 0 = rewind
-        // Clamp so it never goes completely silent or breaks
-        const speed = delta / 6; // normalise: 6 deg/frame = 1× (matches auto-spin)
+        const speed = delta / 6;
         const newRate = Math.min(3, Math.max(-1, speed));
         audio.playbackRate = Math.abs(newRate) < 0.05 ? 0.05 : Math.abs(newRate);
 
-        // Scrub time: negative speed = rewind, positive = fast-forward
         const scrub = (newRate / Math.abs(newRate || 1)) * Math.abs(delta) * 0.05;
         audio.currentTime = Math.min(
           audio.duration - 0.05,
@@ -94,7 +85,6 @@ export default function LoadingScreen() {
       if (!isDragging) return;
       setIsDragging(false);
       lastAngleRef.current = null;
-      // Restore normal playback rate
       if (audioRef.current) audioRef.current.playbackRate = 1;
     };
 
@@ -121,22 +111,22 @@ export default function LoadingScreen() {
           style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
         >
           <img
-            src="https://static.vecteezy.com/system/resources/previews/036/397/995/large_2x/ai-generated-otter-isolated-on-transparent-background-png.png"
+            src={vinyl}
             alt="Loading"
             draggable={false}
             style={{
-              width: '150px',
-              height: '150px',
+              width: '230px',
+              height: '230px',
               transform: `rotate(${rotation}deg)`,
-              filter: `drop-shadow(0 0 20px rgba(0,0,0,0.3))`,
+              filter: 'drop-shadow(0 0 20px rgba(0,0,0,0.3))',
               pointerEvents: 'none',
               userSelect: 'none',
             }}
           />
         </div>
-        <h2 className="loading-text">Building your case...</h2>
+        <h2 className="loading-text">unlocking your case...</h2>
         <p className="loading-subtext">
-          {isDragging ? '🎛️ Scratching the record...' : 'Generating suspects and clues'}
+          {isDragging ? '🎛️ Scratching the record...' : 'generating suspects and clues'}
         </p>
       </div>
     </div>

@@ -9,6 +9,14 @@ import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
 import './Interrogate.css';
 
+// ✅ IMPORT YOUR GIF
+import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
+
+// ✅ MAP (so it still works with avatarId system)
+const avatarMap: Record<string, string> = {
+  default: blinkingPortraitGirl,
+};
+
 interface AttachedClue {
   id: string;
   name: string;
@@ -67,10 +75,12 @@ function Interrogate() {
   const activeProfile = useActiveSuspectProfile();
   const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
+  const [showNotebook, setShowNotebook] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
 
+  // ── Evidence / clue state ──────────────────────────────
   const allClues = useNotificationStore(s => s.clues);
   const discoveredClues = allClues.filter(c => c.discovered);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
@@ -78,13 +88,14 @@ function Interrogate() {
   const [isDragOver, setIsDragOver] = useState(false);
   const { pos, onMouseDown } = useDraggableModal({ x: window.innerWidth - 340, y: 120 });
 
+  const timerPaused = useNotificationStore(s => s.timerPaused);
+
   useEffect(() => {
     if (!activeSuspectName && profiles.length > 0) {
       startInterrogation(profiles[0].name);
     }
   }, []);
 
-  const timerPaused = useNotificationStore(s => s.timerPaused);
   useEffect(() => {
     if (timerPaused) return;
     const id = setInterval(tickElapsed, 1000);
@@ -103,7 +114,7 @@ function Interrogate() {
     setAttachedClues([]);
   };
 
-  // ── Drop zone covers the entire chat panel ─────────────
+  // ── Drop zone handlers ─────────────────────────────────
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -189,15 +200,18 @@ function Interrogate() {
       <div className='navigate'>
         <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
         <button onClick={() => navigate("/clues")}><span> ← </span>Clues</button>
-        <button><span> ← </span>Files</button>
-        <button className="back-btn" onClick={() => goToBriefing(navigate)}>Case Report</button>
+
+        <button className="nav-case-btn" onClick={() => goToBriefing(navigate)}>Case Report</button>
         <button onClick={() => navigate("/desk")}><span> ← </span>Desk</button>
+
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
         }><span> ← </span>Settings</button>
+
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
+            {/* ✅ Mute toggle from music branch */}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0' }}>
               <input type="checkbox" checked={isMuted} onChange={e => setIsMuted(e.target.checked)} />
               Mute Music
@@ -208,10 +222,14 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
+
+        {/* ✅ Suspects nav from music branch */}
         <button onClick={() => navigate("/suspects")}><span> ← </span>Suspects</button>
+
         <button onClick={() =>
           (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
         }>Accuse</button>
+
         <dialog className="nes-dialog" id="accuse">
           <form method="dialog">
             <h3>Make Your Accusation</h3>
@@ -227,6 +245,7 @@ function Interrogate() {
           </form>
         </dialog>
 
+        {/* ✅ Evidence locker toggle from music branch */}
         <button
           className={`evidence-nav-btn ${cluesModalOpen ? 'active' : ''}`}
           onClick={() => setCluesModalOpen(p => !p)}
@@ -237,44 +256,24 @@ function Interrogate() {
 
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
-        <div className='case-title'>
-          <h1>{player.caseReport.caseTitle}</h1>
-        </div>
+        <div className='case-title' />
+
         <div className='currently-interrogating-container'>
           <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
         </div>
 
         <div className='windows-container'>
           <div className='interrogation-window'>
+            {/* ✅ Main branch avatar (gif avatarMap) */}
             {activeProfile && (
               <div className='character-container'>
                 <div className='character-avatar'>
                   <img
-                    src={`/avatars/${activeProfile.avatarId}.png`}
+                    src={avatarMap[activeProfile.avatarId] || avatarMap.default}
                     alt={activeProfile.name}
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
-                  <p>Character Avatar goes here</p>
-                  {activeProfile && (
-                    <div className='character-avatar'>
-                      <img
-                        src={`/avatars/${activeProfile.avatarId}.png`}
-                        alt={activeProfile.name}
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                      />
-                      <StressBar level={stressLevel} />
-                    </div>
-                  )}
-                </div>
-                <div className='case-details'>
-                  <h2>{activeProfile.name}</h2>
-                  <h4>Age: {activeProfile.age}</h4>
-                  <h4>Occupation: {activeProfile.occupation}</h4>
-                  <h4>Relation: {activeProfile.relationshipToVictim}</h4>
-                  <h4>Claims: {activeProfile.claimedAlibi}</h4>
-                  <span className={`suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
-                    {activeProfile.suspicionLevel} suspicion
-                  </span>
+                  <div className="avatar-overlay" />
+                  <StressBar level={stressLevel} />
                 </div>
               </div>
             )}
@@ -292,14 +291,17 @@ function Interrogate() {
                       {msg.role === 'player' ? (
                         <div className='player-message'>
                           <strong className='you-text'>You: </strong>
+                          {/* ✅ Clue chips in chat history from music branch */}
                           {msg.displayClues && msg.displayClues.length > 0 && (
                             <div className="chat-clue-chips">
-                              {msg.displayClues.map(c => (
+                              {msg.displayClues.map((c: { id: string; name: string }) => (
                                 <span key={c.id} className="chat-clue-chip">🔍 {c.name}</span>
                               ))}
                             </div>
                           )}
                           {msg.displayText && <span>{msg.displayText}</span>}
+                          {/* Fallback for older history entries without displayText */}
+                          {!msg.displayText && !msg.displayClues?.length && <span>{msg.text}</span>}
                         </div>
                       ) : (
                         <p className='bot-message'>
@@ -316,7 +318,7 @@ function Interrogate() {
                   <div ref={chatEndRef} />
                 </div>
 
-                {/* ── Drop zone wraps chips + input + submit ── */}
+                {/* ✅ Drop zone + clue chips + input from music branch */}
                 <div
                   className={`question-submit-box ${isDragOver ? 'drag-over' : ''}`}
                   onDragOver={handleDragOver}
@@ -351,37 +353,34 @@ function Interrogate() {
                     <div className="drop-hint">Drop clue to present as evidence</div>
                   )}
 
-                  <div style={{ display: 'flex', height: '50px' }}>
-                    <div className='question-box'>
-                      <input
-                        type="text"
-                        placeholder={
-                          attachedClues.length > 0
-                            ? 'Add a question, or send silently…'
-                            : 'Ask questions here...'
-                        }
-                        value={input}
-                        disabled={isResponding}
-                        onChange={e => setInput(e.target.value)}
-                      />
-                    </div>
-                    <div className='submit-button'>
-                      <button
-                        type='submit'
-                        disabled={isResponding || (!input.trim() && attachedClues.length === 0)}
-                      >
-                        Submit
-                      </button>
-                    </div>
+                  <div className='question-box'>
+                    <input
+                      type="text"
+                      placeholder={
+                        attachedClues.length > 0
+                          ? 'Add a question, or send silently…'
+                          : 'Ask questions here...'
+                      }
+                      value={input}
+                      disabled={isResponding}
+                      onChange={e => setInput(e.target.value)}
+                    />
+                  </div>
+                  <div className='submit-button'>
+                    <button
+                      type='submit'
+                      disabled={isResponding || (!input.trim() && attachedClues.length === 0)}
+                    >
+                      Submit
+                    </button>
                   </div>
                 </div>
               </form>
             </div>
           </div>
 
-          <div className='notes-window'>
-            <h1>Notes go here</h1>
-          </div>
+          {/* ✅ Main branch notes window (clickable notebook modal trigger) */}
+          <div className='notes-window' onClick={() => setShowNotebook(true)} />
         </div>
 
         <div className='suspect-switcher'>
@@ -402,7 +401,41 @@ function Interrogate() {
         </div>
       </div>
 
-      {/* ── Draggable Evidence Locker Modal ── */}
+      {/* ✅ Main branch notebook modal */}
+      {showNotebook && (
+        <div className="notebook-modal-overlay" onClick={() => setShowNotebook(false)}>
+          <div className="notebook-modal" onClick={e => e.stopPropagation()}>
+            <button className="notebook-modal-close" onClick={() => setShowNotebook(false)}>✕</button>
+            <h2 className="notebook-modal-title">SUSPECT PROFILE</h2>
+            <div className="notebook-modal-list">
+              {activeProfile && (
+                <div className="notebook-suspect-card">
+                  <div className="notebook-suspect-header">
+                    <img
+                      src={avatarMap[activeProfile.avatarId] || avatarMap.default}
+                      alt={activeProfile.name}
+                      className="notebook-suspect-avatar"
+                    />
+                    <div>
+                      <div className="notebook-suspect-name">{activeProfile.name}</div>
+                      <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>
+                      <div className={`notebook-suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
+                        {activeProfile.suspicionLevel.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="notebook-suspect-divider" />
+                  <div className="notebook-suspect-field"><span>Relation:</span> {activeProfile.relationshipToVictim}</div>
+                  <div className="notebook-suspect-field"><span>Alibi:</span> {activeProfile.claimedAlibi}</div>
+                  <div className="notebook-suspect-field"><span>Notes:</span> {activeProfile.personalityBlurb}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Draggable Evidence Locker Modal from music branch */}
       {cluesModalOpen && (
         <div
           className="clue-modal"
@@ -478,7 +511,6 @@ function Interrogate() {
             )}
           </div>
 
-          {/* Footer — found / attached counts */}
           <div className="clue-modal-footer">
             <span>FOUND <b>{discoveredClues.length}</b> / {allClues.length}</span>
             <span>ATTACHED <b>{attachedClues.length}</b></span>

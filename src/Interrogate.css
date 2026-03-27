@@ -1,6 +1,3 @@
-/* Importing Press Start 2P for headings/pixel vibe 
-  Importing VT323 for readable 70s terminal/typewriter body text 
-*/
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
 
 :root {
@@ -8,6 +5,14 @@
   --bg-dark: #d1cbb8;
   --ink-color: #111111;
   --white: #ffffff;
+  --px-bg:        #141414;
+  --px-brown:     #b1afa9;
+  --px-dark:      #191818;
+  --px-green-lit: #44aa44;
+  --px-white:     #f0e8d0;
+  --px-gray:      #888070;
+  --px-border:    #3a2f14;
+  --px-gold:      #c8a000;
 }
 
 html, body {
@@ -51,10 +56,10 @@ a {
   width: calc(15vw - 3em);
   min-width: calc(180px - 2.5em);
   z-index: 10;
-  background: var(--ink-color);
-  color: var(--white);
+  background: #ffffff;
+  color: #111111;
   padding: 0.8em 0.5em;
-  border: 3px solid var(--white);
+  border: 3px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
   font-family: 'Press Start 2P', cursive;
   font-size: 0.55rem;
@@ -62,8 +67,8 @@ a {
   flex-direction: column;
 }
 
-.you-text { color: var(--white); }
-.switch-suspect-text { color: var(--white); }
+.you-text { color: var(--ink-color); }
+.switch-suspect-text { color: var(--ink-color); }
 
 .suspect-switcher select {
   width: 100%;
@@ -82,34 +87,53 @@ a {
 
 /* ── Sidebar Navigation ── */
 .navigate {
+  justify-content: flex-end;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  padding: 2em 1em;
-  gap: 1.2em;
-  background-color: var(--bg-dark);
+  gap: 16px;
+  padding: 20px 12px;
+  background-color: #475257;
+  border: 4px solid var(--ink-color);
   width: 15vw;
   min-width: 180px;
   height: 100vh;
   border-right: 4px solid var(--ink-color);
-  background-image: linear-gradient(var(--bg-paper) 1px, transparent 1px);
   background-size: 100% 4px;
 }
 
 .navigate button {
   font-family: 'Press Start 2P', cursive;
   font-size: 0.7rem;
-  padding: 1.2em 1.5em;
-  background: var(--bg-paper);
-  border: 3px solid var(--ink-color);
-  box-shadow: 4px 4px 0 var(--ink-color);
-  color: var(--ink-color);
+  background-color: #e3d5a5;
+  border: 3px solid #1a1a1a;
+  outline: none;
+  box-shadow: 3px 3px 0px #1a1a1a;
+  color: #1a1a1a;
   text-transform: uppercase;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+  width: 100%;
+  min-width: 0;
+  height: 56px;
+  padding: 0 12px;
+  margin: 0;
+  transition: transform 0.1s, opacity 0.2s;
+  position: static;
+  bottom: unset;
+  left: unset;
+  right: unset;
+}
+
+.navigate button:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #1a1a1a;
+}
+
+.navigate button:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
 }
 
 .navigate button span {
@@ -122,10 +146,10 @@ a {
   pointer-events: none;
 }
 
-.navigate button:hover span {
-  width: 25px;
-  opacity: 1;
-  margin-right: 8px;
+.navigate button:hover {
+  background: var(--ink-color);
+  color: var(--white);
+  border: 3px solid var(--white);
 }
 
 .navigate button:active {
@@ -133,17 +157,8 @@ a {
   box-shadow: 0px 0px 0 var(--ink-color);
 }
 
-.navigate button:hover {
-  background: var(--ink-color);
-  color: var(--white);
-  border: 3px solid var(--white);
-}
-
-/* Evidence nav button — active state */
-.evidence-nav-btn.active {
-  background: var(--ink-color);
-  color: var(--white);
-  border: 3px solid var(--white);
+.nav-case-btn {
+  font-size: 0.55rem !important;
 }
 
 /* ── Main Interrogation Area ── */
@@ -151,45 +166,19 @@ a {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 2em;
+  padding: 0;
+  overflow: hidden;
   background-color: var(--bg-paper);
   background-image:
-    linear-gradient(45deg, rgba(17,17,17,0.03) 25%, transparent 25%, transparent 75%, rgba(17,17,17,0.03) 75%, rgba(17,17,17,0.03)),
-    linear-gradient(45deg, rgba(17,17,17,0.03) 25%, transparent 25%, transparent 75%, rgba(17,17,17,0.03) 75%, rgba(17,17,17,0.03));
-  background-size: 60px 60px;
-  background-position: 0 0, 30px 30px;
-}
-
-/* ── Headers ── */
-.case-title {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  margin-bottom: 0.5em;
-  margin-top: 1em;
-}
-
-.case-title h1 {
-  font-family: 'Press Start 2P', cursive;
-  font-size: 1.8rem;
-  text-transform: uppercase;
-  background: var(--bg-paper);
-  padding: 0.2em 0.5em;
-  border: 4px solid var(--ink-color);
-  box-shadow: 6px 6px 0 var(--ink-color);
-  z-index: 2;
-}
-
-.case-title::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 10%;
-  right: 10%;
-  height: 4px;
-  background: var(--ink-color);
-  z-index: 1;
+    url("./assets/locker.png"),
+    url("./assets/light.png"),
+    url("./assets/updatedsecurity.png"),
+    url("./assets/updatednewspaper.png"),
+    url("./assets/2themednotebook.png"),
+    url("./assets/brickapproved.png");
+  background-size: 250px auto, 270px auto, 80px auto, 150px auto, 230px auto, cover;
+  background-position: left 95px top 150px, top -40px center, top 0px right 20px, top 30% right 100px, left 30px bottom 15px, center;
+  background-repeat: no-repeat;
 }
 
 .currently-interrogating-container {
@@ -201,6 +190,7 @@ a {
   box-shadow: 4px 4px 0 var(--ink-color);
   padding: 0.8em 2em;
   margin-bottom: 2em;
+  margin-top: 4rem;
 }
 
 .currently-interrogating-container h1 {
@@ -211,6 +201,8 @@ a {
 }
 
 /* ── Content Windows ── */
+
+
 .windows-container {
   display: flex;
   flex-direction: row;
@@ -219,47 +211,34 @@ a {
   align-items: stretch;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   margin-bottom: 1rem;
+  position: relative;
 }
 
 .interrogation-window {
-  display: flex;
-  flex-direction: column;
-  flex: 2;
-  gap: 1rem;
+  position: relative;
+  flex: 1;
   min-width: 0;
+  height: 100%;
 }
 
-/* ── Character Details ── */
 .character-container {
   display: flex;
   flex-direction: row;
   gap: 1rem;
   flex: 0 0 auto;
-  max-height: 200px;
-}
-
-.character-avatar {
-  flex: 0 0 150px;
-  border: 4px solid var(--ink-color);
-  background-color: var(--white);
-  box-shadow: 4px 4px 0 var(--ink-color);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem;
-  overflow: auto;
-}
-
-.character-avatar img {
-  height: 100%;
-  width: auto;
-  object-fit: contain;
+  max-height: 300px;
+  margin-top: auto;
+  width: 80%;
+  position: relative;
+  right: -26.5rem;
+  align-items: flex-start;
+  bottom: -1.8rem;
 }
 
 .case-details {
-  flex: 1;
+  flex: 0.8;
   border: 4px solid var(--ink-color);
   background-color: var(--white);
   box-shadow: 4px 4px 0 var(--ink-color);
@@ -267,6 +246,13 @@ a {
   font-size: 1.1rem;
   line-height: 1.1;
   overflow-y: auto;
+}
+
+.character-avatar img {
+  height: 250px;   /* make it bigger */
+  width: auto;
+  object-fit: contain;
+  image-rendering: pixelated; /* keeps pixel style clean */
 }
 
 .character-avatar p {
@@ -294,10 +280,10 @@ a {
   box-shadow: 2px 2px 0 var(--ink-color);
 }
 
-.suspicion-low  { background-color: #2e7d32; color: var(--white); }
-.suspicion-medium { background-color: #fbc02d; color: var(--ink-color); }
+.suspicion-low { background-color: #2e7d4c; color: var(--white); }
+.suspicion-medium { background-color: #e3d5a5; color: var(--ink-color); }
 .suspicion-high {
-  background-color: #c62828;
+  background-color: #c62828; 
   color: var(--white);
   animation: pulse-red 2s infinite ease-in-out;
 }
@@ -310,10 +296,17 @@ a {
 
 /* ── Chatbot Area ── */
 .chatbot {
-  flex: 1;
+  flex: 0 0 auto;
+  height: 180px;
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-height: -10px;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+  top: 2rem;
+  left: 16rem;
+  width: 75%;
 }
 
 .message-form {
@@ -456,7 +449,9 @@ a {
   background: var(--white);
 }
 
-.question-box input:focus { background: #fdfceb; }
+.question-box input:focus {
+  background: #fdfceb;
+}
 
 .submit-button button {
   height: 50px;
@@ -487,41 +482,25 @@ a {
 
 /* ── Notes Notebook ── */
 .notes-window {
-  width: 35%;
-  background-color: #fdfae5;
-  border: 4px solid var(--ink-color);
-  box-shadow: 8px 8px 0 var(--ink-color);
+  width: 25%;
   position: relative;
   padding: 2.5em 1.5em;
   font-size: 1.6rem;
-  background-image: repeating-linear-gradient(transparent, transparent 1.9rem, #ccc 1.9rem, #ccc 2rem);
-  background-position: 0 3em;
-  border-radius: 0 15px 15px 0;
+  background-image: url("./assets/bettershadethemednotepad.png");
+  background-size: 85%;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-top: auto;
+  margin-bottom: 0;
+  margin-right: 2.5rem;
+  height: 50%;
+  top: 2rem;
+  cursor: pointer;
+  transition: opacity 0.1s;
 }
 
-.notes-window::before {
-  content: '';
-  position: absolute;
-  top: -16px;
-  left: 15px;
-  right: 15px;
-  height: 25px;
-  background-image: radial-gradient(circle, var(--ink-color) 35%, transparent 40%);
-  background-size: 35px 25px;
-  background-repeat: repeat-x;
-}
-
-.notes-window h1 {
-  font-family: 'Press Start 2P', cursive;
-  font-size: 1.2rem;
-  text-align: center;
-  margin-top: 0;
-  margin-bottom: 1em;
-  text-transform: uppercase;
-  background: #fdfae5;
-  display: inline-block;
-  padding: 0 0.5em;
-  border-bottom: 4px solid var(--ink-color);
+.notes-window:hover {
+  opacity: 0.85;
 }
 
 /* ── Dialog Modals ── */
@@ -562,6 +541,322 @@ a {
   box-shadow: 4px 4px 0 var(--ink-color);
   cursor: pointer;
 }
+
+/* ── Notebook / Suspect Modal ── */
+.notebook-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.notebook-modal {
+  background: var(--bg-paper);
+  border: 4px solid var(--ink-color);
+  box-shadow: 8px 8px 0 var(--ink-color);
+  padding: 2em;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.notebook-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: var(--ink-color);
+  color: var(--white);
+  border: none;
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', cursive;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0 #660000;
+}
+
+.notebook-modal-title {
+  font-size: 1rem;
+  color: var(--ink-color);
+  margin: 0 0 1.5em 0;
+  border-bottom: 3px dashed var(--ink-color);
+  padding-bottom: 0.5em;
+  letter-spacing: 4px;
+}
+
+.notebook-modal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+}
+
+.notebook-suspect-card {
+  background: var(--white);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  padding: 1em;
+}
+
+.notebook-suspect-header {
+  display: flex;
+  gap: 1em;
+  align-items: flex-start;
+  margin-bottom: 0.5em;
+}
+
+.notebook-suspect-avatar {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  border: 2px solid var(--ink-color);
+}
+
+.notebook-suspect-name {
+  font-size: 0.7rem;
+  color: var(--ink-color);
+  margin-bottom: 4px;
+  letter-spacing: 2px;
+}
+
+.notebook-suspect-meta {
+  color: #555;
+  margin-bottom: 6px;
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+}
+
+.notebook-suspicion-tag {
+  display: inline-block;
+  font-size: 0.45rem;
+  padding: 3px 8px;
+  border: 2px solid var(--ink-color);
+  letter-spacing: 1px;
+}
+
+.notebook-suspicion-tag.suspicion-low    { background: #2e7d4c; color: var(--white); }
+.notebook-suspicion-tag.suspicion-medium { background: #e3d5a5; color: var(--ink-color); }
+.notebook-suspicion-tag.suspicion-high   { background: #7a2f2f; color: var(--white); }
+
+.notebook-suspect-divider {
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--ink-color) 0px, var(--ink-color) 6px,
+    transparent 6px, transparent 10px
+  );
+  margin: 0.8em 0;
+}
+
+.notebook-suspect-field {
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  color: var(--ink-color);
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.notebook-suspect-field span {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-right: 6px;
+}
+
+/* ══════════════════════════════════════════
+   CLUE DETAIL PANEL
+   ══════════════════════════════════════════ */
+
+.clue-detail {
+  position: fixed;
+  top: 50%;
+  right: 5%;
+  transform: translateY(-50%);
+  width: 320px;
+  max-height: 80vh;
+  background: var(--px-dark);
+  box-shadow:
+    -2px 0   0 var(--px-border),
+     2px 0   0 var(--px-border),
+     0  -2px 0 var(--px-border),
+     0   2px 0 var(--px-border),
+    inset 0 0 0 2px rgba(255,255,255,0.03);
+  padding: 28px 24px;
+  overflow-y: auto;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  animation: detailIn 0.2s steps(4, end) both;
+}
+
+@keyframes detailIn {
+  from { opacity: 0; transform: translateY(-50%) translateX(12px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
+}
+
+.clue-detail-empty {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.clue-detail-empty-icon {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 48px;
+  color: var(--px-gray);
+  opacity: 0.2;
+  text-align: center;
+}
+
+.clue-detail-empty-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--px-gray);
+  letter-spacing: 2px;
+  opacity: 0.4;
+  text-align: center;
+}
+
+.clue-detail-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    transparent, transparent 3px,
+    rgba(0,0,0,0.15) 3px, rgba(0,0,0,0.15) 4px
+  );
+  pointer-events: none;
+}
+
+.clue-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 4px;
+}
+
+.clue-detail-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--ink-color);
+  color: var(--px-white);
+  border: none;
+  width: 22px;
+  height: 22px;
+  font-size: 15px;
+  cursor: pointer;
+  font-family: 'Press Start 2P', monospace;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 0 #660000;
+  z-index: 2;
+}
+
+.clue-detail-close:hover { background: #333; }
+
+.clue-detail-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: var(--px-white);
+  letter-spacing: 1px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-location {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--px-gray);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-decisive {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--px-gold);
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-divider {
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--px-brown) 0px, var(--px-brown) 6px,
+    transparent 6px, transparent 10px
+  );
+  margin: 14px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-description {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--bg-dark);
+  line-height: 2.2;
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-suspects {
+  margin-top: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-suspects-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--px-gray);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.clue-suspects-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.clue-suspect-tag {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  background: rgba(246, 243, 243, 0.9);
+  color: var(--ink-color);
+  padding: 4px 8px;
+  letter-spacing: 1px;
+  box-shadow:
+    -1px 0   0 var(--ink-color),
+     1px 0   0 var(--ink-color),
+     0  -1px 0 var(--ink-color),
+     0   1px 0 var(--ink-color);
+}
+
+
 
 /* ════════════════════════════════════════════
    EVIDENCE LOCKER MODAL
