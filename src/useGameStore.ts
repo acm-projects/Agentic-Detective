@@ -9,6 +9,7 @@ import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import type { PlayerSeed } from "./obj/backendInterfaces";
 import { generateCaseFile, feedCaseFile, buildSuspectSystemPrompt } from "./caseFile";
 import { streamSpeech } from "./services/ttsService";
+import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 // ─────────────────────────────────────────────
@@ -17,7 +18,9 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 export interface ChatMessage {
   role: "player" | "suspect";
-  text: string;
+  text: string;           // raw LLM string (includes injected evidence)
+  displayText: string;    // what the player typed — shown in chat
+  displayClues?: { id: string; name: string }[];
   timestamp: number;
 }
 
@@ -69,6 +72,7 @@ interface GameState {
   error: string | null;
   isResponding: boolean;
   elapsed: number;
+  voiceIds: Record<string, string>;
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
@@ -76,7 +80,11 @@ interface GameState {
   proceedToInvestigation: (navigate: (path: string) => void) => void;
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
-  sendMessage: (text: string) => Promise<void>;
+ sendMessage: (
+  text: string,
+  displayText: string,
+  displayClues?: { id: string; name: string }[]
+) => Promise<void>;
   makeAccusation: (suspectName: string, navigate: (path: string) => void) => void;
   resetGame: () => void;
   markClueDiscovered: (clueId: string) => void;
@@ -111,6 +119,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   error: null,
   isResponding: false,
   elapsed: 0,
+  voiceIds: {},
 
   // ── Merge partial seed updates ──
   setSeed: (partial) =>
@@ -141,6 +150,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!isReloadFlow) {
       try {
         const { backend, player } = await generateCaseFile(seed);
+        // Select voices server-side (non-blocking — falls back to defaults on failure)
+        const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
         set({ backend, player, phase: "briefing", elapsed: 0 });
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues)
@@ -245,6 +256,9 @@ export const useGameStore = create<GameState>((set, get) => ({
       },
     });
 
+    console.log("[suspect data]", JSON.stringify(suspect, null, 2));
+
+
     // Feed restored history so the model has conversation continuity after reload.
     const history = (existingSession?.history ?? [])
       .filter(m => m.text && m.text.trim().length > 0)
@@ -277,7 +291,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
 
   // ── Send a player message to the active suspect ──
-  sendMessage: async (text) => {
+  sendMessage: async (text, displayText, displayClues) => {
     const { activeSuspectName, sessions } = get();
     const { seed } = get() as { seed: PlayerSeed};
     if (!activeSuspectName || !sessions[activeSuspectName] || get().isResponding) return;
@@ -293,7 +307,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    const playerMessage: ChatMessage = { role: "player", text, timestamp: Date.now() };
+    const playerMessage: ChatMessage = {
+      role: "player",
+      text,           // full injected LLM string
+      displayText,
+      displayClues,
+      timestamp: Date.now(),
+    };
 
     // Optimistically add player message and lock input
     set(state => ({
@@ -317,21 +337,39 @@ export const useGameStore = create<GameState>((set, get) => ({
       let newStress = session.stressLevel; // default: keep current if parse fails
 
       try {
+        // Strip markdown code fences
         const cleaned = raw
           .replace(/^```json\s*/i, "")
           .replace(/^```\s*/i, "")
           .replace(/```\s*$/i, "")
           .trim();
-        const parsed = JSON.parse(cleaned);
-        responseText = String(parsed.response ?? raw);
+
+        // Try to extract a JSON object even if there's trailing garbage
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        const jsonStr = jsonMatch ? jsonMatch[0] : cleaned;
+
+        const parsed = JSON.parse(jsonStr);
+
+        // Ensure response is a plain string with no JSON artifacts
+        const rawResponse = parsed.response;
+        if (typeof rawResponse === "string") {
+          responseText = rawResponse;
+        } else {
+          // parsed.response missing or not a string — strip stress JSON from raw as last resort
+          responseText = raw.replace(/["\s]*stressLevel["\s]*:[\s\d]+\}?\s*$/i, "").trim();
+        }
+
         newStress = Math.min(100, Math.max(0, Number(parsed.stressLevel ?? session.stressLevel)));
       } catch {
-        console.warn("Could not parse suspect JSON reply — using raw text");
+        console.warn("Could not parse suspect JSON reply — stripping stress artifact from raw text");
+        // Fallback: strip any trailing stressLevel JSON fragment from raw
+        responseText = raw.replace(/["\s]*stressLevel["\s]*:[\s\d]+\}?\s*$/i, "").trim();
       }
 
       const suspectMessage: ChatMessage = {
         role: "suspect",
         text: responseText,
+        displayText: responseText,  // suspects have no separate display text
         timestamp: Date.now(),
       };
 
@@ -404,12 +442,15 @@ export const useGameStore = create<GameState>((set, get) => ({
         p => p.name === activeSuspectName
       )?.gender ?? "female";
 
-            //tts streamed better\
-/*
-      streamSpeech(responseText, suspectGender).catch(err =>
-        console.error("TTS playback failed:", err)
-      );
-*/
+        
+      //tts streamed better\
+      const voiceId = get().voiceIds[activeSuspectName];
+
+      if (voiceId) {
+        streamSpeech(responseText, voiceId).catch(err =>
+          console.error("TTS playback failed:", err)
+        );
+      }
 
       // Mark as no longer responding after message is added
       set({ isResponding: false });
@@ -505,6 +546,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       error: null,
       isResponding: false,
       elapsed: 0,
+      voiceIds: {},
     }),
   
     // keeps track of elapsed time
@@ -553,4 +595,11 @@ export const useActiveSuspectProfile = () =>
     state.activeSuspectName
       ? (state.sessions[state.activeSuspectName]?.stressLevel ?? 0)
       : 0
+  );
+
+  export const useActiveSuspectVoiceId = () =>
+  useGameStore(state =>
+    state.activeSuspectName
+      ? (state.voiceIds[state.activeSuspectName] ?? null)
+      : null
   );

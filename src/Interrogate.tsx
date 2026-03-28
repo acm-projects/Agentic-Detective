@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress, type ChatMessage } from './useGameStore';
 import { StressBar } from './StressBar';
@@ -6,10 +6,56 @@ import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
+import { AudioContext } from './App';
 import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
 import './Interrogate.css';
 
+// ✅ IMPORT YOUR GIF
+import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
 
+// ✅ MAP (so it still works with avatarId system)
+const avatarMap: Record<string, string> = {
+  default: blinkingPortraitGirl,
+};
+
+interface AttachedClue {
+  id: string;
+  name: string;
+  description: string;
+  location: string;
+  couldImplicateSuspects?: string | string[];
+}
+
+function useDraggableModal(initialPos: { x: number; y: number }) {
+  const [pos, setPos] = useState(initialPos);
+  const dragging = useRef(false);
+  const offset = useRef({ x: 0, y: 0 });
+
+  const onMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    dragging.current = true;
+    offset.current = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    e.preventDefault();
+  }, [pos]);
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragging.current) return;
+      setPos({
+        x: Math.max(0, Math.min(window.innerWidth - 300, e.clientX - offset.current.x)),
+        y: Math.max(0, Math.min(window.innerHeight - 80, e.clientY - offset.current.y)),
+      });
+    };
+    const onUp = () => { dragging.current = false; };
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    };
+  }, []);
+
+  return { pos, onMouseDown };
+}
 
 function Interrogate() {
   const navigate = useNavigate();
@@ -19,10 +65,10 @@ function Interrogate() {
     activeSuspectName, 
     isResponding, 
     elapsed,
-    startInterrogation, 
-    proceedToInvestigation, 
-    sendMessage, 
-    makeAccusation, 
+    startInterrogation,
+    proceedToInvestigation,
+    sendMessage,
+    makeAccusation,
     goToBriefing,
     tickElapsed,
   } = useGameStore();
@@ -31,11 +77,21 @@ function Interrogate() {
   const activeProfile = useActiveSuspectProfile();
   const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
-  //const [isNoteOpen, setIsNoteOpen] = useState(false);
+  const [showNotebook, setShowNotebook] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
+  const { isMuted, setIsMuted } = useContext(AudioContext);
 
-  // Default to the first suspect whenever profiles become available.
+  // ── Evidence / clue state ──────────────────────────────
+  const allClues = useNotificationStore(s => s.clues);
+  const discoveredClues = allClues.filter(c => c.discovered);
+  const [cluesModalOpen, setCluesModalOpen] = useState(false);
+  const [attachedClues, setAttachedClues] = useState<AttachedClue[]>([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const { pos, onMouseDown } = useDraggableModal({ x: window.innerWidth - 340, y: 120 });
+
+  const timerPaused = useNotificationStore(s => s.timerPaused);
+
   useEffect(() => {
     console.log("got into useEffect1")
     console.log(activeSuspectName, " ", profiles)
@@ -50,18 +106,14 @@ function Interrogate() {
     }
   }, [activeSuspectName, profiles, startInterrogation]);
 
-  // timer efxct and scheduler
-  const timerPaused = useNotificationStore(s => s.timerPaused)
-
   useEffect(() => {
-    if (timerPaused) return
-    const id = setInterval(tickElapsed, 1000)
-    return () => clearInterval(id)
-  }, [timerPaused, player])
+    if (timerPaused) return;
+    const id = setInterval(tickElapsed, 1000);
+    return () => clearInterval(id);
+  }, [timerPaused, player]);
 
-  useNotificationScheduler(elapsed, 600_000, !!player)
+  useNotificationScheduler(elapsed, 600_000, !!player);
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     console.log("got into useEffect2")
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -70,14 +122,79 @@ function Interrogate() {
   const handleSuspectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     startInterrogation(e.target.value);
     setInput('');
+    setAttachedClues([]);
   };
+
+  // ── Drop zone handlers ─────────────────────────────────
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const raw = e.dataTransfer.getData('application/clue');
+    if (!raw) return;
+    try {
+      const clue: AttachedClue = JSON.parse(raw);
+      setAttachedClues(prev =>
+        prev.find(c => c.id === clue.id) ? prev : [...prev, clue]
+      );
+    } catch {
+      console.warn('Could not parse dropped clue data');
+    }
+  };
+
+  const getImplicatingSuspects = (clue: AttachedClue): string[] => {
+    if (Array.isArray(clue.couldImplicateSuspects)) return clue.couldImplicateSuspects;
+    if (typeof clue.couldImplicateSuspects === 'string')
+      return clue.couldImplicateSuspects.split(',').map(s => s.trim()).filter(Boolean);
+    return [];
+  };
+
+  const clueImplicatesCurrent = (clue: AttachedClue) =>
+    getImplicatingSuspects(clue).some(
+      s => s.toLowerCase() === activeSuspectName?.toLowerCase()
+    );
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault();
-    if (!input.trim() || isResponding) return;
-    const text = input.trim();
+    if ((!input.trim() && attachedClues.length === 0) || isResponding) return;
+
+    const typedText = input.trim();
+    const cluesForDisplay = attachedClues.map(c => ({ id: c.id, name: c.name }));
+
+    let llmText = typedText;
+    if (attachedClues.length > 0) {
+      const evidenceBlock = attachedClues
+        .map(clue => {
+          const implicating = clueImplicatesCurrent(clue);
+          return [
+            `[EVIDENCE PRESENTED: "${clue.name}"]`,
+            `  Location found: ${clue.location}`,
+            `  Details: ${clue.description}`,
+            implicating
+              ? `  ⚠️ This evidence directly implicates you. React with significantly elevated stress and defensiveness.`
+              : `  This evidence has been shown to you.`,
+          ].join('\n');
+        })
+        .join('\n\n');
+
+      llmText = typedText
+        ? `${evidenceBlock}\n\nDetective says: "${typedText}"`
+        : `${evidenceBlock}\n\n[The detective slides the evidence across the table without saying a word.]`;
+    }
+
     setInput('');
-    await sendMessage(text);
+    setAttachedClues([]);
+    await sendMessage(llmText, typedText, cluesForDisplay);
   }
 
   const handleConfirmSignOut = async () => {
@@ -118,45 +235,41 @@ function Interrogate() {
 
   return (
     <div className='game-container'>
-      {/* ── Nav bar — matches original structure ── */}
+      {/* ── Nav bar ── */}
       <div className='navigate'>
         
         <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
-        <button onClick = {() => navigate("/clues")}><span> ← </span>Clues</button>
-        <button><span> ← </span>Files</button>
-        {/*<button onClick={() =>
-          (document.getElementById('case-report') as HTMLDialogElement)?.showModal()
-        }>
-          Case Report
-        </button>
-       <dialog className="nes-dialog" id="case-report">
-          <form method="dialog">
-            <h3>Case Report</h3>
-            <p><strong>{player.caseReport.caseTitle}</strong></p>
-            <p>{player.caseReport.officialBriefing}</p>
-            <menu className="dialog-menu">
-              <button>Close</button>
-            </menu>
-          </form>
-        </dialog> */}
-        <button className="back-btn" onClick={() =>goToBriefing(navigate)}>Case Report</button>
+        <button onClick={() => navigate("/clues")}><span> ← </span>Clues</button>
+
+        <button className="nav-case-btn" onClick={() => goToBriefing(navigate)}>Case Report</button>
         <button onClick={() => navigate("/desk")}><span> ← </span>Desk</button>
+
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
         }><span> ← </span>Settings</button>
+
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
+            {/* ✅ Mute toggle from music branch */}
+            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0' }}>
+              <input type="checkbox" checked={isMuted} onChange={e => setIsMuted(e.target.checked)} />
+              Mute Music
+            </label>
             <menu className="dialog-menu">
               <button>Nah</button>
               <button><Link to="/">Go Home</Link></button>
             </menu>
           </form>
         </dialog>
-        <button onClick={() => navigate("/suspects")}> <span> ← </span> Suspects</button>
+
+        {/* ✅ Suspects nav from music branch */}
+        <button onClick={() => navigate("/suspects")}><span> ← </span>Suspects</button>
+
         <button onClick={() =>
           (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
         }>Accuse</button>
+
         <dialog className="nes-dialog" id="accuse">
           <form method="dialog">
             <h3>Make Your Accusation</h3>
@@ -171,15 +284,19 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
+
+        {/* ✅ Evidence locker toggle from music branch */}
+        <button
+          className={`evidence-nav-btn ${cluesModalOpen ? 'active' : ''}`}
+          onClick={() => setCluesModalOpen(p => !p)}
+        >
+          🔍 Evidence {discoveredClues.length > 0 && `(${discoveredClues.length})`}
+        </button>
       </div>
 
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
-        <div className='interrogate-subcontainer'>
-          <div className='interrogate-subsubcontainer'>
-            <div className='case-title'>
-              <h1 style = {{}}>{player.caseReport.caseTitle}</h1>
-            </div>
+        <div className='case-title' />
 
             {/* Interrogation: suspectname title; check if it works if there is no active profile */}
             <div className='currently-interrogating-container'>
@@ -224,48 +341,20 @@ function Interrogate() {
 
         <div className='windows-container'>
           <div className='interrogation-window'>
-            {/* Character card — same layout as original */}
+            {/* ✅ Main branch avatar (gif avatarMap) */}
             {activeProfile && (
               <div className='character-container'>
                 <div className='character-avatar'>
                   <img
-                    src={`/avatars/${activeProfile.avatarId}.png`} 
+                    src={avatarMap[activeProfile.avatarId] || avatarMap.default}
                     alt={activeProfile.name}
-                    onError={e => {{
-                      console.log(activeProfile.avatarId);
-                    }
-                      console.error("Failed to load image at:", (e.target as HTMLImageElement).src);
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
                   />
-                  <p>Character Avatar goes here</p>
-                  {activeProfile && (
-                    <div className='character-avatar'>
-                      <img
-                        src={`/avatars/${activeProfile.avatarId}.png`}
-                        alt={activeProfile.name}
-                        onError={e => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                      <StressBar level={stressLevel} />   {/* ← ADD */}
-                    </div>
-                  )}
-                </div>
-                <div className='case-details'>
-                  <h2>{activeProfile.name}</h2>
-                  <h4>Age: {activeProfile.age}</h4>
-                  <h4>Occupation: {activeProfile.occupation}</h4>
-                  <h4>Relation: {activeProfile.relationshipToVictim}</h4>
-                  <h4>Claims: {activeProfile.claimedAlibi}</h4>
-                  <span className={`suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
-                    {activeProfile.suspicionLevel} suspicion
-                  </span>
+                  <div className="avatar-overlay" />
+                  <StressBar level={stressLevel} />
                 </div>
               </div>
             )}
 
-            {/* Chat — matches original chatbot structure */}
             <div className='chatbot'>
               <form onSubmit={handleSendMessage} className="message-form">
                 <div className='chat-history'>
@@ -277,9 +366,20 @@ function Interrogate() {
                   {history.map((msg, index) => (
                     <div key={index} className='chat-message'>
                       {msg.role === 'player' ? (
-                        <p className='player-message'>
-                          <strong className='you-text'>You: </strong> {msg.text}
-                        </p>
+                        <div className='player-message'>
+                          <strong className='you-text'>You: </strong>
+                          {/* ✅ Clue chips in chat history from music branch */}
+                          {msg.displayClues && msg.displayClues.length > 0 && (
+                            <div className="chat-clue-chips">
+                              {msg.displayClues.map((c: { id: string; name: string }) => (
+                                <span key={c.id} className="chat-clue-chip">🔍 {c.name}</span>
+                              ))}
+                            </div>
+                          )}
+                          {msg.displayText && <span>{msg.displayText}</span>}
+                          {/* Fallback for older history entries without displayText */}
+                          {!msg.displayText && !msg.displayClues?.length && <span>{msg.text}</span>}
+                        </div>
                       ) : (
                         <p className='bot-message'>
                           <strong>{activeProfile?.name}:</strong> {msg.text}
@@ -295,19 +395,59 @@ function Interrogate() {
                   <div ref={chatEndRef} />
                 </div>
 
-                <div className='question-submit-box'>
+                {/* ✅ Drop zone + clue chips + input from music branch */}
+                <div
+                  className={`question-submit-box ${isDragOver ? 'drag-over' : ''}`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  {attachedClues.length > 0 && (
+                    <div className="clue-chips-bar">
+                      {attachedClues.map(clue => {
+                        const implicates = clueImplicatesCurrent(clue);
+                        return (
+                          <span
+                            key={clue.id}
+                            className={`clue-chip ${implicates ? 'clue-chip--implicating' : ''}`}
+                            title={clue.description}
+                          >
+                            {implicates ? '⚠️' : '🔍'} {clue.name}
+                            <button
+                              type="button"
+                              className="clue-chip-remove"
+                              onClick={() =>
+                                setAttachedClues(prev => prev.filter(c => c.id !== clue.id))
+                              }
+                            >✕</button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {isDragOver && (
+                    <div className="drop-hint">Drop clue to present as evidence</div>
+                  )}
+
                   <div className='question-box'>
                     <input
                       type="text"
-                      placeholder='Ask questions here...'
+                      placeholder={
+                        attachedClues.length > 0
+                          ? 'Add a question, or send silently…'
+                          : 'Ask questions here...'
+                      }
                       value={input}
                       disabled={isResponding}
                       onChange={e => setInput(e.target.value)}
                     />
                   </div>
-
                   <div className='submit-button'>
-                    <button type='submit' disabled={isResponding || !input.trim()}>
+                    <button
+                      type='submit'
+                      disabled={isResponding || (!input.trim() && attachedClues.length === 0)}
+                    >
                       Submit
                     </button>
                   </div>
@@ -316,15 +456,13 @@ function Interrogate() {
             </div>
           </div>
 
-          <div className='notes-window'>
-            <h1> Notes go here </h1>
-          </div>
+          {/* ✅ Main branch notes window (clickable notebook modal trigger) */}
+          <div className='notes-window' onClick={() => setShowNotebook(true)} />
         </div>
 
-        {/* Suspect switcher — same as original, driven by store profiles */}
         <div className='suspect-switcher'>
           <form>
-            <label style={{}} htmlFor="suspects"> <span className='switch-suspect-text'> Switch Suspect:</span> </label>
+            <label htmlFor="suspects"><span className='switch-suspect-text'>Switch Suspect:</span></label>
             <br />
             <select
               onChange={handleSuspectChange}
@@ -333,17 +471,133 @@ function Interrogate() {
               id='suspects-list'
             >
               {profiles.map(p => (
-                <option key={p.name} value={p.name}>
-                  {p.name}
-                </option>
+                <option key={p.name} value={p.name}>{p.name}</option>
               ))}
             </select>
           </form>
         </div>
       </div>
+
+      {/* ✅ Main branch notebook modal */}
+      {showNotebook && (
+        <div className="notebook-modal-overlay" onClick={() => setShowNotebook(false)}>
+          <div className="notebook-modal" onClick={e => e.stopPropagation()}>
+            <button className="notebook-modal-close" onClick={() => setShowNotebook(false)}>✕</button>
+            <h2 className="notebook-modal-title">SUSPECT PROFILE</h2>
+            <div className="notebook-modal-list">
+              {activeProfile && (
+                <div className="notebook-suspect-card">
+                  <div className="notebook-suspect-header">
+                    <img
+                      src={avatarMap[activeProfile.avatarId] || avatarMap.default}
+                      alt={activeProfile.name}
+                      className="notebook-suspect-avatar"
+                    />
+                    <div>
+                      <div className="notebook-suspect-name">{activeProfile.name}</div>
+                      <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>
+                      <div className={`notebook-suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
+                        {activeProfile.suspicionLevel.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="notebook-suspect-divider" />
+                  <div className="notebook-suspect-field"><span>Relation:</span> {activeProfile.relationshipToVictim}</div>
+                  <div className="notebook-suspect-field"><span>Alibi:</span> {activeProfile.claimedAlibi}</div>
+                  <div className="notebook-suspect-field"><span>Notes:</span> {activeProfile.personalityBlurb}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ✅ Draggable Evidence Locker Modal from music branch */}
+      {cluesModalOpen && (
+        <div
+          className="clue-modal"
+          style={{ left: pos.x, top: pos.y }}
+        >
+          <div className="clue-modal-handle" onMouseDown={onMouseDown}>
+            <span className="clue-modal-title">LOCKER</span>
+            <div className="clue-modal-handle-dots">
+              <span /><span /><span /><span /><span /><span />
+            </div>
+            <button
+              className="clue-modal-close"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => setCluesModalOpen(false)}
+            >✕</button>
+          </div>
+
+          <p className="clue-modal-hint">Drag a card to the chat to present evidence</p>
+
+          <div className="clue-modal-body">
+            {discoveredClues.length === 0 ? (
+              <p className="clue-modal-empty">No clues discovered yet.</p>
+            ) : (
+              discoveredClues.map((clue, i) => {
+                const suspects = Array.isArray(clue.couldImplicateSuspects)
+                  ? clue.couldImplicateSuspects
+                  : typeof clue.couldImplicateSuspects === 'string'
+                  ? (clue.couldImplicateSuspects as string).split(',').map(s => s.trim())
+                  : [];
+                const implicatesCurrent = suspects.some(
+                  s => s.toLowerCase() === activeSuspectName?.toLowerCase()
+                );
+                const alreadyAttached = attachedClues.some(c => c.id === clue.id);
+
+                return (
+                  <div
+                    key={clue.id}
+                    draggable={!alreadyAttached}
+                    onDragStart={e => {
+                      e.dataTransfer.setData('application/clue', JSON.stringify({
+                        id: clue.id,
+                        name: clue.name,
+                        description: clue.description,
+                        location: clue.location,
+                        couldImplicateSuspects: clue.couldImplicateSuspects,
+                      }));
+                      e.dataTransfer.effectAllowed = 'copy';
+                    }}
+                    className={[
+                      'clue-modal-card',
+                      implicatesCurrent ? 'clue-modal-card--implicating' : '',
+                      alreadyAttached   ? 'clue-modal-card--attached'    : '',
+                    ].join(' ')}
+                    style={{ animationDelay: `${i * 0.05}s` }}
+                  >
+                    <div className="clue-modal-card-icon">
+                      <img src={`/clues/clue_${(i % 6) + 1}.png`} alt="" />
+                    </div>
+                    <div className="clue-modal-card-info">
+                      <div className="clue-modal-card-name">
+                        {implicatesCurrent && <span className="implicates-badge">!</span>}
+                        {clue.name}
+                      </div>
+                      <div className="clue-modal-card-location">📍 {clue.location}</div>
+                    </div>
+                    {alreadyAttached
+                      ? <span className="clue-modal-card-added">ADDED</span>
+                      : <span className="clue-modal-card-drag-hint">⠿</span>
+                    }
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div className="clue-modal-footer">
+            <span>FOUND <b>{discoveredClues.length}</b> / {allClues.length}</span>
+            <span>ATTACHED <b>{attachedClues.length}</b></span>
+          </div>
+        </div>
+      )}
+
       <NotificationToast />
       <MinigameModal />
-      </div>
+    </div>
   );
 }
 

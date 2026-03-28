@@ -13,9 +13,9 @@ function NewGame() {
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const [personalization, setPersonalization] = useState('');
-    const [timePeriod, setTimePeriod] = useState(10); // Default value
-    const [intensity, setIntensity] = useState(5); // Default value
-    const [difficulty, setDifficulty] = useState(5); // Default value
+    const [timePeriod, setTimePeriod] = useState(10);
+    const [intensity, setIntensity] = useState(5);
+    const [difficulty, setDifficulty] = useState(5);
     const [isMuted, setIsMuted] = useState(false);
 
     const { userId, isSignedIn } = useAuth();
@@ -24,17 +24,25 @@ function NewGame() {
     // Setup background music on mount
     useEffect(() => {
         const audio = audioRef.current;
-        if (audio) {
-            audio.volume = 0.3; // Set volume to 30%
+        if (!audio) return;
+
+        audio.volume = 0.3;
+
+        const startAudio = () => {
             audio.play().catch(err => console.log('Audio playback failed:', err));
-        }
+            document.removeEventListener('click', startAudio); // Only trigger once
+        };
+
+        // Try immediately (works if user navigated here via a click)
+        audio.play().catch(() => {
+            // Autoplay blocked — wait for first interaction
+            document.addEventListener('click', startAudio);
+        });
 
         return () => {
-            // Cleanup: stop music when component unmounts
-            if (audio) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
+            document.removeEventListener('click', startAudio);
+            audio.pause();
+            audio.currentTime = 0;
         };
     }, []);
 
@@ -51,7 +59,7 @@ function NewGame() {
     };
 
     const playClickSound = () => {
-      const audio = new Audio('../assets/Graphic_Pulse.mp3'); // Ensure you have a click sound at this path
+      const audio = new Audio('../assets/Graphic_Pulse.mp3');
       audio.play();
     }
 
@@ -59,7 +67,7 @@ function NewGame() {
       <div className="container">
       <audio
         ref={audioRef}
-        src="/assets/9jackjack8-the-triple-move-adventure-spy-jazz-409674.mp3"
+        src="/assets/mondamusic-spy-detective-robbery-music-491671.mp3"
         loop
       />
       <header>
@@ -129,7 +137,6 @@ function NewGame() {
           max="10"
           step="1"
           value={intensity}
-
           onChange={(e) => setIntensity(Number(e.target.value))}
           className="slider"
         />

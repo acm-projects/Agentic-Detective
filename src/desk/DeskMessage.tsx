@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import cluebookImg from './assets/cluebook.png';
-import cigaretteImg from './assets/cigarette.png';
-import caseFileImg from './assets/case-file.png';
-import gunImg from './assets/gun.png';
-import notebookImg from './assets/notebook.png';
-import pencilImg from './assets/pencil.png';
-import plantImg from './assets/plant.png';
-import deskBgImg from './assets/desk-bg-new.png';
+import { useGameStore } from '../useGameStore';
+import cluebookImg from './assets/themedcluebook.png';
+import cigaretteImg from './assets/newthemedcigarette.png';
+import caseFileImg from './assets/themedcasefile.png';
+import gunImg from './assets/themedgun.png';
+import notebookImg from './assets/themednotebook.png';
+import pencilImg from './assets/themedpencil.png';
+import plantImg from './assets/muchbetterthemedplant.png';
+import deskBgImg from './assets/extranewdesk.png';
 import LoadingScreen from '../LoadingScreen';
-import phoneImg from './assets/cellphone7.webp';
-import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from '../useGameStore';
+import CaseReportScreen from '../CaseReportScreen';
+import phoneImg from './assets/2themedcellphone.png';
 import './desk.css';
+import ScrabbleImg from './assets/newscrabble.png'; 
 
 function Message() {
   const { phase, goToBriefing, makeAccusation, player  } = useGameStore();
@@ -53,7 +55,7 @@ function Message() {
           className="evidence-item" 
           src={cluebookImg} 
           alt="Clue Book" 
-          style={{ ...itemStyle, width: '390px', top: '110px', left: '55%', transform: 'rotate(-20deg)' }} 
+          style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }} 
           onClick={handleClueBookClick}
         />
 
@@ -62,6 +64,15 @@ function Message() {
           src={cigaretteImg} 
           alt="Cigarette" 
           style={{ ...itemStyle, width: '320px', top: '5px', left: '5%', transform: 'rotate(-50deg)' }} 
+
+        />
+
+        
+        {/* 2. SCRABBLE */}
+        <img 
+          src={ScrabbleImg} 
+          alt="Scrabble" 
+          style={{ ...itemStyle, width: '340px', top: '1px', left: '67%'}} 
 
         />
 
@@ -76,26 +87,10 @@ function Message() {
 
         {/* 4. GUN */}
         <img 
-          className='evidence-item'
           src={gunImg} 
           alt="Gun" 
-          style={{ ...itemStyle, width: '280px', top: '70px', left: '78%', transform: 'rotate(15deg)' }}
-          onClick={() => (document.getElementById('accuse') as HTMLDialogElement)?.showModal()} 
+          style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 
         />
-        <dialog className="nes-dialog" id="accuse">
-          <form method="dialog">
-            <h3>Make Your Accusation</h3>
-            <p>Who do you think did it?</p>
-            {profiles.map(p => (
-              <button className="accuse" key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
-                {p.name}
-              </button>
-            ))}
-            <menu className="dialog-menu">
-              <button>Cancel</button>
-            </menu>
-          </form>
-        </dialog>
 
         {/* 5. NOTEBOOK */}
         <img 
@@ -117,7 +112,7 @@ function Message() {
         <img 
           src={plantImg} 
           alt="Office Plant" 
-          style={{ ...itemStyle, width: '300px', top: '2px', left: '35%', transform: 'rotate(360deg)' }}
+          style={{ ...itemStyle, width: '330px', top: '-12px', left: '30%', transform: 'rotate(360deg)' }}
         />
 
         {/* 12. PHONE */}

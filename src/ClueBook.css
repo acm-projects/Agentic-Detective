@@ -16,347 +16,113 @@
   --px-border:    #3a2f14;
   --px-gold:      #625111;
   --px-shadow:    rgba(0,0,0,0.8);
-  --bg-paper: #e0dcd3;   /* Vintage dossier beige */
-  --bg-dark: #d1cbb8;    /* Slightly darker beige for contrast */
-  --ink-color: #111111;  /* Almost black for thick outlines */
+  --bg-paper: #e0dcd3;
+  --bg-dark: #d1cbb8;
+  --ink-color: #111111;
   --white: #ffffff;
 }
 
-/* ── Overlay ── */
-.clue-book-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--px-bg);
-  background-image:
-    repeating-linear-gradient(
-      92deg,
-      transparent 0px, transparent 18px,
-      rgba(255,200,100,0.015) 18px, rgba(255,200,100,0.015) 19px
-    ),
-    repeating-linear-gradient(
-      180deg,
-      transparent 0px, transparent 60px,
-      rgba(0,0,0,0.08) 60px, rgba(0,0,0,0.08) 61px
-    ),
-    radial-gradient(ellipse at center, #2a1f0a 0%, #0f0a04 100%);
-  overflow-y: auto;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 32px 24px 60px;
-  font-family: 'Press Start 2P', monospace;
-  image-rendering: pixelated;
+html, body, #root {
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
-/* ── Book ── */
+/* ── Book hidden ── */
 .clue-book {
-  position: relative;
-  width: 100%;
-  max-width: 1300px;
-  min-height: calc(100vh - 80px);
-  background: var(--px-paper);
-  box-shadow:
-    -4px 0   0 var(--px-border),
-     4px 0   0 var(--px-border),
-     0  -4px 0 var(--px-border),
-     0   4px 0 var(--px-border),
-    8px 8px 0 var(--px-dark),
-    0 20px 60px rgba(0,0,0,0.7),
-    0 40px 80px rgba(0,0,0,0.4);
-  padding: 32px 32px 48px;
-  animation: bookIn 0.4s steps(8, end) both;
-  background-image:
-    repeating-linear-gradient(
-      transparent, transparent 7px,
-      rgba(139,105,20,0.08) 7px, rgba(139,105,20,0.08) 8px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent, transparent 7px,
-      rgba(139,105,20,0.04) 7px, rgba(139,105,20,0.04) 8px
-    );
-  background-color: var(--bg-paper);
-  display: flex;
-  flex-direction: column;
+  display: none;
 }
 
-@keyframes bookIn {
-  from { opacity: 0; transform: translateY(16px) scale(0.98); }
-  to   { opacity: 1; transform: translateY(0)    scale(1); }
-}
-
-/* ── Pixel corners ── */
-.pixel-corner {
-  position: absolute;
-  width: 16px;
-  height: 16px;
-  background: var(--px-border);
-  z-index: 2;
-}
-.pixel-corner.tl { top: 0;    left: 0; }
-.pixel-corner.tr { top: 0;    right: 0; }
-.pixel-corner.bl { bottom: 0; left: 0; }
-.pixel-corner.br { bottom: 0; right: 0; }
-
-/* ── Header ── */
-.clue-book-header {
-  text-align: center;
-  margin-bottom: 28px;
-  padding-bottom: 20px;
-  border-bottom: 4px solid var(--px-border);
-  position: relative;
-  flex-shrink: 0;
-}
-
-.clue-book-header::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0; right: 0;
-  height: 4px;
-  background: var(--bg-dark);
-}
-
-.pixel-title-text {
+/* ── Page title ── */
+.clue-board-title {
+  position: fixed;
+  top: 25px;
+  left: 52%;
+  transform: translateX(-50%);
   font-family: 'Press Start 2P', monospace;
-  font-size: 28px;
-  color: var(--ink-color);
-  text-shadow: 3px 3px 0 #302f2f, 6px 6px 0 #575757;
+  font-size: 34px;
+  color: #f0e8d0;
+  text-shadow: 3px 3px 0 #000;
+  z-index: 10;
+  pointer-events: none;
   letter-spacing: 6px;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.pixel-title-underline {
-  height: 4px;
-  background: repeating-linear-gradient(
-    90deg,
-    var(--ink-color) 0px, var(--ink-color) 8px,
-    transparent 8px, transparent 12px
-  );
-  margin: 6px auto;
-  max-width: 200px;
+  white-space: nowrap;
 }
 
 .clue-book-subtitle {
-  font-size: 7px;
-  color: var(--px-brown);
-  letter-spacing: 2px;
-  margin-top: 8px;
-}
-
-/* ── Main body: grid + detail side by side ── */
-.clue-book-body {
-  display: grid;
-  /* grid-template-columns: 340px 1fr;
-  gap: 24px; */
-  flex: 1;
-  min-height: 0;;
-  grid-template-columns: 3fr 2fr; /* left grid / right detail */
-  gap: 1.5rem;
-  align-items: flex-start;
-  height: 100%;
-}
-
-/* ── Clue grid — left column, 2 cols × 3 rows ── */
-.clue-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: .33fr .33fr .33fr;
-  gap: 12px;
-  align-content: start;
-}
-
-.clue-empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  font-size: 8px;
-  color: var(--px-gray);
-  padding: 40px 0;
-  letter-spacing: 2px;
-}
-
-/* ── Clue card ── */
-.clue-card {
-  position: relative;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  /* padding: 10px 5px 6px; */
-  text-align: center;
-  box-shadow:
-    -2px 0   0 var(--px-border),
-     2px 0   0 var(--px-border),
-     0  -2px 0 var(--px-border),
-     0   2px 0 var(--px-border),
-     3px 3px 0 var(--px-dark);
-  transition: transform 0.05s steps(2, end), box-shadow 0.05s steps(2, end);
-  animation: cardIn 0.3s steps(4, end) both;
+  position: fixed;
+  top: 80px;
+  left: 52%;
+  transform: translateX(-50%);
   font-family: 'Press Start 2P', monospace;
-  padding: 0px;
-  aspect-ratio: 3/2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-@keyframes cardIn {
-  from { opacity: 0; transform: scale(0.9) translateY(4px); }
-  to   { opacity: 1; transform: scale(1)   translateY(0); }
-}
-
-.clue-card:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    -2px 0   0 var(--px-border),
-     2px 0   0 var(--px-border),
-     0  -2px 0 var(--px-border),
-     0   2px 0 var(--px-border),
-     3px 6px 0 var(--px-dark);
-}
-
-.clue-card:active {
-  transform: translateY(1px);
-  box-shadow:
-    -2px 0   0 var(--px-border),
-     2px 0   0 var(--px-border),
-     0  -2px 0 var(--px-border),
-     0   2px 0 var(--px-border),
-     1px 1px 0 var(--px-dark);
-}
-
-.clue-card.active {
-  background: var(--px-brown);
-  box-shadow:
-    -2px 0   0 var(--ink-color),
-     2px 0   0 var(--ink-color),
-     0  -2px 0 var(--ink-color),
-     0   2px 0 var(--ink-color),
-     3px 3px 0 var(--px-dark);
-}
-
-
-.clue-card.examined::after {
-  content: '✓';
-  position: absolute;
-  top: 4px;
-  left: 6px;
-  font-size: 30px;
-  color: var(--px-green-lit);
-  font-family: 'Press Start 2P', monospace;
-}
-
-.clue-new-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: var(--ink-color);
-  color: var(--px-white);
-  font-size: 6px;
-  padding: 2px 4px;
-  letter-spacing: 1px;
-  box-shadow: 2px 2px 0 #751313;
-  animation: blink 1s steps(2, end) infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-
-.clue-decisive-badge {
-  position: absolute;
-  top: 4px;
-  right: 6px;
-  font-size: 9px;
-  color: var(--px-gold);
-  text-shadow: 1px 1px 0 #7a5a00;
-}
-.clue-card-icon {
-  position: relative;
-  width: 150px;      /* Bigger container */
-  height: 150px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 0px;  /* center it */
-}
-
-.pixel-icon-locker {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);  /* perfect center */
-  width: 700px;     
-  height: 700px;    
-  object-fit: cover;
-  z-index: 2;      /* Behind pixel icon */
-  image-rendering: pixelated;
-  padding: 0px;
-}
-
-.pixel-icon-wrap {
-  position: relative;
-  z-index: 1;      /* In front */
-  width: 30%;      /* Smaller to sit inside locker */
-  height: 30%;
-  margin: 0 auto 8px;
-  image-rendering: pixelated;
-}
-
-.pixel-icon-image {
-  object-fit: cover;
-  image-rendering: pixelated;
-    padding: 0px;
-}
-.pixel-icon-locker {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  image-rendering: pixelated;
-}
-
-.clue-card-name {
   font-size: 10px;
-  color: var(--px-border);
-  line-height: 1.6;
-  letter-spacing: 0.5px;
-  word-break: break-word;
-  margin-bottom: 4px;
+  color: #f0e8d0;
+  text-shadow: 2px 2px 0 #000;
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 3px;
+  white-space: nowrap;
+  opacity: 0.7;
 }
 
-.clue-card-location {
-  font-size: 7px;
-  color: var(--ink-color);
-  line-height: 1.4;
-  letter-spacing: 0.3px;
-  word-break: break-word;
-  opacity: 0.8;
+.clue-prop-wrap:hover img {
+  filter: drop-shadow(0px 0px 6px rgba(255,255,255,0.7)) drop-shadow(0px 0px 16px rgba(255,255,255,0)) drop-shadow(8px 8px 0px rgba(0,0,0,0.5)) !important;
 }
 
-/* ── Detail panel — right column ── */
+/* ── Detail panel ── */
 .clue-detail {
-  position: relative;
+  position: fixed;
+  top: 55%;
+  right: 5%;
+  transform: translateY(-50%);
+  width: 320px;
+  max-height: 80vh;
   background: var(--px-dark);
-  border: none;
   box-shadow:
     -2px 0   0 var(--px-border),
      2px 0   0 var(--px-border),
      0  -2px 0 var(--px-border),
      0   2px 0 var(--px-border),
     inset 0 0 0 2px rgba(255,255,255,0.03);
-  padding: 28px;
-  overflow: hidden;
-  animation: detailIn 0.2s steps(4, end) both;
+  padding: 28px 24px;
+  overflow-y: auto;
+  z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  animation: detailIn 0.2s steps(4, end) both;
+}
+
+.clue-detail-empty {
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.clue-detail-empty-icon {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 48px;
+  color: var(--px-gray);
+  opacity: 0.2;
+  text-align: center;
+}
+
+.clue-detail-empty-text {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
+  color: var(--px-gray);
+  letter-spacing: 2px;
+  opacity: 0.4;
+  text-align: center;
+}
+
+/* ── Inner wrapper — gives close button a relative parent ── */
+.clue-detail-inner {
+  position: relative;
 }
 
 @keyframes detailIn {
-  from { opacity: 0; transform: translateX(8px); }
-  to   { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateY(-50%) translateX(12px); }
+  to   { opacity: 1; transform: translateY(-50%) translateX(0); }
 }
 
 .clue-detail-scanlines {
@@ -369,47 +135,10 @@
   pointer-events: none;
 }
 
-.clue-detail-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  position: relative;
-}
-
-.clue-detail-icon-large {
-  flex-shrink: 0;
-  box-shadow:
-    -2px 0   0 rgba(255,255,255,0.1),
-     2px 0   0 rgba(255,255,255,0.1),
-     0  -2px 0 rgba(255,255,255,0.1),
-     0   2px 0 rgba(255,255,255,0.1);
-}
-
-.clue-detail-name {
-  font-size: 20px;
-  color: var(--bg-paper);
-  letter-spacing: 1px;
-  line-height: 1.6;
-  margin-bottom: 4px;
-}
-
-.clue-detail-location {
-  font-size: 12px;
-  color: var(--px-gray);
-  letter-spacing: 1px;
-  margin-bottom: 6px;
-}
-
-.clue-detail-decisive {
-  font-size: 10px;
-  color: var(--px-gold);
-  letter-spacing: 1px;
-}
-
 .clue-detail-close {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 0px;
+  right: 0px;
   background: var(--ink-color);
   color: var(--px-white);
   border: none;
@@ -423,9 +152,47 @@
   justify-content: center;
   box-shadow: 2px 2px 0 #660000;
   transition: background 0.1s steps(1);
+  z-index: 2;
 }
 
 .clue-detail-close:hover { background: var(--ink-color-light); }
+
+.clue-detail-icon-large {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 4px;
+}
+
+.clue-detail-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 13px;
+  color: var(--bg-paper);
+  letter-spacing: 1px;
+  line-height: 1.6;
+  margin-bottom: 6px;
+  margin-right: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-location {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--px-gray);
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.clue-detail-decisive {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
+  color: var(--px-gold);
+  letter-spacing: 1px;
+  position: relative;
+  z-index: 1;
+}
 
 .clue-detail-divider {
   height: 2px;
@@ -434,27 +201,30 @@
     var(--px-brown) 0px, var(--px-brown) 6px,
     transparent 6px, transparent 10px
   );
-  margin: 18px 0;
+  margin: 14px 0;
+  position: relative;
+  z-index: 1;
 }
 
 .clue-detail-description {
-  font-size: 15px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 9px;
   color: var(--bg-dark);
-  line-height: 2.4;
+  line-height: 2.2;
   letter-spacing: 0.5px;
   position: relative;
   z-index: 1;
-  flex: 1;
 }
 
 .clue-detail-suspects {
-  margin-top: 20px;
+  margin-top: 16px;
   position: relative;
   z-index: 1;
 }
 
 .clue-suspects-label {
-  font-size: 10px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
   color: var(--px-gray);
   letter-spacing: 2px;
   margin-bottom: 10px;
@@ -467,10 +237,11 @@
 }
 
 .clue-suspect-tag {
-  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 7px;
   background: rgba(246, 243, 243, 0.9);
   color: var(--ink-color);
-  padding: 4px 10px;
+  padding: 4px 8px;
   letter-spacing: 1px;
   box-shadow:
     -1px 0   0 var(--ink-color),
@@ -479,41 +250,11 @@
      0   1px 0 var(--ink-color);
 }
 
-.clue-detail-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 20px;
-}
-
-.clue-detail-empty-icon {
-  font-size: 48px;
-  color: var(--px-gray);
-  opacity: 0.2;
-  font-family: 'Press Start 2P', monospace;
-  animation: blink 2s steps(2, end) infinite;
-}
-
-.clue-detail-empty-text {
-  font-size: 7px;
-  color: var(--px-gray);
-  letter-spacing: 2px;
-  opacity: 0.4;
-}
-
-/* ── Nav buttons row ── */
-.clue-book-nav {
-  display: flex;
-  gap: 12px;
-  margin-top: 24px;
-  flex-shrink: 0;
-  padding-top: 20px;
-  border-top: 4px solid var(--px-border);
-}
-
+/* ── Back button ── */
 .back-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   letter-spacing: 2px;
@@ -529,32 +270,11 @@
   padding: 10px 16px;
   cursor: pointer;
   text-transform: uppercase;
+  z-index: 20;
   transition: background 0.1s steps(1);
 }
 
 .back-btn:hover {
   background: var(--px-border);
   color: var(--bg-paper);
-}
-
-.clue-unlocked-badge {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  background: #2d4a29;
-  color: #7aac6e;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  padding: 2px 6px;
-  border: 1px solid #4a7a43;
-}
-
-.clue-card.unlocked {
-  border-color: #4a7a43;
-  box-shadow: 0 0 0 1px #4a7a4340;
-}
-
-html, body, #root {
-  height: 100%;
-  margin: 0;
 }

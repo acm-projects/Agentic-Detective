@@ -4,6 +4,7 @@ import type {
     NotificationPayload,
     Clue,
     WordleData,
+    ImageUnshuffleData,
     NotificationType,
     MinigameData,
     MinigameType,
@@ -27,21 +28,28 @@ function pickRandom<T>(arr: T[]) {
 };
 
 const NOTIFICATION_TYPES: NotificationType[] = ["mail"];
-const MINIGAME_TYPES: MinigameType[] = ["wordle"];
+const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle"];
 
-const HEADLINES: Record<NotificationType, string[]> = {                 // Add more for different notification types
-    mail: ['A sealed envelope was found beneath the victim\'s pillow.',
-    'The postmaster delivered a letter addressed to the deceased.',
-    'A crumpled note surfaced in the wastepaper basket.',
-  ]}
+const HEADLINES: Record<NotificationType, string[]> = {
+    mail: [
+        'A sealed envelope was found beneath the victim\'s pillow.',
+        'The postmaster delivered a letter addressed to the deceased.',
+        'A crumpled note surfaced in the wastepaper basket.',
+    ]
+}
 
 const FLAVOR_TEXTS: Record<NotificationType, string[]> = {
-    mail: ['The envelope is sealed with wax — whoever wrote this wanted it kept private.', 
+    mail: [
+        'The envelope is sealed with wax — whoever wrote this wanted it kept private.',
         'To read it, you\'ll need to work through the lock.',
         'The letter appears to be written in code. Whoever sent this didn\'t want it read by the wrong eyes.',
-    ]}
+    ]
+}
 
-// Minigame Data Generators - Wordle
+// ─────────────────────────────────────────────
+//  Wordle Data Generator
+// ─────────────────────────────────────────────
+
 const WORDLE_DETECTIVE_WORDS = [
     { answer: 'KNIFE', hint: 'The murder weapon may be closer than you think.' },
     { answer: 'ALIBI', hint: 'Someone\'s story doesn\'t quite add up.' },
@@ -70,7 +78,7 @@ const WORDLE_DETECTIVE_WORDS = [
     { answer: 'DRINK', hint: 'What the victim consumed might hold a clue.' },
 ];
 
-function generateWordleData(): WordleData {             // note to self: the colon is so that the compiler knows what data type this function returns
+function generateWordleData(): WordleData {
     const entry = pickRandom(WORDLE_DETECTIVE_WORDS);
     return {
         kind: 'wordle',
@@ -80,10 +88,48 @@ function generateWordleData(): WordleData {             // note to self: the col
     };
 };
 
+// ─────────────────────────────────────────────
+//  Image Unshuffle Data Generator
+// ─────────────────────────────────────────────
+
+/**
+ * Each entry describes what the reconstructed image reveals.
+ * `solution` is always [0..8] — the canonical solved order.
+ * On game init, the UI shuffles the tiles; the player restores them
+ * by clicking to rotate each cell back to 0°.
+ */
+const IMAGE_UNSHUFFLE_CLUES = [
+    { hint: 'The photograph reveals a face you weren\'t meant to recognise.' },
+    { hint: 'A torn image from the victim\'s coat pocket — piece it together.' },
+    { hint: 'Security footage, corrupted and scrambled. Restore it.' },
+    { hint: 'A portrait found behind the bookcase. Something is off about it.' },
+    { hint: 'The picture was cut apart to hide what it showed.' },
+    { hint: 'A map fragment. The location marked may be the key.' },
+    { hint: 'A photo slipped under the door the morning of the murder.' },
+    { hint: 'The image was deliberately scrambled. Someone didn\'t want it seen.' },
+];
+
+function generateImageUnshuffleData(): ImageUnshuffleData {
+    const entry = pickRandom(IMAGE_UNSHUFFLE_CLUES);
+    return {
+        kind: 'image-unshuffle',
+        imagePath: 'assets/meme.png',
+        // solution is always the identity order; the UI owns the scrambled state
+        solution: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        hint: entry.hint,
+    };
+};
+
+// ─────────────────────────────────────────────
+//  Minigame Dispatcher
+// ─────────────────────────────────────────────
+
 function generateMinigameData(type: MinigameType): MinigameData {
     switch (type) {
         case 'wordle':
             return generateWordleData();
+        case 'image-unshuffle':
+            return generateImageUnshuffleData();
         default:
             throw new Error(`Unknown minigame type: ${type}`);
     };
@@ -124,8 +170,12 @@ function saveClueProgress(get: any) {
     });
 }}
 
-// Notification Store
-// Note for self: Any component in the app can read/write from the "store", it is an object that lives outside React
+
+
+// ─────────────────────────────────────────────
+//  Notification Store
+// ─────────────────────────────────────────────
+
 interface NotificationState {
     notifications: NotificationPayload[];
     clues: Clue[];
@@ -133,9 +183,8 @@ interface NotificationState {
     nextFireAt: number | null;
     timerPaused: boolean;
 
-    // Actions (function prototypes)
-    initClues: (clues: Clue[]) => void; // called once after Gemini returns the story; stamps the clues array into the store
-    tick: (elapsed: number, totalGameDuration: number) => void; // for detailed explanation, see definition below
+    initClues: (clues: Clue[]) => void;
+    tick: (elapsed: number, totalGameDuration: number) => void;
     openNotification: (id: string) => void;
     dismissNotification: (id: string) => void;
     abandonMinigame: (id: string) => void;
@@ -145,128 +194,104 @@ interface NotificationState {
 };
 
 function clearClueNotification(clues: Clue[], clueId: string) {
-  const clue = clues.find(c => c.id === clueId);
-  if (clue) {
-    clue.notificationId = undefined;
-  }
+    const clue = clues.find(c => c.id === clueId);
+    if (clue) clue.notificationId = undefined;
 }
 
 export const useNotificationStore = create<NotificationState>()(
-  immer((set, get) => ({
-    notifications: [],
-    clues: [],
-    lastFiredAt: null,
-    nextFireAt: null,
-    timerPaused: false,
- 
-    initClues(clues) {
-        console.log('[notif] initClues called with', clues.length, 'clues');
-      set(s => {
-        // Clone incoming clues so notification state mutations don't leak into other stores.
-        s.clues = clues.map(clue => ({
-          ...clue,
-          discovered: Boolean(clue.discovered),
-          clueLost: Boolean(clue.clueLost),
-          notificationId: undefined,
-        }));
-      })
-    },
-    
-    /*
-    The tick() function is called every second.
-    - It checks if the game timer is paused, and bails out early if so
-    - Checks if enough time has passed since the last notification, and if both pass, picks a random unused clue, 
-      wraps it in a NotificationPayload, and pushes it onto the notifications array. 
-    - The moment that push happens, any component subscribed to selectActiveToast will re-render automatically.
-    */
-    tick(elapsed, totalGameDuration) {
-      const state = get()
-      if (state.timerPaused) return
- 
-      const remaining = totalGameDuration - elapsed
-      if (remaining < SCHEDULE_CONFIG.minGameTimeRemaining) return
- 
-      const now = Date.now()
- 
-      // Initialise the first fire time
-      if (state.nextFireAt === null) {
-        const delay = randBetween(...SCHEDULE_CONFIG.firstNotificationWindow)
-        set(s => { s.nextFireAt = now + delay })
-        return
-      }
- 
-      if (now < state.nextFireAt) return
- 
-      // Find an undiscovered clue with no pending notification
-      const pendingClueIds = new Set(
-        state.notifications
-          .filter(n => !n.dismissed)
-          .map(n => n.clueId)
-      )
-      const available = state.clues.filter(
-        c => !c.discovered && !c.clueLost && !pendingClueIds.has(c.id) && !c.notificationId
-      )
-      if (available.length === 0) return
- 
-      const clue = pickRandom(available)
-      const type = pickRandom(NOTIFICATION_TYPES)
-      const minigameType = pickRandom(MINIGAME_TYPES)
- 
-      const notification: NotificationPayload = {
-        id: crypto.randomUUID(),
-        type,
-        headline: pickRandom(HEADLINES[type]),
-        flavorText: pickRandom(FLAVOR_TEXTS[type]),
-        clueId: clue.id,
-        minigameType,
-        minigameData: generateMinigameData(minigameType),
-        createdAt: now,
-        expiresAt: now + SCHEDULE_CONFIG.toastLifetime,
-        opened: false,
-        dismissed: false,
-      }
- 
-      set(s => {
-        const clueIdx = s.clues.findIndex((c: { id: string; }) => c.id === clue.id)
-        if (clueIdx >= 0) s.clues[clueIdx].notificationId = notification.id
-        s.notifications.push(notification)
-        s.lastFiredAt = now
-        s.nextFireAt = now + SCHEDULE_CONFIG.cooldown + randBetween(0, 30_000)
-      })
-    },
+    immer((set, get) => ({
+        notifications: [],
+        clues: [],
+        lastFiredAt: null,
+        nextFireAt: null,
+        timerPaused: false,
 
-    /*
-    openNotification() runs when the player clicks on the toast.
-    - Finds the corresponding notification in the array using its id.
-    - Sets opened to true
-    - Sets timerPaused to true
-    */
-    openNotification(id) {
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === id)
-        if (n) {
-          n.opened = true
-          s.timerPaused = true
-        }
-      })
-    },
-    
-    /*
-    dismissNotification() runs when the player closes the toast.
-    - Sets dismissed to true
-    - Unpauses the timer
-    - Toast and modal both disappear
-    */
-    dismissNotification(id) {
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === id)
-        if (n) {
-          n.dismissed = true 
-          clearClueNotification(s.clues, n.clueId)
-        }
-        s.timerPaused = false
-      })
-    },
+        initClues(clues) {
+            console.log('[notif] initClues called with', clues.length, 'clues');
+            set(s => {
+                s.clues = clues.map(clue => ({
+                    ...clue,
+                    discovered: Boolean(clue.discovered),
+                    clueLost: Boolean(clue.clueLost),
+                    notificationId: undefined,
+                }));
+            });
+        },
+
+        tick(elapsed, totalGameDuration) {
+            const state = get();
+            if (state.timerPaused) return;
+
+            const remaining = totalGameDuration - elapsed;
+            if (remaining < SCHEDULE_CONFIG.minGameTimeRemaining) return;
+
+            const now = Date.now();
+
+            if (state.nextFireAt === null) {
+                const delay = randBetween(...SCHEDULE_CONFIG.firstNotificationWindow);
+                set(s => { s.nextFireAt = now + delay; });
+                return;
+            }
+
+            if (now < state.nextFireAt) return;
+
+            const pendingClueIds = new Set(
+                state.notifications
+                    .filter(n => !n.dismissed)
+                    .map(n => n.clueId)
+            );
+            const available = state.clues.filter(
+                c => !c.discovered && !c.clueLost && !pendingClueIds.has(c.id) && !c.notificationId
+            );
+            if (available.length === 0) return;
+
+            const clue = pickRandom(available);
+            const type = pickRandom(NOTIFICATION_TYPES);
+            const minigameType = pickRandom(MINIGAME_TYPES);
+
+            const notification: NotificationPayload = {
+                id: crypto.randomUUID(),
+                type,
+                headline: pickRandom(HEADLINES[type]),
+                flavorText: pickRandom(FLAVOR_TEXTS[type]),
+                clueId: clue.id,
+                minigameType,
+                minigameData: generateMinigameData(minigameType),
+                createdAt: now,
+                expiresAt: now + SCHEDULE_CONFIG.toastLifetime,
+                opened: false,
+                dismissed: false,
+            };
+
+            set(s => {
+                const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
+                if (idx >= 0) s.clues[idx].notificationId = notification.id;
+                s.notifications.push(notification);
+                s.lastFiredAt = now;
+                s.nextFireAt = now + SCHEDULE_CONFIG.cooldown + randBetween(0, 30_000);
+            });
+        },
+
+        openNotification(id) {
+            set(s => {
+                const n = s.notifications.find((n: { id: string }) => n.id === id);
+                if (n) {
+                    n.opened = true;
+                    s.timerPaused = true;
+                }
+            });
+        },
+
+        dismissNotification(id) {
+            set(s => {
+                const n = s.notifications.find((n: { id: string }) => n.id === id);
+                if (n) {
+                    n.dismissed = true;
+                    clearClueNotification(s.clues, n.clueId);
+                }
+                s.timerPaused = false;
+            });
+        },
 
     abandonMinigame(notificationId) {
       set(s => {
@@ -320,45 +345,37 @@ export const useNotificationStore = create<NotificationState>()(
         saveClueProgress(get);
       })
 
-      if (discoveredClueId) {
-        void import("../useGameStore").then(({ useGameStore }) => {
-          useGameStore.getState().markClueDiscovered(discoveredClueId as string);
-        });
-      }
-    },
-    
-    /*
-    Sets timer to be paused
-    */
-    setTimerPaused(paused) {
-      set(s => { s.timerPaused = paused });
-    },
- 
-    /*
-    - loops through notifications and auto-dismisses any that have passed their expiresAt timestamp without being opened. 
-    - makes the toast disappear after 30 seconds if the player ignores it.
-    */
-    purgeExpired() {
-      const now = Date.now()
-      set(s => {
-        s.notifications.forEach((n: { opened: any; dismissed: boolean; expiresAt: number; clueId: string; }) => {
-          if (!n.opened && !n.dismissed && now > n.expiresAt) {
-            n.dismissed = true
-            clearClueNotification(s.clues, n.clueId)
-          }
-        })
-      })
-    },
-  }))
-)
+            if (discoveredClueId) {
+                void import('../useGameStore').then(({ useGameStore }) => {
+                    useGameStore.getState().markClueDiscovered(discoveredClueId as string);
+                });
+            }
+        },
 
+        setTimerPaused(paused) {
+            set(s => { s.timerPaused = paused; });
+        },
 
-// Selectors, used by components to utilize the current state to perform an action
+        purgeExpired() {
+            const now = Date.now();
+            set(s => {
+                s.notifications.forEach((n: { opened: any; dismissed: boolean; expiresAt: number; clueId: string }) => {
+                    if (!n.opened && !n.dismissed && now > n.expiresAt) {
+                        n.dismissed = true;
+                        clearClueNotification(s.clues, n.clueId);
+                    }
+                });
+            });
+        },
+    }))
+);
+
+// Selectors
 export const selectActiveToast = (s: NotificationState) =>
-  s.notifications.find(n => !n.opened && !n.dismissed) ?? null;
+    s.notifications.find(n => !n.opened && !n.dismissed) ?? null;
 
 export const selectOpenMinigame = (s: NotificationState) =>
-  s.notifications.find(n => n.opened && !n.dismissed) ?? null;
- 
+    s.notifications.find(n => n.opened && !n.dismissed) ?? null;
+
 export const selectDiscoveredClues = (s: NotificationState) =>
-  s.clues.filter(c => c.discovered);
+    s.clues.filter(c => c.discovered);
