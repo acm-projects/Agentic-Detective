@@ -18,7 +18,7 @@ function NewGame() {
     const [difficulty, setDifficulty] = useState(5);
     const [isMuted, setIsMuted] = useState(false);
 
-    const { userId, isSignedIn } = useAuth();
+    const { userId, isSignedIn, isLoaded } = useAuth();
 
 
     // Setup background music on mount
@@ -45,6 +45,15 @@ function NewGame() {
             audio.currentTime = 0;
         };
     }, []);
+
+    useEffect(() => {
+      console.log("User Sign in status: " + isSignedIn)
+    }, [isLoaded]);
+    // Removing previous Session ID data after signout
+    useEffect(() => {
+      localStorage.removeItem("lastSessionId");
+      localStorage.removeItem("lastCaseId");
+    }, [!isSignedIn]);
 
     // Handle mute/unmute
     const toggleMute = () => {
@@ -78,6 +87,7 @@ function NewGame() {
           <SignUpButton mode="modal">
             <button className="detective-button">Sign Up</button>
           </SignUpButton>
+          
         </Show>
         <Show when="signed-in">
           Hello, 
@@ -162,7 +172,13 @@ function NewGame() {
             intensity: intensity,
             userId: userId ?? undefined, // cross check whether this should be undefined or ""
             isSignedIn: isSignedIn ? true : false,
-          }) 
+          })
+          if (!isSignedIn) {
+            localStorage.removeItem("lastSessionId");
+            localStorage.removeItem("lastCaseId");
+            alert("Please enter a case theme before starting.");
+            return;
+          }
           startCase(navigate); // check for userId here
           navigate('/desk');
         }} >

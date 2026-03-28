@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useContext } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Clue } from "./caseFile";
 import "./ClueBook.css";
 import { useNavigate } from 'react-router-dom';
@@ -60,12 +60,15 @@ export default function ClueBook() {
 
   return (
     <div className="main-container" style={{
-      width: '100vw',
-      height: '100vh',
-      position: 'relative',
+      width: '100%',
+      height: '100dvh',
+      minHeight: '100vh',
+      position: 'fixed',
+      inset: 0,
       backgroundImage: `url(${deskBgImg})`,
-      backgroundSize: 'cover',
+      backgroundSize: '112% 112%',
       backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
       overflow: 'hidden',
     }}>
 

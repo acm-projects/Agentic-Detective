@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress, type ChatMessage } from './useGameStore';
+import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from './useGameStore';
 import { StressBar } from './StressBar';
 import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
@@ -200,6 +200,8 @@ function Interrogate() {
   const handleConfirmSignOut = async () => {
     (document.getElementById('signout-warning') as HTMLDialogElement)?.close();
     await signOut();
+    localStorage.removeItem("lastSessionId");
+    localStorage.removeItem("lastCaseId");
   };
 
   useEffect(() => {
@@ -297,13 +299,11 @@ function Interrogate() {
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
         <div className='case-title' />
-
+        <div className='header-row'> {/* check this later. */}
             {/* Interrogation: suspectname title; check if it works if there is no active profile */}
             <div className='currently-interrogating-container'>
                 <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
-            </div>
           </div>
-          
           <div className='user-icon'>
             <Show when="signed-out">
               <div className="auth-actions">
@@ -317,7 +317,6 @@ function Interrogate() {
             </Show>
             <Show when="signed-in">
               <div className="auth-actions auth-actions-signed-in">
-                <span className="signed-in-greeting">Hello,</span>
                 <UserButton userProfileMode="modal" showName appearance={{
                   options: {
                     shimmer: false,

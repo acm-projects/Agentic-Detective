@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'nes.css/css/nes.min.css'
-import App from './App.tsx'
+import App from './App'
 import { BrowserRouter } from 'react-router'
 import { ClerkProvider } from '@clerk/react-router'
 import { neobrutalism } from '@clerk/ui/themes'
