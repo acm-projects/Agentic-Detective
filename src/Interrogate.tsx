@@ -7,6 +7,7 @@ import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
+import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
 import './Interrogate.css';
 
 // ✅ IMPORT YOUR GIF
@@ -58,10 +59,11 @@ function useDraggableModal(initialPos: { x: number; y: number }) {
 
 function Interrogate() {
   const navigate = useNavigate();
-  const {
-    player,
-    activeSuspectName,
-    isResponding,
+  const { signOut } = useClerk();
+  const { 
+    player, 
+    activeSuspectName, 
+    isResponding, 
     elapsed,
     startInterrogation,
     proceedToInvestigation,
@@ -91,10 +93,18 @@ function Interrogate() {
   const timerPaused = useNotificationStore(s => s.timerPaused);
 
   useEffect(() => {
-    if (!activeSuspectName && profiles.length > 0) {
+    console.log("got into useEffect1")
+    console.log(activeSuspectName, " ", profiles)
+    if (profiles.length === 0) return;
+
+    const hasValidActiveSuspect =
+      !!activeSuspectName && profiles.some(p => p.name === activeSuspectName);
+
+    if (!hasValidActiveSuspect) {
       startInterrogation(profiles[0].name);
+      console.log("1st useEffect inside if")
     }
-  }, []);
+  }, [activeSuspectName, profiles, startInterrogation]);
 
   useEffect(() => {
     if (timerPaused) return;
@@ -105,6 +115,7 @@ function Interrogate() {
   useNotificationScheduler(elapsed, 600_000, !!player);
 
   useEffect(() => {
+    console.log("got into useEffect2")
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
@@ -186,7 +197,37 @@ function Interrogate() {
     await sendMessage(llmText, typedText, cluesForDisplay);
   }
 
-  if (!player) {
+  const handleConfirmSignOut = async () => {
+    (document.getElementById('signout-warning') as HTMLDialogElement)?.close();
+    await signOut();
+    localStorage.removeItem("lastSessionId");
+    localStorage.removeItem("lastCaseId");
+  };
+
+  useEffect(() => {
+    const handlePotentialSignOutClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (!target) return;
+
+      // Intercept Clerk's built-in sign-out actions in both popover and profile modal.
+      const signOutTrigger = target.closest('button, a') as HTMLElement | null;
+      if (!signOutTrigger) return;
+
+      const label = signOutTrigger.textContent?.trim().toLowerCase() ?? '';
+      if (!label.includes('sign out')) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      (document.getElementById('signout-warning') as HTMLDialogElement)?.showModal();
+    };
+
+    document.addEventListener('click', handlePotentialSignOutClick, true);
+    return () => document.removeEventListener('click', handlePotentialSignOutClick, true);
+  }, []);
+
+  // If no case has been generated yet, redirect home
+  if (!player) {    
+    console.log("No case generated yet")
     return (
       <div className="interrogate-container">
         No active case. <Link to="/">Go Home</Link>
@@ -198,6 +239,7 @@ function Interrogate() {
     <div className='game-container'>
       {/* ── Nav bar ── */}
       <div className='navigate'>
+        
         <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
         <button onClick={() => navigate("/clues")}><span> ← </span>Clues</button>
 
@@ -257,9 +299,43 @@ function Interrogate() {
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container">
         <div className='case-title' />
-
-        <div className='currently-interrogating-container'>
-          <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+        <div className='header-row'> {/* check this later. */}
+            {/* Interrogation: suspectname title; check if it works if there is no active profile */}
+            <div className='currently-interrogating-container'>
+                <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+          </div>
+          <div className='user-icon'>
+            <Show when="signed-out">
+              <div className="auth-actions">
+                <SignInButton mode="modal">
+                  <button className="user-button">Sign In</button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="user-button">Sign Up</button>
+                </SignUpButton>
+              </div>
+            </Show>
+            <Show when="signed-in">
+              <div className="auth-actions auth-actions-signed-in">
+                <UserButton userProfileMode="modal" showName appearance={{
+                  options: {
+                    shimmer: false,
+                  }
+                }}/>
+              </div>
+            </Show>
+          </div>
+          <dialog className="nes-dialog" id="signout-warning">
+            <form method="dialog">
+              <h3>Leave Account?</h3>
+              <p>You are about to sign out from this device. Do you want to stay signed in or leave?</p>
+              <p>You will lose all progress if you choose to sign out.</p>
+              <menu className="dialog-menu">
+                <button type="submit">Stay</button>
+                <button type="button" onClick={handleConfirmSignOut}>Leave</button>
+              </menu>
+            </form>
+          </dialog>
         </div>
 
         <div className='windows-container'>

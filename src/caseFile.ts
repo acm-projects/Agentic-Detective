@@ -9,7 +9,6 @@ const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
 
 
-
 // ─────────────────────────────────────────────
 //  AVATAR POOL
 //  The LLM reads these descriptions and picks the best match per suspect.
@@ -145,6 +144,18 @@ export interface CaseFilePlayer {
   characterProfiles: CharacterProfile[];
   caseReport: CaseReport;
   clues: Clue[];
+}
+
+export interface RestoredSuspectSession {
+  suspectName: string;
+  chatSession: null;
+  history: Array<{
+    role: "player" | "suspect";
+    text: string;
+    timestamp: number;
+  }>;
+  conversationCount: number;
+  stressLevel: number;
 }
 
 // ─────────────────────────────────────────────
@@ -349,8 +360,11 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
 export async function generateCaseFile(seed: PlayerSeed): Promise<{
   backend: CaseFileBackend;
   player: CaseFilePlayer;
-}> 
-{
+  }> 
+  {
+
+  // EXECUTE ALL OF THIS CODE ONLY IF A SESSION ID IS NOT ALREADY STORED IN GAME STATE
+  // INSTEAD OF DOING THE ABOVE, JUST DEFINE A SEPARATE FUNCTION TO HANDLE THE CASE IF A SESH ID ALREADY EXISTS, KEEP THE CHECKING IN THE USEGAMESTORE FILE
   const model = genAI.getGenerativeModel({
     model: "gemini-2.5-flash-lite",
     generationConfig: {
@@ -361,46 +375,73 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   const result = await model.generateContent(buildPrompt(seed));
 
 
-const rawText = result.response.text()
-  // Strip any accidental markdown fences
-  .replace(/^```json\s*/i, '')
-  .replace(/^```\s*/i, '')
-  .replace(/```\s*$/i, '')
-  .trim();
-  console.log(rawText);
+  const rawText = result.response.text()
+    // Strip any accidental markdown fences
+    .replace(/^```json\s*/i, '')
+    .replace(/^```\s*/i, '')
+    .replace(/```\s*$/i, '')
+    .trim();
+    console.log(rawText);
 
-// Sanitize bad control characters inside JSON string values
-const sanitized = rawText.replace(
-  /"(?:[^"\\]|\\.)*"/g,
-  (match) => match
-    .replace(/\n/g, '\\n')
-    .replace(/\r/g, '\\r')
-    .replace(/\t/g, '\\t')
-    .split('')
-    .filter(c => {
-      const code = c.charCodeAt(0);
-      return code >= 32 || code === 10 || code === 13 || code === 9;
-    })
-    .join('')
-);
+  // Sanitize bad control characters inside JSON string values
+  const sanitized = rawText.replace(
+    /"(?:[^"\\]|\\.)*"/g,
+    (match) => match
+      .replace(/\n/g, '\\n')
+      .replace(/\r/g, '\\r')
+      .replace(/\t/g, '\\t')
+      .split('')
+      .filter(c => {
+        const code = c.charCodeAt(0);
+        return code >= 32 || code === 10 || code === 13 || code === 9;
+      })
+      .join('')
+  );
 
-const raw: CaseFileRaw = JSON.parse(sanitized);
+  const raw: CaseFileRaw = JSON.parse(sanitized);
+  const sessionId = raw.caseReport.caseId;
+  localStorage.setItem("lastSessionId", sessionId);
 
+  // Save to MongoDB iff user is signed in
+  if (seed.isSignedIn && seed.userId != "") {
+    try {
+      await fetch("http://localhost:3000/cases/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        
+        // Initial data fed into mongoDB
+        body: JSON.stringify({
+          sessionId: sessionId,
+          userId: seed.userId ?? "",
 
-try {
-  await fetch("http://localhost:3000/save-case", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      caseId:            raw.caseReport.caseId,
-      caseTitle:         raw.caseReport.caseTitle,
-      suspects:          raw.suspects,
-      characterProfiles: raw.characterProfiles,
-    }),
-  });
-} catch (err) {
-  console.warn("[save-case] Could not reach Express server — skipping save:", err);
-}
+          seed: {
+            freeText: seed.freeText,
+            difficulty: seed.difficulty,
+            duration: seed.duration,
+            intensity: seed.intensity,
+          },
+
+          game: {
+            phase: "briefing",
+            elapsedSeconds: 0,
+            activeSuspectName: null,
+            totalConversationCount: 0,
+          },
+
+          caseData: {
+            storyline: raw.storyline,
+            suspects: raw.suspects,
+            characterProfiles: raw.characterProfiles,
+            caseReport: raw.caseReport,
+            initialClues: raw.clues,
+          }          
+        }),
+      });
+      console.log("[MongoDB] Case saved");
+    } catch (err) {
+      console.warn("[MongoDB] Could not save case:", err);
+    }
+  };
 
   const backend: CaseFileBackend = {
     storyline: raw.storyline,
@@ -415,6 +456,63 @@ try {
   };
 
   return { backend, player };
+}
+
+
+export async function feedCaseFile(game: any): Promise<{
+  backend: CaseFileBackend;
+  player: CaseFilePlayer;
+  restoredSessions: Record<string, RestoredSuspectSession>;
+}> {
+  // Merge initialClues metadata with discovered/clueLost from clueState
+  const mergedClues = game.caseData.initialClues.map((clue: any) => {
+    const state = game.clueState[clue.id]; // look up by clue id in clueState
+    return {
+      id: clue.id,
+      name: clue.name,
+      description: clue.description,
+      location: clue.location,
+      couldImplicateSuspects: clue.couldImplicateSuspects,
+      severity: clue.severity,
+      isDecisive: clue.isDecisive,
+      // these two come from clueState, not initialClues
+      discovered: state?.discovered ?? false,
+      clueLost: state?.clueLost ?? false,
+    };
+  });
+
+  // Rebuild message history, stress, and counts for all suspects.
+  const restoredSessions: Record<string, RestoredSuspectSession> = {};
+  const suspectSessions = game?.interrogation?.suspectSessions ?? [];
+
+  for (const s of suspectSessions) {
+    const messages = Array.isArray(s.messages) ? s.messages : [];
+    restoredSessions[s.suspectName] = {
+      suspectName: s.suspectName,
+      chatSession: null,
+      history: messages.map((m: any) => ({
+        role: m.role === "suspect" ? "suspect" : "player",
+        text: String(m.text ?? ""),
+        timestamp: Number(m.timestamp ?? Date.now()),
+      })),
+      conversationCount: Number(s.conversationCount ?? 0),
+      stressLevel: Number(s.currentStress ?? 0),
+    };
+  }
+
+  const backend: CaseFileBackend = {
+    storyline: game.caseData.storyline,
+    suspects: game.caseData.suspects,
+    clues: mergedClues,
+  };
+
+  const player: CaseFilePlayer = {
+    characterProfiles: game.caseData.characterProfiles,
+    caseReport: game.caseData.caseReport,
+    clues: mergedClues,
+  };
+
+  return { backend, player, restoredSessions };
 }
 
 // ─────────────────────────────────────────────

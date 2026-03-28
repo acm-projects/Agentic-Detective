@@ -6,10 +6,18 @@ import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
 import Suspects from './Suspects.tsx';
 import './App.css';
+import { useGameStore } from './useGameStore';
 import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
 import NotesPage from './NotesPage.tsx';
 import Accuse from './Accuse.tsx';
+import CaseResolvedErrorScreen from './components/CaseResolvedErrorScreen/CaseResolvedErrorScreen.tsx';
+import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
+import SavedGamesList from './components/savegamelist/SavedGamesList.tsx';
+
+
+
+
 
 export const AudioContext = createContext<{
   isMuted: boolean;
@@ -69,14 +77,18 @@ function AppInner() {
       <audio ref={audioRef} src={mainMp3} loop />
       <Routes>
         <Route path="/" element={<NewGame />} />
-        <Route path="/desk" element={<Message />} />
+        <Route path="/sign-in/*" element={<SignIn />} />
+      <Route path="/sign-up/*" element={<SignUp />} />
+      <Route path="/user-profile/*" element={<UserProfile />} />
+      <Route path="/desk" element={<Message />} />
         <Route path="/report" element={<CaseReportScreen />} />
         <Route path="/investigate" element={<NotesPage />} />
         <Route path="/clues" element={<ClueBook />} />
         <Route path="/interrogate" element={<Interrogate />} />
         <Route path="/suspects" element={<Suspects />} />
         <Route path="/accuse" element={<Accuse />} />
-      </Routes>
+        <Route path="/case-already-resolved-error" element={<CaseResolvedErrorScreen />} />
+    </Routes>
     </AudioContext.Provider>
   );
 }

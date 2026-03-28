@@ -41,6 +41,72 @@ a {
   text-decoration: none;
 }
 
+.auth-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.7rem;
+  background: var(--ink-color);
+  border: 0.5px solid var(--white);
+  box-shadow: 4px 4px 0 var(--ink-color);
+}
+
+.auth-actions-signed-in {
+  gap: 0.45rem;
+  align-items: center;
+}
+.auth-actions-signed-in:hover,
+.auth-actions-signed-in:active {
+  background-color: #1e0e04;
+}
+
+.auth-actions-signed-in,
+.auth-actions-signed-in * {
+  color: var(--white) !important;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.58rem;
+  text-transform: uppercase;
+}
+
+.signed-in-greeting {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.58rem;
+  color: var(--white);
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  margin: 0;
+}
+
+.auth-actions-signed-in .cl-userButtonBox,
+.auth-actions-signed-in .cl-userButtonTrigger,
+.auth-actions-signed-in .cl-userButtonOuterIdentifier {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.user-button {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.58rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--white);
+  background: var(--ink-color);
+  color: var(--white);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.user-button:hover {
+  background: var(--white);
+  color: var(--ink-color);
+}
+
+.user-button:active {
+  transform: translate(2px, 2px);
+}
+
 .game-container {
   display: flex;
   flex-direction: row;
@@ -174,7 +240,7 @@ a {
     url("./assets/light.png"),
     url("./assets/updatedsecurity.png"),
     url("./assets/updatednewspaper.png"),
-    url("./assets/2themednotebook.png"),
+    url("./assets/CASEDETAILS.png"),
     url("./assets/brickapproved.png");
   background-size: 250px auto, 270px auto, 80px auto, 150px auto, 230px auto, cover;
   background-position: left 95px top 150px, top -40px center, top 0px right 20px, top 30% right 100px, left 30px bottom 15px, center;
@@ -200,6 +266,23 @@ a {
   color: var(--ink-color);
 }
 
+.header-row {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 120px;
+  width: 100%;
+}
+
+.user-icon {
+  position: absolute;
+  top: 2.1em;
+  left: clamp(0.75rem, 1.8vw, 1.25rem);
+  right: auto;
+  z-index: 12;
+}
+
 /* ── Content Windows ── */
 
 
@@ -221,6 +304,9 @@ a {
   flex: 1;
   min-width: 0;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .character-container {
@@ -228,13 +314,14 @@ a {
   flex-direction: row;
   gap: 1rem;
   flex: 0 0 auto;
-  max-height: 300px;
-  margin-top: auto;
+  max-height: 200px;
+  margin-top: 18vh;
+  margin-left: clamp(5rem, 8vw, 16rem);
   width: 80%;
   position: relative;
   right: -26.5rem;
   align-items: flex-start;
-  bottom: -1.8rem;
+  bottom: -1.2rem;
 }
 
 .case-details {
@@ -249,10 +336,10 @@ a {
 }
 
 .character-avatar img {
-  height: 250px;   /* make it bigger */
+  height: clamp(220px, 28vh, 285px);
   width: auto;
   object-fit: contain;
-  image-rendering: pixelated; /* keeps pixel style clean */
+  image-rendering: pixelated;
 }
 
 .character-avatar p {
@@ -297,16 +384,19 @@ a {
 /* ── Chatbot Area ── */
 .chatbot {
   flex: 0 0 auto;
-  height: 180px;
+  height: clamp(250px, 34vh, 420px);
   display: flex;
   flex-direction: column;
-  min-height: -10px;
+  min-height: 250px;
   margin-top: auto;
+  margin-left: 18vw;
+  margin-right: auto;
   position: relative;
   z-index: 2;
-  top: 2rem;
-  left: 16rem;
-  width: 75%;
+  top: 1.2rem;
+  left: 0;
+  transform: translateX(clamp(18px, 2.2vw, 34px));
+  width: clamp(460px, 74%, 980px);
 }
 
 .message-form {
@@ -322,7 +412,16 @@ a {
   box-shadow: 4px 4px 0 var(--ink-color);
   padding: 1rem;
   overflow-y: auto;
-  margin-bottom: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.chat-message {
+  display: flex;
+  margin-bottom: 0.85rem;
+}
+
+.chat-message:last-child {
+  margin-bottom: 0;
 }
 
 .bot-message, .player-message {
@@ -333,7 +432,8 @@ a {
 }
 
 .bot-message {
-  align-self: flex-start;
+  margin: 0;
+  margin-right: auto;
   text-align: left;
   background: var(--bg-dark);
   color: var(--ink-color);
@@ -342,14 +442,23 @@ a {
 }
 
 .player-message {
-  align-self: flex-end;
+  margin: 0;
+  margin-left: auto;
   text-align: left;
-  margin-left: 20vh;
   background: var(--ink-color);
   color: var(--white);
   padding: 0.8em 1em;
   border-radius: 8px;
   line-height: 1.4;
+}
+
+.player-message,
+.player-message * {
+  color: var(--white);
+}
+
+.player-message .you-text {
+  color: var(--white);
 }
 
 /* ── Clue chips in chat history ── */
@@ -372,8 +481,9 @@ a {
 
 /* ── Question / submit box ── */
 .question-submit-box {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: stretch;
   gap: 0;
   border: 4px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
@@ -391,6 +501,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+  grid-column: 1 / -1;
   padding: 6px 10px 0;
 }
 
@@ -429,22 +540,23 @@ a {
   letter-spacing: 0.1em;
   text-align: center;
   padding: 4px;
+  grid-column: 1 / -1;
   border-top: 1px dashed #9b2020;
 }
 
 .question-box {
-  flex: 1;
-  height: 50px;
+  min-height: clamp(54px, 8vh, 68px);
 }
 
 .question-box input {
   width: 100%;
   height: 100%;
-  padding: 0 1em;
+  padding: 0 1.05em;
   border: none;
   border-top: 2px solid var(--ink-color);
+  border-right: 2px solid var(--ink-color);
   font-family: 'VT323', monospace;
-  font-size: 1.5rem;
+  font-size: clamp(1.25rem, 2.2vw, 1.7rem);
   outline: none;
   background: var(--white);
 }
@@ -453,24 +565,36 @@ a {
   background: #fdfceb;
 }
 
+.submit-button {
+  min-width: clamp(110px, 12vw, 148px);
+}
+
 .submit-button button {
-  height: 50px;
-  padding: 0 1.5em;
+  width: 100%;
+  height: 100%;
+  min-height: clamp(54px, 8vh, 68px);
+  padding: 0 1rem;
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.8rem;
+  font-size: clamp(0.55rem, 0.9vw, 0.66rem);
   background: var(--ink-color);
   color: var(--white);
   border: none;
-  border-top: 4px solid var(--ink-color);
-  box-shadow: 4px 4px 0 var(--bg-dark), 8px 8px 0 var(--ink-color);
+  border-top: 2px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
   cursor: pointer;
   text-transform: uppercase;
   transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .submit-button button:active {
-  transform: translate(4px, 4px);
-  box-shadow: 4px 4px 0 var(--ink-color);
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink-color);
+}
+
+.submit-button button:hover:not(:disabled),
+.submit-button button:active:not(:disabled),
+.submit-button button:active:hover:not(:disabled) {
+  background: #5f2400;
 }
 
 .submit-button button:disabled {
@@ -478,6 +602,70 @@ a {
   box-shadow: none;
   transform: none;
   cursor: not-allowed;
+}
+
+@media (max-width: 1280px) {
+  .user-icon {
+    top: 2.1em;
+    left: clamp(0.6rem, 1.6vw, 1rem);
+  }
+
+  .currently-interrogating-container {
+    margin-top: 3.1rem;
+  }
+
+  .character-container {
+    width: 88%;
+    right: -18rem;
+    bottom: -0.8rem;
+  }
+
+  .chatbot {
+    left: 0;
+    transform: translateX(clamp(12px, 2vw, 24px));
+    width: clamp(380px, 78%, 720px);
+    height: clamp(230px, 33vh, 360px);
+    min-height: 230px;
+  }
+
+  .chat-history {
+    padding: 0.85rem;
+  }
+}
+
+@media (max-width: 980px) {
+  .user-icon {
+    top: 2em;
+    left: 0.5rem;
+  }
+
+  .character-container {
+    width: 92%;
+    right: -12rem;
+    bottom: -0.4rem;
+  }
+
+  .chatbot {
+    left: 0;
+    transform: translateX(clamp(8px, 1.6vw, 16px));
+    width: clamp(300px, 86%, 620px);
+  }
+
+  .question-submit-box {
+    grid-template-columns: 1fr;
+  }
+
+  .question-box input {
+    border-right: none;
+  }
+
+  .submit-button {
+    min-width: 0;
+  }
+
+  .submit-button button {
+    border-top: 2px solid var(--ink-color);
+  }
 }
 
 /* ── Notes Notebook ── */
@@ -582,6 +770,10 @@ a {
   align-items: center;
   justify-content: center;
   box-shadow: 2px 2px 0 #660000;
+}
+
+.notebook-modal-close:hover { 
+  background: #ab1818; 
 }
 
 .notebook-modal-title {

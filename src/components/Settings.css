@@ -1,0 +1,48 @@
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.settings-copy {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}
+
+.settings-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.settings-account-card {
+  border: 3px solid #111111;
+  box-shadow: 4px 4px 0 #111111;
+  background: #ffffff;
+  padding: 0.9rem;
+}
+
+.settings-account-title {
+  margin: 0 0 0.6rem 0;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.settings-account-row {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.05rem;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-account-row:last-child {
+  margin-bottom: 0;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+}

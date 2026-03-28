@@ -3,7 +3,7 @@ import "./CaseReportScreen.css";
 import { useNavigate } from "react-router";
 import { useState, useRef, useCallback, useEffect } from "react";
 
-const LENS_SIZE = 180;   // diameter in px
+const LENS_SIZE = 200;   // diameter in px
 const ZOOM = 2.0;        // zoom level
 
 interface LensPos { x: number; y: number; }
