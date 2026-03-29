@@ -1,0 +1,618 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+.newgame-page {
+  position: fixed;
+  inset: 0;
+  overflow: auto;
+  font-family: 'VT323', monospace;
+  color: #f0e8d0;
+  background: #141414;
+}
+
+.newgame-bg,
+.newgame-bg-grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.newgame-bg {
+  background:
+    radial-gradient(circle at 14% -12%, rgba(220, 176, 97, 0.16) 0%, rgba(220, 176, 97, 0) 48%),
+    radial-gradient(circle at 87% -10%, rgba(94, 126, 188, 0.15) 0%, rgba(94, 126, 188, 0) 45%),
+    linear-gradient(180deg, #191612 0%, #14110f 58%, #100d0c 100%);
+  z-index: 0;
+  animation: newgame-bg-breathe 9s ease-in-out infinite alternate;
+  overflow: hidden;
+}
+
+.newgame-bg::before,
+.newgame-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(14px);
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.newgame-bg::before {
+  width: 38vw;
+  height: 38vw;
+  min-width: 260px;
+  min-height: 260px;
+  top: -16vh;
+  left: -12vw;
+  background: radial-gradient(circle, rgba(250, 199, 116, 0.7) 0%, rgba(250, 199, 116, 0) 70%);
+  animation: newgame-orb-drift-a 20s ease-in-out infinite alternate;
+}
+
+.newgame-bg::after {
+  width: 34vw;
+  height: 34vw;
+  min-width: 220px;
+  min-height: 220px;
+  right: -10vw;
+  bottom: -18vh;
+  background: radial-gradient(circle, rgba(128, 160, 219, 0.65) 0%, rgba(128, 160, 219, 0) 70%);
+  animation: newgame-orb-drift-b 22s ease-in-out infinite alternate;
+}
+
+.newgame-bg-grain {
+  background-image:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 16px 16px;
+  opacity: 0.6;
+  z-index: 1;
+  mix-blend-mode: soft-light;
+  animation: newgame-grain-drift 14s linear infinite, newgame-grain-flicker 2.6s steps(2, end) infinite;
+}
+
+.newgame-shell {
+  position: relative;
+  z-index: 2;
+  width: min(980px, 94vw);
+  margin: 1.4rem auto 2rem;
+  animation: newgame-shell-sway 7s ease-in-out infinite;
+}
+
+.newgame-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.newgame-title-wrap {
+  color: #e6d9be;
+}
+
+.newgame-kicker {
+  display: inline-block;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #ddcb9d;
+  border: 1px solid rgba(221, 203, 157, 0.5);
+  padding: 0.3rem 0.5rem;
+  background: rgba(17, 14, 12, 0.75);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
+  animation: newgame-kicker-pulse 2.4s ease-in-out infinite;
+}
+
+.newgame-title {
+  margin: 0.55rem 0 0;
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(1.35rem, 3.8vw, 2.3rem);
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  color: #f0e8d0;
+  text-shadow: 3px 3px 0 #000;
+  animation: newgame-title-glow 2.8s steps(2, end) infinite;
+}
+
+.newgame-subtitle {
+  margin: 0.65rem 0 0;
+  color: #d2c5a8;
+  font-size: clamp(1rem, 1.8vw, 1.22rem);
+  max-width: 56ch;
+}
+
+.newgame-auth-block {
+  display: flex;
+  align-items: flex-start;
+}
+
+.newgame-auth-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.newgame-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.7rem;
+  background: #111111;
+  border: 2px solid #f0e8d0;
+  box-shadow: 3px 3px 0 #000;
+  position: relative;
+  overflow: hidden;
+}
+
+.newgame-user-chip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.22) 42%, rgba(255, 255, 255, 0) 70%);
+  transform: translateX(-140%);
+  animation: newgame-chip-shine 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.newgame-user-chip,
+.newgame-user-chip * {
+  color: #f0e8d0 !important;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.56rem;
+  text-transform: uppercase;
+}
+
+.newgame-user-chip-label {
+  opacity: 0.9;
+}
+
+.newgame-board {
+  position: relative;
+  border: 4px solid #1a1a1a;
+  box-shadow: 5px 5px 0 #1a1a1a;
+  background:
+    linear-gradient(180deg, rgba(228, 220, 204, 0.97) 0%, rgba(206, 196, 176, 0.98) 100%);
+  color: #16120e;
+  padding: 1rem;
+  animation: newgame-board-float 4.8s ease-in-out infinite;
+}
+
+.newgame-board::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    transparent,
+    transparent 26px,
+    rgba(74, 57, 37, 0.08) 26px,
+    rgba(74, 57, 37, 0.08) 27px
+  );
+  animation: newgame-paper-lines 6s ease-in-out infinite alternate;
+}
+
+.newgame-board::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.14) 38%,
+    rgba(255, 255, 255, 0) 68%
+  );
+  transform: translateX(-120%);
+  animation: newgame-board-sheen 8s ease-in-out infinite;
+}
+
+.newgame-board-head,
+.newgame-field-block,
+.newgame-sliders-grid,
+.newgame-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.newgame-board-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.newgame-board-title {
+  margin: 0;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #2f2418;
+  animation: newgame-title-tick 3.1s steps(2, end) infinite;
+}
+
+.newgame-field-block {
+  margin-bottom: 0.75rem;
+}
+
+.newgame-label {
+  display: block;
+  margin-bottom: 0.26rem;
+  color: #2f2418;
+  font-size: 1.04rem;
+  letter-spacing: 0.03em;
+}
+
+.newgame-textarea {
+  width: 100%;
+  min-height: 150px;
+  resize: vertical;
+  border: 2px solid #1a1a1a;
+  background: #f2ead7;
+  color: #20170f;
+  box-shadow: inset 0 0 0 1px rgba(32, 23, 15, 0.28);
+  padding: 0.64rem 0.78rem;
+  font-family: 'VT323', monospace;
+  font-size: 1.28rem;
+  line-height: 1.45;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.newgame-textarea:focus {
+  outline: none;
+  border-color: #7b211d;
+  box-shadow: inset 0 0 0 1px rgba(32, 23, 15, 0.28), 0 0 0 2px rgba(123, 33, 29, 0.18);
+}
+
+.newgame-textarea::placeholder {
+  color: #77664d;
+}
+
+.newgame-sliders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+}
+
+.newgame-slider-card {
+  border: 2px solid #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  background: rgba(248, 241, 225, 0.82);
+  padding: 0.5rem 0.52rem 0.62rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  animation: newgame-card-idle 4.5s ease-in-out infinite;
+}
+
+.newgame-slider-card:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.newgame-slider-card:nth-child(3) {
+  animation-delay: 1.2s;
+}
+
+.newgame-slider-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #1a1a1a;
+}
+
+.newgame-slider {
+  width: 100%;
+  height: 8px;
+  appearance: none;
+  border-radius: 999px;
+  border: 1px solid #1a1a1a;
+  background: linear-gradient(90deg, #cbb894 0%, #d8c7a8 50%, #cbb894 100%);
+  background-size: 180% 100%;
+  animation: newgame-slider-shimmer 4.2s linear infinite;
+}
+
+.newgame-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #1a1a1a;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #bb4335 0%, #85271f 100%);
+  cursor: pointer;
+}
+
+.newgame-footer {
+  border-top: 2px dashed rgba(35, 26, 16, 0.42);
+  padding-top: 0.7rem;
+}
+
+.newgame-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 2px solid #1a1a1a;
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.14s ease, filter 0.14s ease;
+}
+
+.newgame-btn:active {
+  transform: translate(2px, 2px);
+}
+
+.newgame-btn-secondary {
+  background: #111111;
+  color: #f0e8d0;
+  box-shadow: 2px 2px 0 #000;
+  padding: 0.5rem 0.72rem;
+}
+
+.newgame-btn-secondary:hover {
+  background: #f0e8d0;
+  color: #111111;
+}
+
+.newgame-mute-btn {
+  white-space: nowrap;
+}
+
+.newgame-btn-primary {
+  width: 100%;
+  background: linear-gradient(120deg, #be4638 0%, #932820 45%, #6c1c19 75%, #be4638 100%);
+  background-size: 220% 100%;
+  color: #fff3de;
+  border-color: #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  padding: 0.84rem 0.95rem;
+  animation: newgame-cta-throb 1.8s ease-in-out infinite, newgame-cta-shift 3.2s linear infinite;
+}
+
+.newgame-btn-primary:hover {
+  filter: brightness(1.06) saturate(1.08);
+}
+
+@keyframes newgame-bg-breathe {
+  0% {
+    filter: saturate(0.94) brightness(0.96);
+    transform: scale(1);
+  }
+  100% {
+    filter: saturate(1.05) brightness(1.04);
+    transform: scale(1.01);
+  }
+}
+
+@keyframes newgame-grain-drift {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-16px, -16px);
+  }
+}
+
+@keyframes newgame-grain-flicker {
+  0%,
+  100% {
+    opacity: 0.56;
+  }
+  50% {
+    opacity: 0.66;
+  }
+}
+
+@keyframes newgame-orb-drift-a {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(10vw, 14vh) scale(1.08);
+  }
+}
+
+@keyframes newgame-orb-drift-b {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    transform: translate(-8vw, -12vh) scale(1.06);
+  }
+}
+
+@keyframes newgame-shell-sway {
+  0%,
+  100% {
+    transform: translateX(0px);
+  }
+  50% {
+    transform: translateX(1.5px);
+  }
+}
+
+@keyframes newgame-board-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes newgame-paper-lines {
+  0% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes newgame-board-sheen {
+  0%,
+  75%,
+  100% {
+    transform: translateX(-120%);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.65;
+  }
+  40% {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+@keyframes newgame-kicker-pulse {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.12);
+  }
+}
+
+@keyframes newgame-title-glow {
+  0%,
+  100% {
+    text-shadow: 3px 3px 0 #000;
+  }
+  50% {
+    text-shadow: 3px 3px 0 #000, 0 0 8px rgba(240, 232, 208, 0.32);
+  }
+}
+
+@keyframes newgame-title-tick {
+  0%,
+  100% {
+    letter-spacing: 0.08em;
+  }
+  50% {
+    letter-spacing: 0.09em;
+  }
+}
+
+@keyframes newgame-chip-shine {
+  0%,
+  78%,
+  100% {
+    transform: translateX(-140%);
+    opacity: 0;
+  }
+  85% {
+    opacity: 0.55;
+  }
+  95% {
+    transform: translateX(140%);
+    opacity: 0;
+  }
+}
+
+@keyframes newgame-card-idle {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes newgame-slider-shimmer {
+  0% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 180% 0;
+  }
+}
+
+@keyframes newgame-cta-throb {
+  0%,
+  100% {
+    box-shadow: 3px 3px 0 #1a1a1a;
+  }
+  50% {
+    box-shadow: 3px 3px 0 #1a1a1a, 0 0 12px rgba(190, 70, 56, 0.44);
+  }
+}
+
+@keyframes newgame-cta-shift {
+  0% {
+    background-position: 0% 0;
+  }
+  100% {
+    background-position: 220% 0;
+  }
+}
+
+@media (max-width: 860px) {
+  .newgame-header {
+    flex-direction: column;
+  }
+
+  .newgame-auth-block,
+  .newgame-auth-actions {
+    width: 100%;
+  }
+
+  .newgame-auth-actions .newgame-btn {
+    flex: 1;
+  }
+
+  .newgame-board-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .newgame-mute-btn {
+    width: 100%;
+  }
+
+  .newgame-sliders-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .newgame-shell {
+    width: 95vw;
+    margin: 1rem auto 1.4rem;
+  }
+
+  .newgame-board {
+    padding: 0.82rem;
+  }
+
+  .newgame-title {
+    letter-spacing: 0.04em;
+  }
+
+  .newgame-btn {
+    font-size: 0.54rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newgame-bg,
+  .newgame-bg::before,
+  .newgame-bg::after,
+  .newgame-bg-grain,
+  .newgame-shell,
+  .newgame-kicker,
+  .newgame-title,
+  .newgame-user-chip::after,
+  .newgame-board,
+  .newgame-board::before,
+  .newgame-board::after,
+  .newgame-board-title,
+  .newgame-slider,
+  .newgame-slider-card,
+  .newgame-btn-primary {
+    animation: none !important;
+  }
+
+  .newgame-slider-card {
+    transition: none;
+  }
+}
