@@ -11,6 +11,7 @@ import { generateCaseFile, feedCaseFile, buildSuspectSystemPrompt } from "./case
 import { streamSpeech } from "./services/ttsService";
 import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+console.log(import.meta.env.VITE_GEMINI_API_KEY)
 
 // ─────────────────────────────────────────────
 //  CHAT TYPES
@@ -196,6 +197,7 @@ export const useGameStore = create<GameState>((set, get) => ({
 
           const { useNotificationStore } = await import("./store/useNotificationStore");
           useNotificationStore.getState().initClues(player.clues);
+          useNotificationStore.getState().hydrateSchedulerState(selectedCase?.schedulerState ?? null);
 
           if (isResolved) {
             console.log(selectedCase?.status)
@@ -496,6 +498,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         console.log("right before sessionId check, after sign in check")
         if (sessionId) {
           const state = get();
+          const { useNotificationStore } = await import("./store/useNotificationStore");
+          const notificationState = useNotificationStore.getState();
           const suspectSessions = Object.values(state.sessions).map((s) => ({
             suspectName: s.suspectName,
             conversationCount: s.conversationCount,
@@ -525,6 +529,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
               interrogation: {
                 suspectSessions,
+              },
+              schedulerState: {
+                lastFiredAt: notificationState.lastFiredAt,
+                nextFireAt: notificationState.nextFireAt,
+                timerPaused: notificationState.timerPaused,
               }
             }),
           }).catch(() => {});
