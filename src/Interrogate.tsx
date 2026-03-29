@@ -235,6 +235,17 @@ function Interrogate() {
     );
   }
 
+  useEffect(() => {
+    window.addEventListener("beforeunload", alertUser);
+    return () => {
+      window.removeEventListener("beforeunload", alertUser);
+    };
+  }, []);
+  const alertUser = (e: BeforeUnloadEvent) => {
+    e.preventDefault();
+    e.returnValue = "";
+  };
+
   return (
     <div className='game-container'>
       {/* ── Nav bar ── */}
