@@ -1,8 +1,9 @@
 import { useEffect, useRef } from "react";
 import { useNotificationStore } from "../store/useNotificationStore";
+import { useGameStore } from "../useGameStore";
 
 /*
-  Drives the notification scheduler on every second of game time, and handles expiry cleanup.
+  Drives the notification scheduler on every conversation message, and handles expiry cleanup.
   
   Parameters:
   - elapsed          Seconds elapsed in the game (from your game timer store)
@@ -17,17 +18,26 @@ export function useNotificationScheduler(
 ) {
   const tick = useNotificationStore(s => s.tick)
   const purgeExpired = useNotificationStore(s => s.purgeExpired)
+  const totalConversationCount = useGameStore(s => s.totalConversationCount)
   const elapsedMs = elapsed * 1000
  
-  const lastTickRef = useRef(0)
+  const lastElapsedSecondRef = useRef(-1)
+  const lastMessageCountRef = useRef(-1)
  
   useEffect(() => {
     if (!active) return
-    // Only tick once per second to avoid thrashing the store
-    if (Math.floor(elapsed) === lastTickRef.current) return
-    lastTickRef.current = Math.floor(elapsed)
+
+    const elapsedSecond = Math.floor(elapsed)
+    const elapsedChanged = elapsedSecond !== lastElapsedSecondRef.current
+    const messageCountChanged = totalConversationCount !== lastMessageCountRef.current
+
+    // Run when either game time advances or the conversation count changes.
+    if (!elapsedChanged && !messageCountChanged) return
+
+    lastElapsedSecondRef.current = elapsedSecond
+    lastMessageCountRef.current = totalConversationCount
  
-    tick(elapsedMs, totalDuration)
+    tick(elapsedMs, totalDuration, totalConversationCount)
     purgeExpired()
-  }, [elapsed, active, tick, purgeExpired, elapsedMs, totalDuration])
+  }, [elapsed, active, tick, purgeExpired, elapsedMs, totalDuration, totalConversationCount])
 }
