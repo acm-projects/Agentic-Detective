@@ -78,6 +78,7 @@ function Interrogate() {
   const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
   const [showNotebook, setShowNotebook] = useState(false);
+  //const [showNotes, setShowNotes] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
@@ -339,6 +340,7 @@ function Interrogate() {
         </div>
 
         <div className='windows-container'>
+          {/* <div className='notes-window' onClick={() => setShowNotes(true)} /> */}
           <div className='interrogation-window'>
             {/* ✅ Main branch avatar (gif avatarMap) */}
             {activeProfile && (
@@ -510,6 +512,39 @@ function Interrogate() {
           </div>
         </div>
       )}
+{/*       
+      {showNotes && (
+        <div className="notebook-modal-overlay" onClick={() => setShowNotebook(false)}>
+          <div className="notebook-modal" onClick={e => e.stopPropagation()}>
+            <button className="notebook-modal-close" onClick={() => setShowNotebook(false)}>✕</button>
+            <h2 className="notebook-modal-title">SUSPECT PROFILE</h2>
+            <div className="notebook-modal-list">
+              {activeProfile && (
+                <div className="notebook-suspect-card">
+                  <div className="notebook-suspect-header">
+                    <img
+                      src={avatarMap[activeProfile.avatarId] || avatarMap.default}
+                      alt={activeProfile.name}
+                      className="notebook-suspect-avatar"
+                    />
+                    <div>
+                      <div className="notebook-suspect-name">{activeProfile.name}</div>
+                      <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>
+                      <div className={`notebook-suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
+                        {activeProfile.suspicionLevel.toUpperCase()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="notebook-suspect-divider" />
+                  <div className="notebook-suspect-field"><span>Relation:</span> {activeProfile.relationshipToVictim}</div>
+                  <div className="notebook-suspect-field"><span>Alibi:</span> {activeProfile.claimedAlibi}</div>
+                  <div className="notebook-suspect-field"><span>Notes:</span> {activeProfile.personalityBlurb}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )} */}
 
       {/* ✅ Draggable Evidence Locker Modal from music branch */}
       {cluesModalOpen && (
