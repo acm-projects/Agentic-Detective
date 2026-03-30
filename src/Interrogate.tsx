@@ -10,10 +10,8 @@ import { AudioContext } from './App';
 import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
 import './Interrogate.css';
 
-// ✅ IMPORT YOUR GIF
 import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
 
-// ✅ MAP (so it still works with avatarId system)
 const avatarMap: Record<string, string> = {
   default: blinkingPortraitGirl,
 };
@@ -26,6 +24,14 @@ interface AttachedClue {
   couldImplicateSuspects?: string | string[];
 }
 
+interface SuspectNote {
+  id?: string;
+  suspectName: string;
+  suspectNotes: string;
+  createdAt?: string;
+}
+
+// ── Draggable hook ─────────────────────────────────────
 function useDraggableModal(initialPos: { x: number; y: number }) {
   const [pos, setPos] = useState(initialPos);
   const dragging = useRef(false);
@@ -60,10 +66,10 @@ function useDraggableModal(initialPos: { x: number; y: number }) {
 function Interrogate() {
   const navigate = useNavigate();
   const { signOut } = useClerk();
-  const { 
-    player, 
-    activeSuspectName, 
-    isResponding, 
+  const {
+    player,
+    activeSuspectName,
+    isResponding,
     elapsed,
     startInterrogation,
     proceedToInvestigation,
@@ -78,6 +84,8 @@ function Interrogate() {
   const profiles = player?.characterProfiles ?? [];
   const [input, setInput] = useState('');
   const [showNotebook, setShowNotebook] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [cluesModalOpen, setCluesModalOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
@@ -85,25 +93,87 @@ function Interrogate() {
   // ── Evidence / clue state ──────────────────────────────
   const allClues = useNotificationStore(s => s.clues);
   const discoveredClues = allClues.filter(c => c.discovered);
-  const [cluesModalOpen, setCluesModalOpen] = useState(false);
   const [attachedClues, setAttachedClues] = useState<AttachedClue[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
-  const { pos, onMouseDown } = useDraggableModal({ x: window.innerWidth - 340, y: 120 });
+
+  // ── Three fully independent drag positions ─────────────
+  const { pos: cluePos,     onMouseDown: clueMouseDown     } = useDraggableModal({ x: window.innerWidth - 340, y: 120 });
+  const { pos: notesPos,    onMouseDown: notesMouseDown    } = useDraggableModal({ x: window.innerWidth - 700, y: 120 });
+  const { pos: notebookPos, onMouseDown: notebookMouseDown } = useDraggableModal({ x: Math.max(0, window.innerWidth / 2 - 220), y: 80 });
+
+  // ── Notes modal state ──────────────────────────────────
+  const [notesList, setNotesList] = useState<SuspectNote[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+  const [noteInputOpen, setNoteInputOpen] = useState(false);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [noteSaving, setNoteSaving] = useState(false);
+  const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const timerPaused = useNotificationStore(s => s.timerPaused);
+  const sessionId = player?.caseReport?.caseId ?? '';
+
+  // ── Load notes ─────────────────────────────────────────
+  const loadNotes = useCallback(async () => {
+    if (!activeSuspectName || !sessionId) return;
+    setNotesLoading(true);
+    setNotesError(null);
+    try {
+      const res = await fetch(
+        `http://localhost:3000/case/${sessionId}/suspectNotes?suspectName=${encodeURIComponent(activeSuspectName)}`
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data: SuspectNote[] = await res.json();
+      setNotesList(data);
+    } catch {
+      setNotesError('Could not load notes.');
+    } finally {
+      setNotesLoading(false);
+    }
+  }, [activeSuspectName, sessionId]);
 
   useEffect(() => {
-    console.log("got into useEffect1")
-    console.log(activeSuspectName, " ", profiles)
-    if (profiles.length === 0) return;
+    if (showNotes) {
+      loadNotes();
+      setNoteInputOpen(false);
+      setNoteDraft('');
+    }
+  }, [showNotes, activeSuspectName, loadNotes]);
 
+  useEffect(() => {
+    if (noteInputOpen) noteTextareaRef.current?.focus();
+  }, [noteInputOpen]);
+
+  // ── Save note ──────────────────────────────────────────
+  const saveNote = useCallback(async () => {
+    if (!noteDraft.trim() || noteSaving) return;
+    setNoteSaving(true);
+    setNotesError(null);
+    try {
+      const res = await fetch(`http://localhost:3000/case/${sessionId}/suspectNotes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          suspectName: activeSuspectName,
+          suspectNotes: noteDraft.trim(),
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setNoteDraft('');
+      setNoteInputOpen(false);
+      await loadNotes();
+    } catch {
+      setNotesError('Failed to save. Try again.');
+    } finally {
+      setNoteSaving(false);
+    }
+  }, [noteDraft, noteSaving, sessionId, activeSuspectName, loadNotes]);
+
+  useEffect(() => {
+    if (profiles.length === 0) return;
     const hasValidActiveSuspect =
       !!activeSuspectName && profiles.some(p => p.name === activeSuspectName);
-
-    if (!hasValidActiveSuspect) {
-      startInterrogation(profiles[0].name);
-      console.log("1st useEffect inside if")
-    }
+    if (!hasValidActiveSuspect) startInterrogation(profiles[0].name);
   }, [activeSuspectName, profiles, startInterrogation]);
 
   useEffect(() => {
@@ -115,28 +185,14 @@ function Interrogate() {
   useNotificationScheduler(elapsed, 600_000, !!player);
 
   useEffect(() => {
-    console.log("got into useEffect2")
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
-  const handleSuspectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    startInterrogation(e.target.value);
-    setInput('');
-    setAttachedClues([]);
-  };
-
-  // ── Drop zone handlers ─────────────────────────────────
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(true);
-  };
-
+  // ── Drop zone ──────────────────────────────────────────
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true); };
   const handleDragLeave = (e: React.DragEvent) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-      setIsDragOver(false);
-    }
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) setIsDragOver(false);
   };
-
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -144,12 +200,8 @@ function Interrogate() {
     if (!raw) return;
     try {
       const clue: AttachedClue = JSON.parse(raw);
-      setAttachedClues(prev =>
-        prev.find(c => c.id === clue.id) ? prev : [...prev, clue]
-      );
-    } catch {
-      console.warn('Could not parse dropped clue data');
-    }
+      setAttachedClues(prev => prev.find(c => c.id === clue.id) ? prev : [...prev, clue]);
+    } catch { console.warn('Could not parse dropped clue data'); }
   };
 
   const getImplicatingSuspects = (clue: AttachedClue): string[] => {
@@ -160,38 +212,30 @@ function Interrogate() {
   };
 
   const clueImplicatesCurrent = (clue: AttachedClue) =>
-    getImplicatingSuspects(clue).some(
-      s => s.toLowerCase() === activeSuspectName?.toLowerCase()
-    );
+    getImplicatingSuspects(clue).some(s => s.toLowerCase() === activeSuspectName?.toLowerCase());
 
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault();
     if ((!input.trim() && attachedClues.length === 0) || isResponding) return;
-
     const typedText = input.trim();
     const cluesForDisplay = attachedClues.map(c => ({ id: c.id, name: c.name }));
-
     let llmText = typedText;
     if (attachedClues.length > 0) {
-      const evidenceBlock = attachedClues
-        .map(clue => {
-          const implicating = clueImplicatesCurrent(clue);
-          return [
-            `[EVIDENCE PRESENTED: "${clue.name}"]`,
-            `  Location found: ${clue.location}`,
-            `  Details: ${clue.description}`,
-            implicating
-              ? `  ⚠️ This evidence directly implicates you. React with significantly elevated stress and defensiveness.`
-              : `  This evidence has been shown to you.`,
-          ].join('\n');
-        })
-        .join('\n\n');
-
+      const evidenceBlock = attachedClues.map(clue => {
+        const implicating = clueImplicatesCurrent(clue);
+        return [
+          `[EVIDENCE PRESENTED: "${clue.name}"]`,
+          `  Location found: ${clue.location}`,
+          `  Details: ${clue.description}`,
+          implicating
+            ? `  ⚠️ This evidence directly implicates you. React with significantly elevated stress and defensiveness.`
+            : `  This evidence has been shown to you.`,
+        ].join('\n');
+      }).join('\n\n');
       llmText = typedText
         ? `${evidenceBlock}\n\nDetective says: "${typedText}"`
         : `${evidenceBlock}\n\n[The detective slides the evidence across the table without saying a word.]`;
     }
-
     setInput('');
     setAttachedClues([]);
     await sendMessage(llmText, typedText, cluesForDisplay);
@@ -208,26 +252,19 @@ function Interrogate() {
     const handlePotentialSignOutClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
-
-      // Intercept Clerk's built-in sign-out actions in both popover and profile modal.
       const signOutTrigger = target.closest('button, a') as HTMLElement | null;
       if (!signOutTrigger) return;
-
       const label = signOutTrigger.textContent?.trim().toLowerCase() ?? '';
       if (!label.includes('sign out')) return;
-
       event.preventDefault();
       event.stopPropagation();
       (document.getElementById('signout-warning') as HTMLDialogElement)?.showModal();
     };
-
     document.addEventListener('click', handlePotentialSignOutClick, true);
     return () => document.removeEventListener('click', handlePotentialSignOutClick, true);
   }, []);
 
-  // If no case has been generated yet, redirect home
-  if (!player) {    
-    console.log("No case generated yet")
+  if (!player) {
     return (
       <div className="interrogate-container">
         No active case. <Link to="/">Go Home</Link>
@@ -235,25 +272,50 @@ function Interrogate() {
     );
   }
 
+  // Avatar index map for vertical suspect picker (1-based)
+  const avatarIndexMap: Record<string, number> = {};
+  profiles.forEach((p, i) => { avatarIndexMap[p.name] = i + 1; });
+
   return (
     <div className='game-container'>
-      {/* ── Nav bar ── */}
+
+      {/* ── Sidebar nav — only Desk + Accuse ── */}
       <div className='navigate'>
         
-        <button onClick={() => proceedToInvestigation(navigate)}><span> ← </span>Notes</button>
-        <button onClick={() => navigate("/clues")}><span> ← </span>Clues</button>
 
-        <button className="nav-case-btn" onClick={() => goToBriefing(navigate)}>Case Report</button>
-        <button onClick={() => navigate("/desk")}><span> ← </span>Desk</button>
+        {/* ── Vertical suspect avatar picker ── */}
+        <div className="suspect-avatar-picker">
+          <div className="suspect-picker-label">SUSPECTS</div>
+          {profiles.map((p) => {
+            const avatarIdx = avatarIndexMap[p.name] ?? 1;
+            const isActive = activeSuspectName === p.name;
+            return (
+              <button
+                key={p.name}
+                className={`suspect-avatar-btn ${isActive ? 'active' : ''}`}
+                onClick={() => { startInterrogation(p.name); setInput(''); setAttachedClues([]); }}
+                title={p.name}
+              >
+                <img
+                  src={`/clues/avatars/avatar_0${avatarIdx}.png`}
+                  alt={p.name}
+                  onError={e => { (e.target as HTMLImageElement).src = avatarMap.default; }}
+                />
+                <span className="suspect-avatar-name">{p.name}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <button onClick={() => navigate("/desk")}>Desk</button>
 
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
-        }><span> ← </span>Settings</button>
+        }>Settings</button>
 
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
             <h3>Settings</h3>
-            {/* ✅ Mute toggle from music branch */}
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '12px 0' }}>
               <input type="checkbox" checked={isMuted} onChange={e => setIsMuted(e.target.checked)} />
               Mute Music
@@ -264,9 +326,6 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
-
-        {/* ✅ Suspects nav from music branch */}
-        <button onClick={() => navigate("/suspects")}><span> ← </span>Suspects</button>
 
         <button onClick={() =>
           (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
@@ -287,60 +346,70 @@ function Interrogate() {
           </form>
         </dialog>
 
-        {/* ✅ Evidence locker toggle from music branch */}
-        <button
-          className={`evidence-nav-btn ${cluesModalOpen ? 'active' : ''}`}
-          onClick={() => setCluesModalOpen(p => !p)}
-        >
-          🔍 Evidence {discoveredClues.length > 0 && `(${discoveredClues.length})`}
-        </button>
+        <dialog className="nes-dialog" id="signout-warning">
+          <form method="dialog">
+            <h3>Leave Account?</h3>
+            <p>You are about to sign out from this device.</p>
+            <p>You will lose all progress if you choose to sign out.</p>
+            <menu className="dialog-menu">
+              <button type="submit">Stay</button>
+              <button type="button" onClick={handleConfirmSignOut}>Leave</button>
+            </menu>
+          </form>
+        </dialog>
+
+        {/* Auth */}
+        {/* <div className="nav-auth">
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button className="user-button">Sign In</button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <div className="auth-actions auth-actions-signed-in">
+              <UserButton userProfileMode="modal" showName appearance={{ options: { shimmer: false } }} />
+            </div>
+          </Show>
+        </div> */}
       </div>
 
       {/* ── Main interrogation area ── */}
-      <div className="interrogate-container">
-        <div className='case-title' />
-        <div className='header-row'> {/* check this later. */}
-            {/* Interrogation: suspectname title; check if it works if there is no active profile */}
-            <div className='currently-interrogating-container'>
-                <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
+      <div className="interrogate-container" style={{ position: 'relative' }}>
+
+        {/* ── Clickable case-details image (replaces bg layer) ── */}
+        <img
+          src="src/assets/updatedcasedetails.png"
+          alt="Case Details"
+          className="bg-img-casedetails"
+          onClick={() => setShowNotes(v => !v)}
+          title="Field Notes"
+        />
+
+        {/* ── Clickable locker image (replaces bg layer) ── */}
+        <img
+          src="src/assets/locker.png"
+          alt="Evidence Locker"
+          className="bg-img-locker"
+          onClick={() => setCluesModalOpen(v => !v)}
+          title="Evidence Locker"
+        />
+
+        <div className='header-row'>
+          <div className='currently-interrogating-container'>
+            <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
           </div>
           <div className='user-icon'>
-            <Show when="signed-out">
-              <div className="auth-actions">
-                <SignInButton mode="modal">
-                  <button className="user-button">Sign In</button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="user-button">Sign Up</button>
-                </SignUpButton>
-              </div>
-            </Show>
             <Show when="signed-in">
               <div className="auth-actions auth-actions-signed-in">
-                <UserButton userProfileMode="modal" showName appearance={{
-                  options: {
-                    shimmer: false,
-                  }
-                }}/>
+                <UserButton userProfileMode="modal" showName appearance={{ options: { shimmer: false } }} />
               </div>
             </Show>
           </div>
-          <dialog className="nes-dialog" id="signout-warning">
-            <form method="dialog">
-              <h3>Leave Account?</h3>
-              <p>You are about to sign out from this device. Do you want to stay signed in or leave?</p>
-              <p>You will lose all progress if you choose to sign out.</p>
-              <menu className="dialog-menu">
-                <button type="submit">Stay</button>
-                <button type="button" onClick={handleConfirmSignOut}>Leave</button>
-              </menu>
-            </form>
-          </dialog>
         </div>
 
         <div className='windows-container'>
           <div className='interrogation-window'>
-            {/* ✅ Main branch avatar (gif avatarMap) */}
+
             {activeProfile && (
               <div className='character-container'>
                 <div className='character-avatar'>
@@ -367,7 +436,6 @@ function Interrogate() {
                       {msg.role === 'player' ? (
                         <div className='player-message'>
                           <strong className='you-text'>You: </strong>
-                          {/* ✅ Clue chips in chat history from music branch */}
                           {msg.displayClues && msg.displayClues.length > 0 && (
                             <div className="chat-clue-chips">
                               {msg.displayClues.map((c: { id: string; name: string }) => (
@@ -376,7 +444,6 @@ function Interrogate() {
                             </div>
                           )}
                           {msg.displayText && <span>{msg.displayText}</span>}
-                          {/* Fallback for older history entries without displayText */}
                           {!msg.displayText && !msg.displayClues?.length && <span>{msg.text}</span>}
                         </div>
                       ) : (
@@ -394,7 +461,6 @@ function Interrogate() {
                   <div ref={chatEndRef} />
                 </div>
 
-                {/* ✅ Drop zone + clue chips + input from music branch */}
                 <div
                   className={`question-submit-box ${isDragOver ? 'drag-over' : ''}`}
                   onDragOver={handleDragOver}
@@ -415,28 +481,18 @@ function Interrogate() {
                             <button
                               type="button"
                               className="clue-chip-remove"
-                              onClick={() =>
-                                setAttachedClues(prev => prev.filter(c => c.id !== clue.id))
-                              }
+                              onClick={() => setAttachedClues(prev => prev.filter(c => c.id !== clue.id))}
                             >✕</button>
                           </span>
                         );
                       })}
                     </div>
                   )}
-
-                  {isDragOver && (
-                    <div className="drop-hint">Drop clue to present as evidence</div>
-                  )}
-
+                  {isDragOver && <div className="drop-hint">Drop clue to present as evidence</div>}
                   <div className='question-box'>
                     <input
                       type="text"
-                      placeholder={
-                        attachedClues.length > 0
-                          ? 'Add a question, or send silently…'
-                          : 'Ask questions here...'
-                      }
+                      placeholder={attachedClues.length > 0 ? 'Add a question, or send silently…' : 'Ask questions here...'}
                       value={input}
                       disabled={isResponding}
                       onChange={e => setInput(e.target.value)}
@@ -446,78 +502,115 @@ function Interrogate() {
                     <button
                       type='submit'
                       disabled={isResponding || (!input.trim() && attachedClues.length === 0)}
-                    >
-                      Submit
-                    </button>
+                    >Submit</button>
                   </div>
                 </div>
               </form>
             </div>
           </div>
 
-          {/* ✅ Main branch notes window (clickable notebook modal trigger) */}
-          <div className='notes-window' onClick={() => setShowNotebook(true)} />
-        </div>
-
-        <div className='suspect-switcher'>
-          <form>
-            <label htmlFor="suspects"><span className='switch-suspect-text'>Switch Suspect:</span></label>
-            <br />
-            <select
-              onChange={handleSuspectChange}
-              value={activeSuspectName ?? ''}
-              name='suspects'
-              id='suspects-list'
-            >
-              {profiles.map(p => (
-                <option key={p.name} value={p.name}>{p.name}</option>
-              ))}
-            </select>
-          </form>
+          {/* Notepad image — opens notebook modal */}
+          <div className='notes-window' onClick={() => setShowNotebook(v => !v)} />
         </div>
       </div>
 
-      {/* ✅ Main branch notebook modal */}
-      {showNotebook && (
-        <div className="notebook-modal-overlay" onClick={() => setShowNotebook(false)}>
-          <div className="notebook-modal" onClick={e => e.stopPropagation()}>
-            <button className="notebook-modal-close" onClick={() => setShowNotebook(false)}>✕</button>
-            <h2 className="notebook-modal-title">SUSPECT PROFILE</h2>
-            <div className="notebook-modal-list">
-              {activeProfile && (
-                <div className="notebook-suspect-card">
-                  <div className="notebook-suspect-header">
-                    <img
-                      src={avatarMap[activeProfile.avatarId] || avatarMap.default}
-                      alt={activeProfile.name}
-                      className="notebook-suspect-avatar"
-                    />
-                    <div>
-                      <div className="notebook-suspect-name">{activeProfile.name}</div>
-                      <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>
-                      <div className={`notebook-suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
-                        {activeProfile.suspicionLevel.toUpperCase()}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="notebook-suspect-divider" />
-                  <div className="notebook-suspect-field"><span>Relation:</span> {activeProfile.relationshipToVictim}</div>
-                  <div className="notebook-suspect-field"><span>Alibi:</span> {activeProfile.claimedAlibi}</div>
-                  <div className="notebook-suspect-field"><span>Notes:</span> {activeProfile.personalityBlurb}</div>
-                </div>
-              )}
+      {/* ══════════════════════════════════════════════════
+          NOTES MODAL — fully independent
+      ══════════════════════════════════════════════════ */}
+      {showNotes && (
+        <div className="clue-modal" style={{ left: notesPos.x, top: notesPos.y }}>
+          <div className="clue-modal-handle" onMouseDown={notesMouseDown}>
+            <span className="clue-modal-title">FIELD NOTES</span>
+            <div className="clue-modal-handle-dots">
+              <span /><span /><span /><span /><span /><span />
             </div>
+            <button
+              className="clue-modal-close"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => setShowNotes(false)}
+            >✕</button>
+          </div>
+
+          <div className="notes-suspect-bar">
+            <span className="notes-suspect-name">{activeSuspectName?.toUpperCase()}</span>
+            <button
+              className="notes-reload-btn"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={loadNotes}
+              title="Reload notes"
+            >↻</button>
+          </div>
+
+          <div className="clue-modal-body notes-modal-body">
+            {notesLoading && <p className="clue-modal-empty">Loading…</p>}
+            {!notesLoading && notesList.length === 0 && (
+              <p className="clue-modal-empty">No notes yet for this suspect.</p>
+            )}
+            {!notesLoading && notesList.map((n, i) => (
+              <div key={n.id ?? i} className="notes-entry">
+                <p className="notes-entry-text">{n.suspectNotes}</p>
+                {n.createdAt && (
+                  <span className="notes-entry-time">
+                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {noteInputOpen && (
+            <div className="notes-input-panel">
+              <textarea
+                ref={noteTextareaRef}
+                className="notes-textarea"
+                placeholder={`Observations on ${activeSuspectName}…`}
+                value={noteDraft}
+                rows={4}
+                onChange={e => setNoteDraft(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveNote();
+                  if (e.key === 'Escape') { setNoteInputOpen(false); setNoteDraft(''); }
+                }}
+              />
+              {notesError && <p className="notes-error">{notesError}</p>}
+              <div className="notes-input-actions">
+                <span className="notes-hint">Ctrl+↵ to save · Esc to cancel</span>
+                <button
+                  className="notes-cancel-btn"
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={() => { setNoteInputOpen(false); setNoteDraft(''); setNotesError(null); }}
+                >Cancel</button>
+                <button
+                  className="notes-save-btn"
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={saveNote}
+                  disabled={noteSaving || !noteDraft.trim()}
+                >
+                  {noteSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="clue-modal-footer">
+            {notesError && !noteInputOpen && <span className="notes-error">{notesError}</span>}
+            <button
+              className="notes-add-btn"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => { setNoteInputOpen(v => !v); setNotesError(null); }}
+            >
+              {noteInputOpen ? '— Close' : '+ Add Note'}
+            </button>
           </div>
         </div>
       )}
 
-      {/* ✅ Draggable Evidence Locker Modal from music branch */}
+      {/* ══════════════════════════════════════════════════
+          EVIDENCE LOCKER MODAL — fully independent
+      ══════════════════════════════════════════════════ */}
       {cluesModalOpen && (
-        <div
-          className="clue-modal"
-          style={{ left: pos.x, top: pos.y }}
-        >
-          <div className="clue-modal-handle" onMouseDown={onMouseDown}>
+        <div className="clue-modal" style={{ left: cluePos.x, top: cluePos.y }}>
+          <div className="clue-modal-handle" onMouseDown={clueMouseDown}>
             <span className="clue-modal-title">LOCKER</span>
             <div className="clue-modal-handle-dots">
               <span /><span /><span /><span /><span /><span />
@@ -545,18 +638,14 @@ function Interrogate() {
                   s => s.toLowerCase() === activeSuspectName?.toLowerCase()
                 );
                 const alreadyAttached = attachedClues.some(c => c.id === clue.id);
-
                 return (
                   <div
                     key={clue.id}
                     draggable={!alreadyAttached}
                     onDragStart={e => {
                       e.dataTransfer.setData('application/clue', JSON.stringify({
-                        id: clue.id,
-                        name: clue.name,
-                        description: clue.description,
-                        location: clue.location,
-                        couldImplicateSuspects: clue.couldImplicateSuspects,
+                        id: clue.id, name: clue.name, description: clue.description,
+                        location: clue.location, couldImplicateSuspects: clue.couldImplicateSuspects,
                       }));
                       e.dataTransfer.effectAllowed = 'copy';
                     }}
@@ -590,6 +679,50 @@ function Interrogate() {
           <div className="clue-modal-footer">
             <span>FOUND <b>{discoveredClues.length}</b> / {allClues.length}</span>
             <span>ATTACHED <b>{attachedClues.length}</b></span>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════
+          NOTEBOOK / SUSPECT PROFILE — draggable, independent
+      ══════════════════════════════════════════════════ */}
+      {showNotebook && (
+        <div className="clue-modal notebook-drag-modal" style={{ left: notebookPos.x, top: notebookPos.y }}>
+          <div className="clue-modal-handle" onMouseDown={notebookMouseDown}>
+            <span className="clue-modal-title">SUSPECT PROFILE</span>
+            <div className="clue-modal-handle-dots">
+              <span /><span /><span /><span /><span /><span />
+            </div>
+            <button
+              className="clue-modal-close"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => setShowNotebook(false)}
+            >✕</button>
+          </div>
+
+          <div className="clue-modal-body notebook-modal-body">
+            {activeProfile && (
+              <div className="notebook-suspect-card">
+                <div className="notebook-suspect-header">
+                  <img
+                    src={avatarMap[activeProfile.avatarId] || avatarMap.default}
+                    alt={activeProfile.name}
+                    className="notebook-suspect-avatar"
+                  />
+                  <div>
+                    <div className="notebook-suspect-name">{activeProfile.name}</div>
+                    <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>
+                    <div className={`notebook-suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
+                      {activeProfile.suspicionLevel.toUpperCase()}
+                    </div>
+                  </div>
+                </div>
+                <div className="notebook-suspect-divider" />
+                <div className="notebook-suspect-field"><span>Relation:</span> {activeProfile.relationshipToVictim}</div>
+                <div className="notebook-suspect-field"><span>Alibi:</span> {activeProfile.claimedAlibi}</div>
+                <div className="notebook-suspect-field"><span>Notes:</span> {activeProfile.personalityBlurb}</div>
+              </div>
+            )}
           </div>
         </div>
       )}
