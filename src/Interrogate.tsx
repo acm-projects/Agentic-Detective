@@ -8,6 +8,8 @@ import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
 import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
+import { Tooltip } from './components/tooltip/Tooltip';
+
 import './Interrogate.css';
 
 import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
@@ -29,6 +31,24 @@ interface SuspectNote {
   suspectName: string;
   suspectNotes: string;
   createdAt?: string;
+}
+
+interface InterrogateImageProp {
+  src: string;
+  alt: string;
+  tooltip: string;
+  className?: string;
+  title?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+}
+
+interface InterrogatePanelProp {
+  tooltip: string;
+  className?: string;
+  title?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
 }
 
 // ── Draggable hook ─────────────────────────────────────
@@ -61,6 +81,53 @@ function useDraggableModal(initialPos: { x: number; y: number }) {
   }, []);
 
   return { pos, onMouseDown };
+}
+
+// Tooltip
+function InterrogateImagePropWithToolTip( { src, alt, tooltip, className, style, title, onClick}: InterrogateImageProp) {
+  return (
+    <Tooltip<HTMLImageElement> 
+      content={tooltip} 
+      className='item-tooltip'
+      placement='top'
+      offsetPx={1}
+    >
+     {({ ref, getReferenceProps }) => (
+        <img
+          className={className}
+          src={src}
+          alt={alt}
+          ref={ref}
+          aria-label={title ?? tooltip}
+          style={style}
+          {...getReferenceProps()}
+          onClick={onClick}
+        />
+      )}
+    </Tooltip>
+  )
+}
+
+function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick }: InterrogatePanelProp) {
+  return (
+    <Tooltip<HTMLDivElement>
+      content={tooltip}
+      className='item-tooltip'
+      placement='top'
+      offsetPx={-1}
+    >
+      {({ ref, getReferenceProps }) => (
+        <div
+          className={className}
+          ref={ref}
+          aria-label={title ?? tooltip}
+          style={style}
+          {...getReferenceProps()}
+          onClick={onClick}
+        />
+      )}
+    </Tooltip>
+  )
 }
 
 function Interrogate() {
@@ -377,19 +444,21 @@ function Interrogate() {
       <div className="interrogate-container" style={{ position: 'relative' }}>
 
         {/* ── Clickable case-details image (replaces bg layer) ── */}
-        <img
+        <InterrogateImagePropWithToolTip
           src="src/assets/updatedcasedetails.png"
           alt="Case Details"
           className="bg-img-casedetails"
-          onClick={() => setShowNotes(v => !v)}
-          title="Field Notes"
+          tooltip={showNotebook ? 'Close suspect profile' : 'Open suspect profile'}
+          onClick={() => setShowNotebook(v => !v)}
+          title="Suspect Profile"
         />
 
         {/* ── Clickable locker image (replaces bg layer) ── */}
-        <img
+        <InterrogateImagePropWithToolTip
           src="src/assets/locker.png"
           alt="Evidence Locker"
           className="bg-img-locker"
+          tooltip={cluesModalOpen ? 'Close Evidence Locker' : 'Open Evidence Locker' + ' to add Clues to the Conversation'}
           onClick={() => setCluesModalOpen(v => !v)}
           title="Evidence Locker"
         />
@@ -510,7 +579,12 @@ function Interrogate() {
           </div>
 
           {/* Notepad image — opens notebook modal */}
-          <div className='notes-window' onClick={() => setShowNotebook(v => !v)} />
+          <InterrogatePanelWithToolTip
+            className='notes-window'
+            tooltip={showNotes ? 'Close Notepad for Suspect' : 'Open Notepad for Suspect'}
+            title='Field Notes'
+            onClick={() => setShowNotes(v => !v)}
+          />
         </div>
       </div>
 

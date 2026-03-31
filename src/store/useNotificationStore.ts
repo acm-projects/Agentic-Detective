@@ -371,6 +371,14 @@ export const useNotificationStore = create<NotificationState>()(
             clue.discovered = true;
             discoveredClueId = clue.id;
           }
+          console.log(clue?.name, "is discovered");
+
+          // Notes for self:
+            // Call functions to show the user which way to go to find the clue
+            // 
+            // 
+            // 
+            //           
         }
         else { // maybe replace with abandon
           const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId);

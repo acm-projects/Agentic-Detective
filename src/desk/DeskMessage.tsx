@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../useGameStore';
+import { Tooltip } from '../components/tooltip/Tooltip';
 import cluebookImg from './assets/themedcluebook.png';
 import cigaretteImg from './assets/newthemedcigarette.png';
 import caseFileImg from './assets/themedcasefile.png';
@@ -10,15 +10,41 @@ import pencilImg from './assets/themedpencil.png';
 import plantImg from './assets/muchbetterthemedplant.png';
 import deskBgImg from './assets/extranewdesk.png';
 import LoadingScreen from '../LoadingScreen';
-import CaseReportScreen from '../CaseReportScreen';
 import phoneImg from './assets/2themedcellphone.png';
 import './desk.css';
 import ScrabbleImg from './assets/newscrabble.png'; 
 
+interface DeskItemProps {
+  src: string;
+  alt: string;
+  tooltip: string;
+  className?: string;
+  style: React.CSSProperties;
+  onClick?: () => void;
+}
+
+function DeskItemWithTooltip({ src, alt, tooltip, className, style, onClick }: DeskItemProps) {
+  return (
+    <Tooltip<HTMLImageElement> content={tooltip} className="desk-tooltip" placement="bottom" offsetPx={3}>
+      {({ ref, getReferenceProps }) => (
+        <img
+          className={className}
+          src={src}
+          alt={alt}
+          style={style}
+          ref={ref}
+          {...getReferenceProps()}
+          onClick={onClick}
+        />
+      )}
+    </Tooltip>
+  );
+}
+
 function Message() {
-  const { phase, goToBriefing, makeAccusation, player  } = useGameStore();
+  const { phase } = useGameStore();
   const navigate = useNavigate();
-  const profiles = player?.characterProfiles ?? [];
+
   if (phase === 'generating') {
     return <LoadingScreen />;
   }
@@ -51,11 +77,12 @@ function Message() {
       <div style={{ width: '100vw', height: '100vh', position: 'relative', backgroundImage: `url(${deskBgImg})`, backgroundSize: 'cover' }}>
         
         {/* 1. CLUE BOOK */}
-        <img 
+        <DeskItemWithTooltip
           className="evidence-item" 
           src={cluebookImg} 
           alt="Clue Book" 
-          style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }} 
+          tooltip="Clue Book: review discovered evidence."
+          style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }}
           onClick={handleClueBookClick}
         />
 
@@ -77,10 +104,11 @@ function Message() {
         />
 
         {/* 3. CASE FILE */}
-        <img 
+        <DeskItemWithTooltip
           className='evidence-item'
           src={caseFileImg} 
           alt="Case File" 
+          tooltip="Case File: open your report and briefing."
           style={{ ...itemStyle, width: '490px', top: '270px', left: '5%', transform: 'rotate(-25deg)', zIndex: 10 }} 
           onClick={handleCaseFileClick}
         />
@@ -93,10 +121,11 @@ function Message() {
         />
 
         {/* 5. NOTEBOOK */}
-        <img 
+        <DeskItemWithTooltip
           className='evidence-item'
           src={notebookImg} 
           alt="Notebook" 
+          tooltip="Notebook: inspect all suspect profiles."
           style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
           onClick={handleSuspectClick}
         />
@@ -116,16 +145,17 @@ function Message() {
         />
 
         {/* 12. PHONE */}
-      <img 
+      <DeskItemWithTooltip
         className='evidence-item'
           src={phoneImg} 
           alt="Cellphone" 
+          tooltip="Cellphone: answer and continue interrogation."
           style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
           onClick={() => {
-          const audio = new Audio("http://localhost:5555/api/voice");
-          audio.play();
-          handlePhoneClick();
-        }}
+            const audio = new Audio("http://localhost:5555/api/voice");
+            audio.play();
+            handlePhoneClick();
+          }}
       />
     </div>
     </>

@@ -16,6 +16,7 @@
     "@clerk/react-router": "^3.0.5",
     "@clerk/ui": "^1.2.2",
     "@elevenlabs/elevenlabs-js": "^2.38.1",
+    "@floating-ui/react": "^0.27.19",
     "@google/genai": "^1.46.0",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/sdk": "^1.27.1",

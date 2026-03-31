@@ -16,6 +16,21 @@
   z-index: 9999;
 }
 
+.desk-tooltip {
+  background: rgba(17, 17, 17, 0.94);
+  color: #f3f0e4;
+  border: 2px solid #f3f0e4;
+  border-radius: 4px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 10px;
+  line-height: 1.4;
+  max-width: 230px;
+  padding: 8px 10px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  z-index: 11000;
+  pointer-events: none;
+}
+
 /* Modal Styles */
 .modal-overlay {
   position: fixed;
