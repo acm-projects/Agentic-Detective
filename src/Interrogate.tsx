@@ -7,7 +7,7 @@ import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
-import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
+import { Show, UserButton, useClerk } from '@clerk/react-router';
 import './Interrogate.css';
 
 import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
@@ -30,6 +30,8 @@ interface SuspectNote {
   suspectNotes: string;
   createdAt?: string;
 }
+
+type SuspicionLevel = 'low' | 'medium' | 'high';
 
 // ── Draggable hook ─────────────────────────────────────
 function useDraggableModal(initialPos: { x: number; y: number }) {
@@ -68,14 +70,13 @@ function Interrogate() {
   const { signOut } = useClerk();
   const {
     player,
+    seed,
     activeSuspectName,
     isResponding,
     elapsed,
     startInterrogation,
-    proceedToInvestigation,
     sendMessage,
     makeAccusation,
-    goToBriefing,
     tickElapsed,
   } = useGameStore();
 
@@ -86,6 +87,7 @@ function Interrogate() {
   const [showNotebook, setShowNotebook] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
+  const [selectedSuspicionLevel, setSelectedSuspicionLevel] = useState<SuspicionLevel | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
@@ -187,6 +189,15 @@ function Interrogate() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
+
+  useEffect(() => {
+    if (!activeProfile) return;
+    if ((seed?.difficulty ?? 0) < 3) {
+      setSelectedSuspicionLevel(activeProfile.suspicionLevel);
+      return;
+    }
+    setSelectedSuspicionLevel(null);
+  }, [activeProfile, seed?.difficulty]);
 
   // ── Drop zone ──────────────────────────────────────────
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true); };
@@ -712,8 +723,18 @@ function Interrogate() {
                   <div>
                     <div className="notebook-suspect-name">{activeProfile.name}</div>
                     <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>
-                    <div className={`notebook-suspicion-tag suspicion-${activeProfile.suspicionLevel}`}>
-                      {activeProfile.suspicionLevel.toUpperCase()}
+                    <div className="notebook-suspicion-buttons" role="group" aria-label="Suspicion level selector">
+                      {(['low', 'medium', 'high'] as SuspicionLevel[]).map((level) => (
+                        <button
+                          key={level}
+                          type="button"
+                          className={`notebook-suspicion-btn suspicion-${level} ${selectedSuspicionLevel === level ? 'active' : ''}`}
+                          onClick={() => setSelectedSuspicionLevel(level)}
+                          aria-pressed={selectedSuspicionLevel === level}
+                        >
+                          {level.toUpperCase()}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
