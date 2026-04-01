@@ -22,6 +22,80 @@ export const AVATAR_POOL = [
   { id: "avatar_04", description: "grey hair, glasses, long nose, blue sweater vest, medium thick eyebrows" }
 ] as const;
 
+// Each frame index maps to a visual description the LLM can reason about
+export const FEATURE_POOL = {
+  hair: [
+    { frameIndex: 0, description: "short, neat, parted left" },
+    { frameIndex: 1, description: "medium wavy, swept back" },
+    { frameIndex: 2, description: "long straight, loose" },
+    { frameIndex: 3, description: "short curly, voluminous" },
+    { frameIndex: 4, description: "shaggy, unkempt, falls over forehead" },
+    { frameIndex: 5, description: "tight bun or updo" },
+  ],
+  eyes: [
+    { frameIndex: 0, description: "wide, round, expressive" },
+    { frameIndex: 1, description: "narrow, calculating, slightly squinting" },
+    { frameIndex: 2, description: "large almond-shaped" },
+    { frameIndex: 3, description: "small, deep-set, intense" },
+    { frameIndex: 4, description: "tired, heavy-lidded" },
+    { frameIndex: 5, description: "bright, wide-eyed, youthful" },
+  ],
+  nose: [
+    { frameIndex: 0, description: "small button nose" },
+    { frameIndex: 1, description: "long aquiline, aristocratic" },
+    { frameIndex: 2, description: "wide and flat" },
+    { frameIndex: 3, description: "upturned, perky" },
+    { frameIndex: 4, description: "crooked, possibly broken" },
+    { frameIndex: 5, description: "large and bulbous" },
+  ],
+  mouth: [
+    { frameIndex: 0, description: "thin lips, neutral expression" },
+    { frameIndex: 1, description: "wide smile, friendly" },
+    { frameIndex: 2, description: "full lips, slightly parted" },
+    { frameIndex: 3, description: "pursed, stern" },
+    { frameIndex: 4, description: "downturned, melancholic" },
+    { frameIndex: 5, description: "smirk, one side raised" },
+  ],
+} as const;
+
+export type FeatureSelection = {
+  hairFrameIndex: number;
+  eyesFrameIndex: number;
+  noseFrameIndex: number;
+  mouthFrameIndex: number;
+  hairColor: string;
+  skinColor: string;
+  eyeColor: string;
+  shirtColor: string;
+  lipColor: string;
+};
+
+
+function sanitizeHex(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const cleaned = value.trim().replace(/^#+/, '');
+  if (/^[0-9A-Fa-f]{6}$/.test(cleaned)) return `#${cleaned}`;
+  if (/^[0-9A-Fa-f]{3}$/.test(cleaned)) {
+    const [a, b, c] = cleaned;
+    return `#${a}${a}${b}${b}${c}${c}`;
+  }
+  return fallback;
+}
+
+function sanitizePortraitFeatures(raw: any): FeatureSelection {
+  return {
+    hairFrameIndex:  Math.min(5, Math.max(0, Number(raw?.hairFrameIndex  ?? 0))),
+    eyesFrameIndex:  Math.min(5, Math.max(0, Number(raw?.eyesFrameIndex  ?? 0))),
+    noseFrameIndex:  Math.min(5, Math.max(0, Number(raw?.noseFrameIndex  ?? 0))),
+    mouthFrameIndex: Math.min(5, Math.max(0, Number(raw?.mouthFrameIndex ?? 0))),
+    hairColor:  sanitizeHex(raw?.hairColor,  '#7B4B2A'),
+    skinColor:  sanitizeHex(raw?.skinColor,  '#F5C28A'),
+    eyeColor:   sanitizeHex(raw?.eyeColor,   '#634E34'),
+    shirtColor: sanitizeHex(raw?.shirtColor, '#2980B9'),
+    lipColor:   sanitizeHex(raw?.lipColor,   '#C0627A'),
+  };
+}
+
 export type ClueSeverity = "low" | "medium" | "high";
 
 
@@ -50,6 +124,7 @@ export interface Suspect {
   lyingTells: string | null;          // null if they're fully honest
   knowledgeOfOtherSuspects: string;
   conversationsNeededToBreak: number; // Approx exchanges before cracks appear
+  portraitFeatures: FeatureSelection;
 }
 
 // ─────────────────────────────────────────────
@@ -67,6 +142,7 @@ export interface CharacterProfile {
   physicalDescription: string;
   avatarId: AvatarId;
   suspicionLevel: "low" | "medium" | "high"; // Initial UI hint
+  portraitFeatures: FeatureSelection;
 }
 
 // ─────────────────────────────────────────────
@@ -224,6 +300,24 @@ If the theme is purely original with no clear reference, invent a vivid original
 generic "mansion murder." Commit to a specific, unusual milieu.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+NAMING RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+If the setting is based on or closely inspired by an existing franchise, show, film, game, 
+or other IP — use naming conventions native to that world (see POP CULTURE & MEDIA RESONANCE).
+
+If the setting is original with no clear real-world IP reference, names must feel like 
+real people, not fictional characters:
+
+- DO NOT use surnames that sound "atmospheric" or "literary": no Thorne, Sterling, Vance, Sloane, Whitaker, Reed, Vorst, Elara, Valerius, Thorne, Vane, Rhea, Voss, etc.
+- DO NOT use first names that feel Victorian-mysterious: no Alistair, Cornelius, Isolde, Dorian, Lavinia, Arabella, Reginald, etc. unless the setting explicitly demands it.
+- DO NOT create alliterative or "poetic" name combos chosen to evoke atmosphere.
+- DO use statistically common names for the setting's culture and era.
+- DO mix mundane first names with mundane surnames. Real people have boring names.
+- BEFORE finalizing each name, ask: "Does this name sound like an AI invented it to 
+  sound mysterious?" If yes, change it.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 AVAILABLE AVATARS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -233,6 +327,53 @@ The following are your pre-made character art assets. For each suspect you gener
 3. Each suspect must have a UNIQUE avatarId — no two suspects share the same avatar.
 
 ${avatarList}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CHARACTER PORTRAIT FEATURES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For each suspect, select portrait features that best match their physicalDescription.
+If the character is inspired by or IS a known character from any game, show, book, or
+other media, prioritize matching that character's CANONICAL visual appearance.
+
+HAIR STYLES — pick the frameIndex whose description best matches:
+${FEATURE_POOL.hair.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
+
+EYE SHAPES — pick the frameIndex whose description best matches:
+${FEATURE_POOL.eyes.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
+
+NOSE SHAPES — pick the frameIndex whose description best matches:
+${FEATURE_POOL.nose.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
+
+MOUTH SHAPES — pick the frameIndex whose description best matches:
+${FEATURE_POOL.mouth.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
+
+COLORS — generate accurate hex values, do NOT pick from a fixed list:
+
+skinColor:
+  - Match the character's canonical skin tone if from known IP
+  - Valid human range: #FDDBB4 (very light) → #3B1A0A (very dark)
+  - Non-human characters may use any color (e.g. "#7EC8A0" for a green-skinned creature)
+  - Output a 6-digit hex string e.g. "#C68642"
+
+hairColor:
+  - Match canonical hair color if known IP (e.g. Terraria Painter → warm brown like "#7B4B2A")
+  - Fantasy characters may have any color
+  - Output a 6-digit hex string e.g. "#1A1008"
+
+eyeColor:
+  - Realistic human range: browns, greens, blues, greys, hazels
+  - Fantasy/non-human characters may have unusual eye colors
+  - Output a 6-digit hex string e.g. "#4B8B3B"
+
+shirtColor:
+  - Match canonical outfit/shirt color if known IP
+  - Output a 6-digit hex string e.g. "#2980B9"
+
+lipColor:
+  - Should harmonize with the skinColor you chose
+  - Realistic range: pinks, mauves, warm browns, deep reds
+  - Output a 6-digit hex string e.g. "#C0627A"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SUSPECT HONESTY RULES
@@ -308,7 +449,18 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
     "secretTheyreHiding": string | null,
     "lyingTells": string | null,
     "knowledgeOfOtherSuspects": string,
-    "conversationsNeededToBreak": number
+    "conversationsNeededToBreak": number,
+    "portraitFeatures": {
+      "hairFrameIndex": number,
+      "eyesFrameIndex": number,
+      "noseFrameIndex": number,
+      "mouthFrameIndex": number,
+      "hairColor": string,
+      "skinColor": string,
+      "eyeColor": string,
+      "shirtColor": string,
+      "lipColor": string
+    }
   }],
   "characterProfiles": [{
     "name": string,
@@ -321,6 +473,17 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
     "physicalDescription": string,
     "avatarId": string,
     "suspicionLevel": "low" | "medium" | "high"
+    "portraitFeatures": {
+      "hairFrameIndex": number,
+      "eyesFrameIndex": number,
+      "noseFrameIndex": number,
+      "mouthFrameIndex": number,
+      "hairColor": string,
+      "skinColor": string,
+      "eyeColor": string,
+      "shirtColor": string,
+      "lipColor": string
+    }
   }],
   "caseReport": {
     "caseTitle": string,
@@ -366,9 +529,9 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   // EXECUTE ALL OF THIS CODE ONLY IF A SESSION ID IS NOT ALREADY STORED IN GAME STATE
   // INSTEAD OF DOING THE ABOVE, JUST DEFINE A SEPARATE FUNCTION TO HANDLE THE CASE IF A SESH ID ALREADY EXISTS, KEEP THE CHECKING IN THE USEGAMESTORE FILE
   const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-2.5-flash",
     generationConfig: {
-      temperature: 0.5,
+      temperature: 0.9,
       responseMimeType: "application/json",
     },
   });
@@ -399,6 +562,16 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   );
 
   const raw: CaseFileRaw = JSON.parse(sanitized);
+
+  raw.suspects = raw.suspects.map(s => ({
+  ...s,
+    portraitFeatures: sanitizePortraitFeatures(s.portraitFeatures),
+  }));
+  raw.characterProfiles = raw.characterProfiles.map(p => ({
+    ...p,
+    portraitFeatures: sanitizePortraitFeatures(p.portraitFeatures),
+  }));
+
   const sessionId = raw.caseReport.caseId;
   localStorage.setItem("lastSessionId", sessionId);
 
@@ -502,12 +675,18 @@ export async function feedCaseFile(game: any): Promise<{
 
   const backend: CaseFileBackend = {
     storyline: game.caseData.storyline,
-    suspects: game.caseData.suspects,
+    suspects: game.caseData.suspects.map((s: any) => ({
+      ...s,
+      portraitFeatures: sanitizePortraitFeatures(s.portraitFeatures),
+    })),
     clues: mergedClues,
   };
 
   const player: CaseFilePlayer = {
-    characterProfiles: game.caseData.characterProfiles,
+    characterProfiles: game.caseData.characterProfiles.map((p: any) => ({
+      ...p,
+      portraitFeatures: sanitizePortraitFeatures(p.portraitFeatures),
+    })),
     caseReport: game.caseData.caseReport,
     clues: mergedClues,
   };

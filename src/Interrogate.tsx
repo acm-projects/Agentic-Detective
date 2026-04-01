@@ -9,14 +9,14 @@ import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
 import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
 import './Interrogate.css';
-
+import SuspectPortrait from './components/SuspectPortrait'
 // ✅ IMPORT YOUR GIF
-import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
+//import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
 
 // ✅ MAP (so it still works with avatarId system)
-const avatarMap: Record<string, string> = {
-  default: blinkingPortraitGirl,
-};
+//const avatarMap: Record<string, string> = {
+//  default: blinkingPortraitGirl,
+//};
 
 interface AttachedClue {
   id: string;
@@ -344,10 +344,10 @@ function Interrogate() {
             {activeProfile && (
               <div className='character-container'>
                 <div className='character-avatar'>
-                  <img
-                    src={avatarMap[activeProfile.avatarId] || avatarMap.default}
-                    alt={activeProfile.name}
-                  />
+                  {activeProfile.portraitFeatures
+                    ? <SuspectPortrait features={activeProfile.portraitFeatures} size={384} />
+                    : <div style={{ width: 384, height: 384, background: '#111' }} />
+                  }
                   <div className="avatar-overlay" />
                   <StressBar level={stressLevel} />
                 </div>
@@ -487,11 +487,14 @@ function Interrogate() {
               {activeProfile && (
                 <div className="notebook-suspect-card">
                   <div className="notebook-suspect-header">
-                    <img
-                      src={avatarMap[activeProfile.avatarId] || avatarMap.default}
-                      alt={activeProfile.name}
-                      className="notebook-suspect-avatar"
-                    />
+                    {activeProfile.portraitFeatures
+                      ? <SuspectPortrait
+                          features={activeProfile.portraitFeatures}
+                          size={80}
+                          className="notebook-suspect-avatar"
+                        />
+                      : <div className="notebook-suspect-avatar" style={{ background: '#111' }} />
+                    }
                     <div>
                       <div className="notebook-suspect-name">{activeProfile.name}</div>
                       <div className="notebook-suspect-meta">{activeProfile.age} · {activeProfile.occupation}</div>

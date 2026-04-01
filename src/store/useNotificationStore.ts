@@ -109,11 +109,17 @@ const IMAGE_UNSHUFFLE_CLUES = [
     { hint: 'The image was deliberately scrambled. Someone didn\'t want it seen.' },
 ];
 
+const IMAGE_UNSHUFFLE_IMAGES = [
+  '../../assets/Key.png',
+  '../../assets/Outline.png',
+  // add more as needed
+];
+
 function generateImageUnshuffleData(): ImageUnshuffleData {
     const entry = pickRandom(IMAGE_UNSHUFFLE_CLUES);
     return {
         kind: 'image-unshuffle',
-        imagePath: 'assets/meme.png',
+        imagePath: pickRandom(IMAGE_UNSHUFFLE_IMAGES),
         // solution is always the identity order; the UI owns the scrambled state
         solution: [0, 1, 2, 3, 4, 5, 6, 7, 8],
         hint: entry.hint,
