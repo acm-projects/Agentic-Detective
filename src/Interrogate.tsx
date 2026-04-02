@@ -7,7 +7,7 @@ import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
-import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
+import { Show, UserButton, useClerk } from '@clerk/react-router';
 import { Tooltip } from './components/tooltip/Tooltip';
 
 import './Interrogate.css';
@@ -136,13 +136,12 @@ function Interrogate() {
   const {
     player,
     activeSuspectName,
+    isFirstClueDiscovery,
     isResponding,
     elapsed,
     startInterrogation,
-    proceedToInvestigation,
     sendMessage,
     makeAccusation,
-    goToBriefing,
     tickElapsed,
   } = useGameStore();
 
@@ -331,6 +330,22 @@ function Interrogate() {
     return () => document.removeEventListener('click', handlePotentialSignOutClick, true);
   }, []);
 
+  // Source - https://stackoverflow.com/a/68933242
+  // Posted by Drew Reese, modified by community. See post 'Timeline' for change history
+  // Retrieved 2026-04-01, License - CC BY-SA 4.0
+
+  useEffect(() => {
+    const unloadCallback = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+      return "";
+    };
+
+    window.addEventListener("beforeunload", unloadCallback);
+    return () => window.removeEventListener("beforeunload", unloadCallback);
+  }, []);
+
+
   if (!player) {
     return (
       <div className="interrogate-container">
@@ -374,11 +389,16 @@ function Interrogate() {
           })}
         </div>
 
-        <button onClick={() => navigate("/desk")}>Desk</button>
+        <button
+          className={isFirstClueDiscovery ? 'desk-guide-button' : ''}
+          onClick={() => navigate("/desk")}
+        >Desk</button>
 
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
         }>Settings</button>
+        
+        
 
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
@@ -438,7 +458,19 @@ function Interrogate() {
             </div>
           </Show>
         </div> */}
+        <div className='notification-board'>
+          {isFirstClueDiscovery && (
+            <div className="first-clue-guide" role="status" aria-live="polite">
+              <p className="first-clue-guide-title">First Clue Discovered</p>
+              <p className="first-clue-guide-body">
+                <strong>Step 1:</strong> Click the highlighted Desk button above. <br /> <br />
+                <strong>Step 2:</strong> Open the Clues page from the Desk to review your newly acquired evidence.
+              </p>
+            </div>
+          )}  
+        </div>
       </div>
+      
 
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container" style={{ position: 'relative' }}>
@@ -491,6 +523,8 @@ function Interrogate() {
                 </div>
               </div>
             )}
+
+           
 
             <div className='chatbot'>
               <form onSubmit={handleSendMessage} className="message-form">

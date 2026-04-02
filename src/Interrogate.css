@@ -108,7 +108,108 @@ a { color: inherit; text-decoration: none; }
   transform: translate(4px, 4px); box-shadow: none;
 }
 
+.navigate > button.desk-guide-button {
+  background: #8a1515;
+  color: #fff5db;
+  border-color: #fff5db;
+  box-shadow: 0 0 0 2px #8a1515, 0 0 0 4px #fff5db;
+  animation: desk-guide-pulse 1.45s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  will-change: transform, box-shadow, background-color;
+}
+
+@keyframes desk-guide-pulse {
+  0% {
+    transform: translate(0, 0) scale(1);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 4px #fff5db;
+    background-color: #8a1515;
+  }
+
+  38% {
+    transform: translate(0, -1px) scale(1.02);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 8px rgba(241, 213, 140, 0.75);
+    background-color: #d32c2c;
+  }
+
+  68% {
+    transform: translate(0, 0.5px) scale(1.008);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 6px rgba(241, 213, 140, 0.55);
+    background-color: #be2424;
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 4px #fff5db;
+    background-color: #8a1515;
+  }
+}
+
 .nav-auth { margin-top: auto; }
+
+.notification-board {
+  margin-top: auto;
+  width: 100%;
+  min-height: 132px;
+  padding: 0.45rem;
+  border: 2px solid rgba(20, 20, 20, 0.75);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, #1a1b2c 0%, #212338 100%);
+  display: flex;
+  align-items: stretch;
+}
+
+.notification-board:empty::before {
+  content: 'No Active Notifications';
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.43rem;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(233, 231, 206, 0.78);
+  border: 2px dashed rgba(233, 231, 206, 0.28);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.notification-board .first-clue-guide {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  border: 3px solid #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  background:
+    linear-gradient(180deg, #fff4d8 0%, #f0ddb6 100%);
+  padding: 0.7rem 0.65rem;
+}
+
+.notification-board .first-clue-guide-title {
+  margin: 0 0 0.5rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.44rem;
+  line-height: 1.45;
+  text-transform: uppercase;
+  color: #7f1a1a;
+}
+
+.notification-board .first-clue-guide-body {
+  margin: 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.08rem;
+  line-height: 1.15;
+  color: #111111;
+}
+
+.notification-board .first-clue-guide-body strong {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.42rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #7f1a1a;
+}
 
 /* ── Vertical suspect avatar picker ── */
 .suspect-avatar-picker {
@@ -294,6 +395,31 @@ a { color: inherit; text-decoration: none; }
 .character-avatar img {
   height: clamp(220px, 28vh, 285px); width: auto;
   object-fit: contain; image-rendering: pixelated;
+}
+
+.first-clue-guide {
+  margin-top: 0.8rem;
+  border: 3px solid #1a1a1a;
+  box-shadow: 4px 4px 0 #1a1a1a;
+  background: #fff4d8;
+  padding: 0.7rem 1rem;
+  z-index: 3;
+}
+
+.first-clue-guide-title {
+  margin: 0 0 0.35rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.52rem;
+  text-transform: uppercase;
+  color: #8a1515;
+}
+
+.first-clue-guide-body {
+  margin: 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.2rem;
+  line-height: 1.2;
+  color: #111111;
 }
 
 /* ── Chat ── */

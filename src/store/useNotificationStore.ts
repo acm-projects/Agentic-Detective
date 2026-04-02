@@ -331,69 +331,65 @@ export const useNotificationStore = create<NotificationState>()(
             saveClueProgress(get);
         },
 
-    abandonMinigame(notificationId) {
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
-        if (!n) return
+            abandonMinigame(notificationId) {
+            set(s => {
+                const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
+                if (!n) return
 
-        n.dismissed = true
-        s.timerPaused = false
-        clearClueNotification(s.clues, n.clueId)
+                n.dismissed = true
+                s.timerPaused = false
+                clearClueNotification(s.clues, n.clueId)
 
-        const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId)
-        if (clue) {
-          clue.clueLost = true // if clueLost is true, it cannot be fed into a notification again
-          console.log(clue.name, "is lost");
-        }
-      })
+                const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId)
+                if (clue) {
+                clue.clueLost = true // if clueLost is true, it cannot be fed into a notification again
+                console.log(clue.name, "is lost");
+                }
+            })
 
-      saveClueProgress(get);
-    },
- 
-    /*
-    resolveMinigame() runs when a minigame ends. 
-    - If success is true, it finds the clue linked to that notification and flips clue.discovered = true. 
-    - Makes it appear in the evidence board. 
-    - Whether success or failure, it also dismisses the notification and unpauses the timer
-    */
-    resolveMinigame(notificationId, success) {
-      let discoveredClueId: string | null = null;
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
-        if (!n) return;
-        n.dismissed = true;
-        s.timerPaused = false;
-        clearClueNotification(s.clues, n.clueId);
- 
-        if (success) {
-          const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId) // cross-check this parameter type
-          if (clue) {
-            clue.discovered = true;
-            discoveredClueId = clue.id;
-          }
-          console.log(clue?.name, "is discovered");
-
-          // Notes for self:
-            // Call functions to show the user which way to go to find the clue
-            // 
-            // 
-            // 
-            //           
-        }
-        else { // maybe replace with abandon
-          const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId);
-          if (clue) {
-            clue.clueLost = true; // if clueLost is true, it cannot be fed into a notification again
-            console.log(clue.name, "is lost");
-          }
-        }
-      })
+            saveClueProgress(get);
+            },
+        
+        /*
+        resolveMinigame() runs when a minigame ends. 
+        - If success is true, it finds the clue linked to that notification and flips clue.discovered = true. 
+        - Makes it appear in the evidence board. 
+        - Whether success or failure, it also dismisses the notification and unpauses the timer
+        */
+        resolveMinigame(notificationId, success) {
+        let discoveredClueId: string | null = null;
+        set(s => {
+            const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
+            if (!n || n.dismissed) return;
+            n.dismissed = true;
+            s.timerPaused = false;
+            clearClueNotification(s.clues, n.clueId);
+    
+            if (success) {
+            const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId) // cross-check this parameter type
+            if (clue) {
+                clue.discovered = true;
+                discoveredClueId = clue.id;
+                // keep notification store clue state in sync for immediate UI updates
+            }
+            console.log(clue?.name, "is discovered");
+            }
+            else { // maybe replace with abandon
+            const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId);
+            if (clue) {
+                clue.clueLost = true; // if clueLost is true, it cannot be fed into a notification again
+                console.log(clue.name, "is lost");
+            }
+            }
+        })
 
             saveClueProgress(get);
 
             if (discoveredClueId) {
                 void import('../useGameStore').then(({ useGameStore }) => {
                     useGameStore.getState().markClueDiscovered(discoveredClueId as string);
+
+
                 });
             }
         },

@@ -44,6 +44,8 @@ function DeskItemWithTooltip({ src, alt, tooltip, className, style, onClick }: D
 function Message() {
   const { phase } = useGameStore();
   const navigate = useNavigate();
+  const { isFirstClueDiscovery, clearFirstClueDiscovery } = useGameStore();
+
 
   if (phase === 'generating') {
     return <LoadingScreen />;
@@ -61,6 +63,7 @@ function Message() {
   };
 
   const handleClueBookClick = () => {
+    clearFirstClueDiscovery();
     navigate('/clues');
   }
 
@@ -78,7 +81,7 @@ function Message() {
         
         {/* 1. CLUE BOOK */}
         <DeskItemWithTooltip
-          className="evidence-item" 
+          className={isFirstClueDiscovery ? 'evidence-item-first-discovery' : 'evidence-item'}
           src={cluebookImg} 
           alt="Clue Book" 
           tooltip="Clue Book: review discovered evidence."

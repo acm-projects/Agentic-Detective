@@ -62,6 +62,8 @@ interface GameState {
   totalConversationCount: number;
   currentSessionId: string;
   selectedCase: any | null;
+  isFirstClueDiscovery: boolean;
+  numDiscoveredClues: number;
 
   accusationResult: {
     accusedName: string;
@@ -81,14 +83,15 @@ interface GameState {
   proceedToInvestigation: (navigate: (path: string) => void) => void;
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
- sendMessage: (
-  text: string,
-  displayText: string,
-  displayClues?: { id: string; name: string }[]
-) => Promise<void>;
+  sendMessage: (
+    text: string,
+    displayText: string,
+    displayClues?: { id: string; name: string }[]
+  ) => Promise<void>;
   makeAccusation: (suspectName: string, navigate: (path: string) => void) => void;
   resetGame: () => void;
   markClueDiscovered: (clueId: string) => void;
+  clearFirstClueDiscovery: () => void;
   tickElapsed: () => void;
   setCurrentSessionId: (sessionId: string) => void; // This function can only be called when the user is signed in
   setSelectedCase: (caseDoc: any) => void;
@@ -116,6 +119,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   totalConversationCount: 0,
   currentSessionId: "",
   selectedCase: null,
+  isFirstClueDiscovery: false,
+  numDiscoveredClues: 0,
   accusationResult: null,
   error: null,
   isResponding: false,
@@ -153,7 +158,14 @@ export const useGameStore = create<GameState>((set, get) => ({
         const { backend, player } = await generateCaseFile(seed);
         // Select voices server-side (non-blocking — falls back to defaults on failure)
         const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
-        set({ backend, player, phase: "briefing", elapsed: 0 });
+        set({
+          backend,
+          player,
+          phase: "briefing",
+          elapsed: 0,
+          numDiscoveredClues: 0,
+          isFirstClueDiscovery: false,
+        });
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues)
         navigate("/report");           // ← instead of set({ phase: "briefing" })
@@ -165,6 +177,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         // Reloading existing case from selected save.
         try {
           const { backend, player, restoredSessions, isResolved } = await feedCaseFile(selectedCase);
+          const discoveredCluesCount = player.clues.filter(c => c.discovered).length;
 
           const gameState = selectedCase?.game ?? {};
           const restoredPhase = (gameState.phase as GamePhase) ?? "briefing";
@@ -192,6 +205,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             totalConversationCount: Number(gameState.totalConversationCount ?? 0),
             elapsed: Number(gameState.elapsedSeconds ?? 0),
             phase: isResolved ? "resolved" : restoredPhase,
+            numDiscoveredClues: discoveredCluesCount,
+            isFirstClueDiscovery: discoveredCluesCount === 1,
             accusationResult: restoredAccusationResult,
           });
 
@@ -621,16 +636,33 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   markClueDiscovered: (clueId) => {
     set(state => {
-    if (!state.player) return state
-    return {
-      player: {
-        ...state.player,
-        clues: state.player.clues.map(c =>
-          c.id === clueId ? { ...c, discovered: true } : c
-        )
-      }
-    };
+      if (!state.player) return state;
+
+      const targetClue = state.player.clues.find(c => c.id === clueId);
+      if (!targetClue || targetClue.discovered) return state;
+
+      const nextNumDiscovered = state.numDiscoveredClues + 1;
+      return {
+        numDiscoveredClues: nextNumDiscovered,
+        isFirstClueDiscovery: nextNumDiscovered === 1,
+        player: {
+          ...state.player,
+          clues: state.player.clues.map(c =>
+            c.id === clueId ? { ...c, discovered: true } : c
+          )
+        }
+      };
     });
+
+    if (useGameStore.getState().isFirstClueDiscovery) {
+      console.log("YEEHAW FIRST CLAWUE");
+    }
+
+    console.log("num disc cluee: " +useGameStore.getState().numDiscoveredClues)
+  },
+
+  clearFirstClueDiscovery: () => {
+    set({ isFirstClueDiscovery: false });
   },
 
   
@@ -645,6 +677,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       activeSuspectName: null,
       sessions: {},
       totalConversationCount: 0,
+      isFirstClueDiscovery: false,
+      numDiscoveredClues: 0,
       accusationResult: null,
       error: null,
       isResponding: false,
