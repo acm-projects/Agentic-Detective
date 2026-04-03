@@ -78,89 +78,102 @@ function Message() {
   return (
     <>
       <div style={{ width: '100vw', height: '100vh', position: 'relative', backgroundImage: `url(${deskBgImg})`, backgroundSize: 'cover' }}>
-        
-        {/* 1. CLUE BOOK */}
-        <DeskItemWithTooltip
-          className={isFirstClueDiscovery ? 'evidence-item-first-discovery' : 'evidence-item'}
-          src={cluebookImg} 
-          alt="Clue Book" 
-          tooltip="Clue Book: review discovered evidence."
-          style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }}
-          onClick={handleClueBookClick}
-        />
+        <div className='icons'>
+          {/* 1. CLUE BOOK */}
+          <DeskItemWithTooltip
+            className={isFirstClueDiscovery ? 'evidence-item-first-discovery' : 'evidence-item'}
+            src={cluebookImg} 
+            alt="Clue Book" 
+            tooltip="Clue Book: review discovered evidence."
+            style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }}
+            onClick={handleClueBookClick}
+          />
 
-        {/* 2. CIGARETTE */}
-        <img 
-          src={cigaretteImg} 
-          alt="Cigarette" 
-          style={{ ...itemStyle, width: '320px', top: '5px', left: '5%', transform: 'rotate(-50deg)' }} 
+          {/* 2. CIGARETTE */}
+          <img 
+            src={cigaretteImg} 
+            alt="Cigarette" 
+            style={{ ...itemStyle, width: '320px', top: '5px', left: '5%', transform: 'rotate(-50deg)' }} 
 
-        />
+          />
 
-        
-        {/* 2. SCRABBLE */}
-        <img 
-          src={ScrabbleImg} 
-          alt="Scrabble" 
-          style={{ ...itemStyle, width: '340px', top: '1px', left: '67%'}} 
+          
+          {/* 2. SCRABBLE */}
+          <img 
+            src={ScrabbleImg} 
+            alt="Scrabble" 
+            style={{ ...itemStyle, width: '340px', top: '1px', left: '67%'}} 
 
-        />
+          />
 
-        {/* 3. CASE FILE */}
+          {/* 3. CASE FILE */}
+          <DeskItemWithTooltip
+            className='evidence-item'
+            src={caseFileImg} 
+            alt="Case File" 
+            tooltip="Case File: open your report and briefing."
+            style={{ ...itemStyle, width: '490px', top: '270px', left: '5%', transform: 'rotate(-25deg)', zIndex: 10 }} 
+            onClick={handleCaseFileClick}
+          />
+
+          {/* 4. GUN */}
+          <img 
+            src={gunImg} 
+            alt="Gun" 
+            style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 
+          />
+
+          {/* 5. NOTEBOOK */}
+          <DeskItemWithTooltip
+            className='evidence-item'
+            src={notebookImg} 
+            alt="Notebook" 
+            tooltip="Notebook: inspect all suspect profiles."
+            style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
+            onClick={handleSuspectClick}
+          />
+
+          {/* 6. PENCIL */}
+          <img 
+            src={pencilImg} 
+            alt="Pencil" 
+            style={{ ...itemStyle, width: '200px', top: '315px', left: '48%', transform: 'rotate(-3deg)' }} 
+          />
+
+          {/* 11. PLANT */}
+          <img 
+            src={plantImg} 
+            alt="Office Plant" 
+            style={{ ...itemStyle, width: '330px', top: '-12px', left: '30%', transform: 'rotate(360deg)' }}
+          />
+
+          {/* 12. PHONE */}
         <DeskItemWithTooltip
           className='evidence-item'
-          src={caseFileImg} 
-          alt="Case File" 
-          tooltip="Case File: open your report and briefing."
-          style={{ ...itemStyle, width: '490px', top: '270px', left: '5%', transform: 'rotate(-25deg)', zIndex: 10 }} 
-          onClick={handleCaseFileClick}
+            src={phoneImg} 
+            alt="Cellphone" 
+            tooltip="Cellphone: answer and continue interrogation."
+            style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
+            onClick={() => {
+              const audio = new Audio("http://localhost:5555/api/voice");
+              audio.play();
+              handlePhoneClick();
+            }}
         />
-
-        {/* 4. GUN */}
-        <img 
-          src={gunImg} 
-          alt="Gun" 
-          style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 
-        />
-
-        {/* 5. NOTEBOOK */}
-        <DeskItemWithTooltip
-          className='evidence-item'
-          src={notebookImg} 
-          alt="Notebook" 
-          tooltip="Notebook: inspect all suspect profiles."
-          style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
-          onClick={handleSuspectClick}
-        />
-
-        {/* 6. PENCIL */}
-        <img 
-          src={pencilImg} 
-          alt="Pencil" 
-          style={{ ...itemStyle, width: '200px', top: '315px', left: '48%', transform: 'rotate(-3deg)' }} 
-        />
-
-        {/* 11. PLANT */}
-        <img 
-          src={plantImg} 
-          alt="Office Plant" 
-          style={{ ...itemStyle, width: '330px', top: '-12px', left: '30%', transform: 'rotate(360deg)' }}
-        />
-
-        {/* 12. PHONE */}
-      <DeskItemWithTooltip
-        className='evidence-item'
-          src={phoneImg} 
-          alt="Cellphone" 
-          tooltip="Cellphone: answer and continue interrogation."
-          style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
-          onClick={() => {
-            const audio = new Audio("http://localhost:5555/api/voice");
-            audio.play();
-            handlePhoneClick();
-          }}
-      />
+        </div>
+      <div className='custom-message'>
+        {isFirstClueDiscovery && (
+          <div role="status" aria-live="polite">
+            <p>First Clue Discovered</p>
+            <p>
+              <strong>Step 1:</strong> Click the highlighted Clue Book button above. <br /> <br />
+              <strong>Step 2:</strong> Open the Clues page from the Clue Book to review your newly acquired evidence.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
+    
     </>
   );
 }

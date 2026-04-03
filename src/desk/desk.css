@@ -150,3 +150,58 @@
   justify-content: center;
   transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
 }
+
+.custom-message {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(12px, 3.2vh, 34px);
+  width: min(560px, 82vw);
+  max-width: calc(100vw - 28px);
+  z-index: 40;
+  pointer-events: none;
+}
+
+.custom-message > div {
+  border: 3px solid #1a1a1a;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.35);
+  background:
+    linear-gradient(180deg, #fff4d8 0%, #efddb6 100%);
+  padding: 0.85rem 0.95rem;
+}
+
+.custom-message p {
+  margin: 0;
+  color: #111111;
+}
+
+.custom-message p:first-child {
+  margin-bottom: 0.55rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(0.45rem, 0.9vw, 0.56rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #7f1a1a;
+  line-height: 1.45;
+}
+
+.custom-message p:last-child {
+  font-family: 'VT323', monospace;
+  font-size: clamp(1.03rem, 1.9vw, 1.28rem);
+  line-height: 1.18;
+}
+
+.custom-message strong {
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(0.4rem, 0.78vw, 0.48rem);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: #7f1a1a;
+}
+
+@media (max-width: 980px) {
+  .custom-message {
+    width: min(92vw, 560px);
+    bottom: clamp(10px, 2.4vh, 18px);
+  }
+}
