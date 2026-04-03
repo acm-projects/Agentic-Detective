@@ -153,7 +153,7 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame } = useGameStore();
+  const { accusationResult, resetGame, player } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
   const audioRefs = useRef<HTMLAudioElement[]>([]);
@@ -198,6 +198,7 @@ function Accuse() {
   }
 
   const { accusedName, isCorrect, trueKiller, explanation } = accusationResult;
+  const caseCode = player?.caseReport?.caseId;
 
   return (
     <div className={`accuse-page ${phase === 'flash' ? 'accuse-flash' : 'accuse-dark'}`}>
@@ -226,6 +227,12 @@ function Accuse() {
 
         {explanation && (
           <p className="accuse-explanation">{explanation}</p>
+        )}
+
+        {caseCode && (
+          <p className="accuse-case-code">
+            Case ID: <span>{caseCode}</span>
+          </p>
         )}
 
         <div className="accuse-buttons">

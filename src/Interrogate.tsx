@@ -7,7 +7,7 @@ import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
-import { Show, SignInButton, SignUpButton, UserButton, useClerk } from '@clerk/react-router';
+import { Show, UserButton, useClerk } from '@clerk/react-router';
 import './Interrogate.css';
 
 import blinkingPortraitGirl from './assets/blinkingportraitgirl.gif';
@@ -72,10 +72,8 @@ function Interrogate() {
     isResponding,
     elapsed,
     startInterrogation,
-    proceedToInvestigation,
     sendMessage,
     makeAccusation,
-    goToBriefing,
     tickElapsed,
   } = useGameStore();
 

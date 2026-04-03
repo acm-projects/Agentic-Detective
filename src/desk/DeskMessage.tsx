@@ -19,6 +19,7 @@ function Message() {
   const { phase, goToBriefing, makeAccusation, player  } = useGameStore();
   const navigate = useNavigate();
   const profiles = player?.characterProfiles ?? [];
+  const caseCode = player?.caseReport?.caseId;
   if (phase === 'generating') {
     return <LoadingScreen />;
   }
@@ -49,6 +50,23 @@ function Message() {
   return (
     <>
       <div style={{ width: '100vw', height: '100vh', position: 'relative', backgroundImage: `url(${deskBgImg})`, backgroundSize: 'cover' }}>
+        {caseCode && (
+          <div style={{
+            position: 'absolute',
+            top: '16px',
+            left: '18px',
+            zIndex: 10001,
+            background: 'rgba(10,10,10,0.78)',
+            color: '#fff',
+            border: '1px solid #ffffff66',
+            padding: '8px 10px',
+            fontSize: '0.72rem',
+            letterSpacing: '0.06em',
+            fontFamily: 'Press Start 2P, cursive'
+          }}>
+            CASE ID: {caseCode}
+          </div>
+        )}
         
         {/* 1. CLUE BOOK */}
         <img 

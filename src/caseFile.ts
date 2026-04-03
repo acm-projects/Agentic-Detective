@@ -177,10 +177,10 @@ function buildPrompt(seed: PlayerSeed): string {
       : "Dark and visceral. Graphic cause of death and disturbing details are appropriate.";
 
   const difficultyGuide =
-    seed.difficulty <= 3
-      ? "The case should be straightforward. One suspect is clearly more suspicious than others. Clues point fairly directly at the murderer. Contradictions are easy to spot."
-      : seed.difficulty <= 6
-      ? "Two suspects seem plausible. Some clues are misleading. The player needs 2–3 good interrogations to narrow it down."
+    seed.difficulty ==1
+      ? "The case should be straightforward. One or two suspect is clearly more suspicious than others. Clues point fairly directly at the murderer. Contradictions are easy to spot. It should be easy but not too easy."
+      : seed.difficulty == 2
+      ? "Two to three suspects seem plausible. Some clues are misleading. The player needs 5-6 good interrogations to narrow it down."
       : "All suspects have plausible motives. Red herrings are present. Only careful cross-referencing of clues and dialogue will reveal the truth.";
 
   return `
@@ -188,7 +188,7 @@ You are a mystery game master designing a murder mystery detective game case.
 
 PLAYER SEED:
 - Theme / Setting and other information: "${seed.freeText}"
-- Difficulty: ${seed.difficulty} out of 10 — ${difficultyGuide}
+- Difficulty: ${seed.difficulty} out of 3 — ${difficultyGuide}
 - Session length: ${seed.duration} minutes (target ~${estimatedConversations} total exchanges across all suspects before the player has enough to solve it)
 - Intensity: ${seed.intensity} out of 10 — ${intensityGuide}
 

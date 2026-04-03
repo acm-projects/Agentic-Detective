@@ -126,3 +126,15 @@
 .accuse-explanation {
     color: white;
 }
+
+.accuse-case-code {
+  margin-top: 1rem;
+  color: #ddd;
+  font-size: 0.85rem;
+}
+
+.accuse-case-code span {
+  color: #fff;
+  border: 1px solid #ffffff55;
+  padding: 0.2rem 0.5rem;
+}

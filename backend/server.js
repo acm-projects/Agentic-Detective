@@ -169,8 +169,8 @@ app.post('/save-case', (req, res) => {
   res.json({ success: true, file: filename });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on: http://localhost:${port}`);
+app.get('/health', (_req, res) => {
+  res.json({ ok: true, service: 'agentic-detective-backend' });
 });
 // -- Helpers --
 const STATUS = new Set(["in_progress", "paused", "resolved", "abandoned"]);
@@ -280,6 +280,7 @@ app.post('/cases/create', async (req, res) => {
       },
 
       notes: {
+        activeSuspectName: game?.activeSuspectName ?? null,
         
       },
 
@@ -386,7 +387,7 @@ app.get('/case/:sessionId/notes', async (req, res) => {
   if(!suspectName){}
   try {
     const doc = await db.collection('cases').findOne(
-      { sessionId: req.params.caseId },
+      { sessionId: req.params.sessionId },
       { projection: { _id: 0, notes: 1 } }
     );
 
@@ -436,6 +437,45 @@ app.post('/cases/:sessionId/outcome', async (req, res) => {
     }
 
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/community/cases/:caseCode/template', async (req, res) => {
+  try {
+    const caseCode = String(req.params.caseCode ?? '').trim();
+    if (!caseCode) {
+      return res.status(400).json({ error: 'caseCode is required' });
+    }
+
+    const caseCodeRegex = new RegExp(`^${caseCode}$`, 'i');
+    const doc = await db.collection('cases').findOne(
+      {
+        $or: [
+          { 'caseData.caseReport.caseId': caseCodeRegex },
+          { caseId: caseCodeRegex },
+          { sessionId: caseCodeRegex },
+        ],
+      },
+      {
+        sort: { updatedAt: -1 },
+        projection: {
+          _id: 0,
+          caseData: 1,
+          game: 1,
+        },
+      }
+    );
+
+    if (!doc?.caseData?.caseReport?.caseId) {
+      return res.status(404).json({ error: 'Case code not found' });
+    }
+
+    res.json({
+      caseData: doc.caseData,
+      seed: doc.game?.seed ?? null,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

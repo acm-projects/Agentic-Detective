@@ -4,7 +4,8 @@ import { useGameStore } from "./useGameStore";
 import { useNavigate } from 'react-router';
 import { Show, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/react-router';
 import SavedGamesList from './components/savegamelist/SavedGamesList';
-import { FaSave } from "react-icons/fa";
+import { FaSave, FaUsers } from "react-icons/fa";
+import Community from './Community';
 
 function NewGame() {
   const setSeed = useGameStore((s) => s.setSeed);
@@ -15,8 +16,9 @@ function NewGame() {
     const [personalization, setPersonalization] = useState('');
     const [timePeriod, setTimePeriod] = useState(10);
     const [intensity, setIntensity] = useState(5);
-    const [difficulty, setDifficulty] = useState(5);
+    const [difficulty, setDifficulty] = useState<1 | 2 | 3>(2);
     const [isMuted, setIsMuted] = useState(false);
+    const [showCommunity, setShowCommunity] = useState(false);
 
     const { userId, isSignedIn, isLoaded } = useAuth();
 
@@ -152,22 +154,38 @@ function NewGame() {
         />
       </div>
       <div className="slider-container">
-        <label className="label">Difficulty: {difficulty}</label>
-        <input
-          type="range"
-          min="1" 
-          max="10" 
-          step="1"
-          value={difficulty}
-          onChange={(e) => setDifficulty(Number(e.target.value))}
-          className="slider"
-        />
+        <label className="label">
+          Difficulty: {difficulty === 1 ? 'Easy' : difficulty === 2 ? 'Medium' : 'Hard'}
+        </label>
+        <div className="difficulty-toggle" role="group" aria-label="Difficulty selector">
+          <button
+            type="button"
+            className={`difficulty-option ${difficulty === 1 ? 'active' : ''}`}
+            onClick={() => setDifficulty(1)}
+          >
+            Easy
+          </button>
+          <button
+            type="button"
+            className={`difficulty-option ${difficulty === 2 ? 'active' : ''}`}
+            onClick={() => setDifficulty(2)}
+          >
+            Medium
+          </button>
+          <button
+            type="button"
+            className={`difficulty-option ${difficulty === 3 ? 'active' : ''}`}
+            onClick={() => setDifficulty(3)}
+          >
+            Hard
+          </button>
+        </div>
       </div>
         <button className="detective-button" onClick={()=>{
           playClickSound();
           setSeed({
             freeText: personalization,        // "1920s jazz club", "remote Antarctic base", etc
-            difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
+            difficulty: difficulty,  // 1 = Easy, 2 = Medium, 3 = Hard
             duration: timePeriod,     // minutes: 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60
             intensity: intensity,
             userId: userId ?? undefined, // cross check whether this should be undefined or ""
@@ -184,8 +202,42 @@ function NewGame() {
         }} >
         SOLVE! 
       </button>
+
+      {/* Community Button - Bottom Left */}
+      <button
+        onClick={() => setShowCommunity(true)}
+        className="community-button"
+        title="View Community"
+      >
+        <FaUsers /> Community
+      </button>
+
+      {/* Community Modal */}
+      <dialog 
+        className="community-modal"
+        open={showCommunity}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowCommunity(false);
+          }
+        }}
+      >
+        <div className="community-modal-content">
+          <button
+            className="community-modal-close"
+            onClick={() => setShowCommunity(false)}
+            aria-label="Close community modal"
+          >
+            ✕
+          </button>
+          <Community onCloseModal={() => setShowCommunity(false)} />
+        </div>
+      </dialog>
     </div>
     );
+
+
+
 }
 
 export default NewGame;
