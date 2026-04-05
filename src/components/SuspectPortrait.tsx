@@ -53,11 +53,11 @@ type CharacterState = Record<string, Frame>
 
 function buildCharacterState(features: FeatureSelection): CharacterState {
   return {
-    backHair:  ASSETS.backHair.frames[features.hairFrameIndex]  ?? ASSETS.backHair.frames[0],
-    frontHair: ASSETS.frontHair.frames[features.hairFrameIndex] ?? ASSETS.frontHair.frames[0],
-    eyes:      ASSETS.eyes.frames[features.eyesFrameIndex]      ?? ASSETS.eyes.frames[0],
-    nose:      ASSETS.nose.frames[features.noseFrameIndex]      ?? ASSETS.nose.frames[0],
-    mouth:     ASSETS.mouth.frames[features.mouthFrameIndex]    ?? ASSETS.mouth.frames[0],
+    backHair:  ASSETS.backHair.frames[features.backHairFrameIndex]  ?? ASSETS.backHair.frames[0],
+    frontHair: ASSETS.frontHair.frames[features.frontHairFrameIndex] ?? ASSETS.frontHair.frames[0],
+    eyes:      ASSETS.eyes.frames[features.eyesFrameIndex]           ?? ASSETS.eyes.frames[0],
+    nose:      ASSETS.nose.frames[features.noseFrameIndex]           ?? ASSETS.nose.frames[0],
+    mouth:     ASSETS.mouth.frames[features.mouthFrameIndex]         ?? ASSETS.mouth.frames[0],
     head:      ASSETS.head.frames[0],
     neck:      ASSETS.neck.frames[0],
     shirt:     ASSETS.shirt.frames[0],
@@ -224,8 +224,8 @@ export default function SuspectPortrait({ features, size = 384, className }: Sus
       height={FRAME_H}
       className={className}
       style={{
-        width: size,
-        height: size,
+        width: size / 1.75,
+        height: size / 1.75,
         imageRendering: 'pixelated',
       }}
     />

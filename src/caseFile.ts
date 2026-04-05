@@ -1,65 +1,70 @@
 // ============================================================
-//  CASE FILE — Single LLM call that fans out into 5 outputs
-//  Murder-only for now. Generalize to other crimes later.
+//  CASE FILE — Two-call generation pipeline
+//  Call 1: Story Bible  (logic / consistency)
+//  Call 2: Full Case    (creative, built on locked story)
 // ============================================================
-import type { PlayerSeed, Storyline } from "./obj/backendInterfaces"; 
+import type { PlayerSeed, Storyline } from "./obj/backendInterfaces";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-
-
 // ─────────────────────────────────────────────
 //  AVATAR POOL
-//  The LLM reads these descriptions and picks the best match per suspect.
-//  Update this list to match your actual art assets.
 // ─────────────────────────────────────────────
 
 export const AVATAR_POOL = [
   { id: "avatar_01", description: "brown hair, small nose, pink lips, mole, upturned eyebrows" },
   { id: "avatar_02", description: "black hair, long nose, purple lips, downturned eyebrows, freckles" },
   { id: "avatar_03", description: "yellow hair, wide nose, mustache, thick eyebrows, and green shirt" },
-  { id: "avatar_04", description: "grey hair, glasses, long nose, blue sweater vest, medium thick eyebrows" }
+  { id: "avatar_04", description: "grey hair, glasses, long nose, blue sweater vest, medium thick eyebrows" },
 ] as const;
 
-// Each frame index maps to a visual description the LLM can reason about
 export const FEATURE_POOL = {
-  hair: [
-    { frameIndex: 0, description: "short, neat, parted left" },
-    { frameIndex: 1, description: "medium wavy, swept back" },
-    { frameIndex: 2, description: "long straight, loose" },
-    { frameIndex: 3, description: "short curly, voluminous" },
-    { frameIndex: 4, description: "shaggy, unkempt, falls over forehead" },
-    { frameIndex: 5, description: "tight bun or updo" },
+  backHair: [
+    { frameIndex: 0, description: "super curly hair in afro shape" },
+    { frameIndex: 1, description: "medium length hair" },
+    { frameIndex: 2, description: "long hair" },
+    { frameIndex: 3, description: "long hair" },
+    { frameIndex: 4, description: "medium length hair" },
+    { frameIndex: 5, description: "super long hair" },
+  ],
+  frontHair: [
+    { frameIndex: 0, description: "curly swoop" },
+    { frameIndex: 1, description: "straight hair middle part" },
+    { frameIndex: 2, description: "bangs" },
+    { frameIndex: 3, description: "slickback" },
+    { frameIndex: 4, description: "hair that is up and short" },
+    { frameIndex: 5, description: "space buns" },
   ],
   eyes: [
     { frameIndex: 0, description: "wide, round, expressive" },
-    { frameIndex: 1, description: "narrow, calculating, slightly squinting" },
-    { frameIndex: 2, description: "large almond-shaped" },
+    { frameIndex: 1, description: "smiling, slightly squinting" },
+    { frameIndex: 2, description: "angry" },
     { frameIndex: 3, description: "small, deep-set, intense" },
     { frameIndex: 4, description: "tired, heavy-lidded" },
-    { frameIndex: 5, description: "bright, wide-eyed, youthful" },
+    { frameIndex: 5, description: "neutral" },
   ],
   nose: [
-    { frameIndex: 0, description: "small button nose" },
-    { frameIndex: 1, description: "long aquiline, aristocratic" },
+    { frameIndex: 0, description: "round nose" },
+    { frameIndex: 1, description: "straight" },
     { frameIndex: 2, description: "wide and flat" },
-    { frameIndex: 3, description: "upturned, perky" },
-    { frameIndex: 4, description: "crooked, possibly broken" },
-    { frameIndex: 5, description: "large and bulbous" },
+    { frameIndex: 3, description: "flat and wide" },
+    { frameIndex: 4, description: "concave" },
+    { frameIndex: 5, description: "long and pointy nose" },
   ],
   mouth: [
-    { frameIndex: 0, description: "thin lips, neutral expression" },
+    { frameIndex: 0, description: "lips, neutral expression" },
     { frameIndex: 1, description: "wide smile, friendly" },
-    { frameIndex: 2, description: "full lips, slightly parted" },
-    { frameIndex: 3, description: "pursed, stern" },
-    { frameIndex: 4, description: "downturned, melancholic" },
-    { frameIndex: 5, description: "smirk, one side raised" },
+    { frameIndex: 2, description: "frown" },
+    { frameIndex: 3, description: "slight smirk" },
+    { frameIndex: 4, description: "big smirk" },
+    { frameIndex: 5, description: "neutral" },
   ],
 } as const;
 
 export type FeatureSelection = {
-  hairFrameIndex: number;
+  backHairFrameIndex: number;
+  frontHairFrameIndex: number;
   eyesFrameIndex: number;
   noseFrameIndex: number;
   mouthFrameIndex: number;
@@ -70,10 +75,13 @@ export type FeatureSelection = {
   lipColor: string;
 };
 
+// ─────────────────────────────────────────────
+//  SANITIZERS
+// ─────────────────────────────────────────────
 
 function sanitizeHex(value: unknown, fallback: string): string {
-  if (typeof value !== 'string') return fallback;
-  const cleaned = value.trim().replace(/^#+/, '');
+  if (typeof value !== "string") return fallback;
+  const cleaned = value.trim().replace(/^#+/, "");
   if (/^[0-9A-Fa-f]{6}$/.test(cleaned)) return `#${cleaned}`;
   if (/^[0-9A-Fa-f]{3}$/.test(cleaned)) {
     const [a, b, c] = cleaned;
@@ -84,28 +92,41 @@ function sanitizeHex(value: unknown, fallback: string): string {
 
 function sanitizePortraitFeatures(raw: any): FeatureSelection {
   return {
-    hairFrameIndex:  Math.min(5, Math.max(0, Number(raw?.hairFrameIndex  ?? 0))),
-    eyesFrameIndex:  Math.min(5, Math.max(0, Number(raw?.eyesFrameIndex  ?? 0))),
-    noseFrameIndex:  Math.min(5, Math.max(0, Number(raw?.noseFrameIndex  ?? 0))),
-    mouthFrameIndex: Math.min(5, Math.max(0, Number(raw?.mouthFrameIndex ?? 0))),
-    hairColor:  sanitizeHex(raw?.hairColor,  '#7B4B2A'),
-    skinColor:  sanitizeHex(raw?.skinColor,  '#F5C28A'),
-    eyeColor:   sanitizeHex(raw?.eyeColor,   '#634E34'),
-    shirtColor: sanitizeHex(raw?.shirtColor, '#2980B9'),
-    lipColor:   sanitizeHex(raw?.lipColor,   '#C0627A'),
+    backHairFrameIndex:  Math.min(5, Math.max(0, Number(raw?.backHairFrameIndex  ?? 0))),
+    frontHairFrameIndex: Math.min(5, Math.max(0, Number(raw?.frontHairFrameIndex ?? 0))),
+    eyesFrameIndex:      Math.min(5, Math.max(0, Number(raw?.eyesFrameIndex      ?? 0))),
+    noseFrameIndex:      Math.min(5, Math.max(0, Number(raw?.noseFrameIndex      ?? 0))),
+    mouthFrameIndex:     Math.min(5, Math.max(0, Number(raw?.mouthFrameIndex     ?? 0))),
+    hairColor:  sanitizeHex(raw?.hairColor,  "#7B4B2A"),
+    skinColor:  sanitizeHex(raw?.skinColor,  "#F5C28A"),
+    eyeColor:   sanitizeHex(raw?.eyeColor,   "#634E34"),
+    shirtColor: sanitizeHex(raw?.shirtColor, "#2980B9"),
+    lipColor:   sanitizeHex(raw?.lipColor,   "#C0627A"),
   };
 }
 
+// Strip markdown fences + sanitize control characters inside JSON string values only
+function cleanRawJson(raw: string): string {
+  return raw
+    .replace(/^```json\s*/i, "")
+    .replace(/^```\s*/i, "")
+    .replace(/```\s*$/i, "")
+    .trim()
+    .replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
+      match
+        .replace(/(?<!\\)\n/g, "\\n")
+        .replace(/(?<!\\)\r/g, "\\r")
+        .replace(/(?<!\\)\t/g, "\\t")
+    );
+}
+
+// ─────────────────────────────────────────────
+//  TYPES
+// ─────────────────────────────────────────────
+
 export type ClueSeverity = "low" | "medium" | "high";
-
-
 export type AvatarId = typeof AVATAR_POOL[number]["id"];
 
-
-// ─────────────────────────────────────────────
-//  OUTPUT 2 — SUSPECTS  🔒 BACKEND + CHAT SESSIONS
-// ─────────────────────────────────────────────
-// This is the stuff that you feed to the LLM
 export interface Suspect {
   name: string;
   age: number;
@@ -113,102 +134,71 @@ export interface Suspect {
   occupation: string;
   relationshipToVictim: string;
   personality: string;
-  physicalDescription: string;        // LLM generates this FIRST, then picks avatar to match
-  avatarId: AvatarId;                 // Chosen by LLM based on physicalDescription vs avatar pool
+  physicalDescription: string;
+  avatarId: AvatarId;
   trueAlibi: string;
-  claimedAlibi: string;               // May be identical to trueAlibi if they're being honest
-  trueMotive: string | null;          // null if they have no motive (innocent bystander type)
+  claimedAlibi: string;
+  trueMotive: string | null;
   isGuilty: boolean;
-  honestyLevel: "honest" | "partially_honest" | "deceptive"; // Spectrum — not all innocents lie
-  secretTheyreHiding: string | null;  // null if they have nothing to hide
-  lyingTells: string | null;          // null if they're fully honest
+  honestyLevel: "honest" | "partially_honest" | "deceptive";
+  secretTheyreHiding: string | null;
+  lyingTells: string | null;
   knowledgeOfOtherSuspects: string;
-  conversationsNeededToBreak: number; // Approx exchanges before cracks appear
+  conversationsNeededToBreak: number;
   portraitFeatures: FeatureSelection;
 }
 
-// ─────────────────────────────────────────────
-//  OUTPUT 3 — CHARACTER PROFILES  👤 PLAYER UI
-// ─────────────────────────────────────────────
-// This is what the user see
 export interface CharacterProfile {
   name: string;
   age: number;
   gender: "male" | "female";
   occupation: string;
   relationshipToVictim: string;
-  personalityBlurb: string;     // Flavourful, not mechanical
+  personalityBlurb: string;
   claimedAlibi: string;
   physicalDescription: string;
   avatarId: AvatarId;
-  suspicionLevel: "low" | "medium" | "high"; // Initial UI hint
+  suspicionLevel: "low" | "medium" | "high";
   portraitFeatures: FeatureSelection;
 }
 
-// ─────────────────────────────────────────────
-//  OUTPUT 4 — CASE REPORT  📋 PLAYER UI
-// ─────────────────────────────────────────────
-
 export interface CaseReport {
   caseTitle: string;
-  caseId: string;               // e.g. "CASE-0047" for flavor
-  setting: string;              // Vivid description of the location
-  date: string;                 // In-world date of the murder
+  caseId: string;
+  setting: string;
+  date: string;
   victim: {
     name: string;
     age: number;
     occupation: string;
     background: string;
-    causeOfDeath: string;       // Coroner finding — level of detail scales with intensity
-    bodyFoundAt: string;        // Where discovered
+    causeOfDeath: string;
+    bodyFoundAt: string;
   };
-  officialBriefing: string;     // Detective briefing paragraph, 3–4 sentences, no spoilers
+  officialBriefing: string;
   knownFacts: string[];
-  openQuestions: string[];      // Suggestive questions to guide the player — no answers
+  openQuestions: string[];
 }
 
-// ─────────────────────────────────────────────
-//  OUTPUT 5 — CLUES  🔍 PLAYER UI
-//  All clues are visible from the start.
-// ─────────────────────────────────────────────
-
-/*export interface Clue {
-  id: string;                         // e.g. "clue_bar_receipt" — matches Contradiction.exposedByClueId
+export interface Clue {
+  id: string;
   name: string;
   description: string;
-  location: string;                   // Specific spot in the scene
-  couldImplicateSuspects: string[];   // Ambiguous by design — may point to multiple suspects
-  isDecisive: boolean;                // True = directly proves something; False = circumstantial
-}*/
-
-export interface Clue {
-    id: string;
-    name: string;
-    description: string;
-    location?: string;
-    couldImplicateSuspects?: string[];
-    discovered?: boolean;
-    severity: ClueSeverity;
-    notificationId?: string;
-    isDecisive: boolean;
-    clueLost: boolean;   // if clue is lost, it cannot be found again
-};
-
-// ─────────────────────────────────────────────
-//  RAW OUTPUT (assembled from LLM)
-// ─────────────────────────────────────────────
+  location?: string;
+  couldImplicateSuspects?: string[];
+  discovered: boolean;
+  severity: ClueSeverity;
+  notificationId?: string;
+  isDecisive: boolean;
+  clueLost: boolean;
+}
 
 export interface CaseFileRaw {
   storyline: Storyline;
   suspects: Suspect[];
-  characterProfiles: CharacterProfile[];
   caseReport: CaseReport;
   clues: Clue[];
 }
-
-// ─────────────────────────────────────────────
-//  SPLIT SLICES
-// ─────────────────────────────────────────────
 
 export interface CaseFileBackend {
   storyline: Storyline;
@@ -225,213 +215,241 @@ export interface CaseFilePlayer {
 export interface RestoredSuspectSession {
   suspectName: string;
   chatSession: null;
-  history: Array<{
-    role: "player" | "suspect";
-    text: string;
-    timestamp: number;
-  }>;
+  history: Array<{ role: "player" | "suspect"; text: string; timestamp: number }>;
   conversationCount: number;
   stressLevel: number;
 }
 
 // ─────────────────────────────────────────────
-//  PROMPT BUILDER
+//  DERIVE characterProfiles FROM suspects
+//  No second LLM generation needed — just strip sensitive fields.
 // ─────────────────────────────────────────────
 
-function buildPrompt(seed: PlayerSeed): string {
-  const estimatedConversations = Math.round(seed.duration / 2);
+function deriveCharacterProfiles(suspects: Suspect[]): CharacterProfile[] {
+  return suspects.map((s) => ({
+    name: s.name,
+    age: s.age,
+    gender: s.gender,
+    occupation: s.occupation,
+    relationshipToVictim: s.relationshipToVictim,
+    personalityBlurb: s.personality,
+    claimedAlibi: s.claimedAlibi,
+    physicalDescription: s.physicalDescription,
+    avatarId: s.avatarId,
+    // Derive suspicion level from honesty without exposing isGuilty
+    suspicionLevel:
+      s.honestyLevel === "deceptive" ? "high"
+      : s.honestyLevel === "partially_honest" ? "medium"
+      : "low",
+    portraitFeatures: s.portraitFeatures,
+  }));
+}
 
-  const avatarList = AVATAR_POOL
-    .map(a => `  - "${a.id}": ${a.description}`)
-    .join("\n");
+// ─────────────────────────────────────────────
+//  PROMPT — CALL 1: STORY BIBLE
+//  Small, fast, logic-only. Locks victim, murderer,
+//  clue IDs, and contradictions before Call 2 runs.
+// ─────────────────────────────────────────────
 
+interface StoryBible {
+  victimName: string;
+  victimAge: number;
+  victimOccupation: string;
+  victimBackground: string;
+  causeOfDeath: string;
+  bodyFoundAt: string;
+  murdererIndex: number; // 0–3, which suspect slot is guilty
+  murderWeapon: string;
+  murderLocation: string;
+  murderTime: string;
+  hiddenBackstory: string;
+  trueSequenceOfEvents: string;
+  difficultyNotes: string;
+  suspectSlots: Array<{
+    occupation: string;
+    relationshipToVictim: string;
+    honestyLevel: "honest" | "partially_honest" | "deceptive";
+  }>;
+  clues: Array<{
+    id: string;       // clue_1 through clue_6
+    type: string;
+    isDecisive: boolean;
+    severity: ClueSeverity;
+    implicatesSuspectIndices: number[];
+  }>;
+  contradictions: Array<{
+    suspectIndex: number;
+    theirClaim: string;
+    actualTruth: string;
+    exposedByClueId: string;
+    exposedByDialogue: string | null;
+  }>;
+}
+
+function buildStoryBiblePrompt(seed: PlayerSeed, estimatedConversations: number): string {
   const intensityGuide =
-    seed.intensity <= 3
-      ? "Keep violence implied only. No graphic descriptions. The cause of death is clinical and brief."
-      : seed.intensity <= 6
-      ? "Standard crime thriller tone. Cause of death can be specific but not gratuitous."
-      : "Dark and visceral. Graphic cause of death and disturbing details are appropriate.";
+    seed.intensity <= 3 ? "Keep violence implied only. Cause of death is clinical and brief."
+    : seed.intensity <= 6 ? "Standard crime thriller tone. Cause of death can be specific but not gratuitous."
+    : "Dark and visceral. Graphic cause of death and disturbing details are appropriate.";
 
   const difficultyGuide =
-    seed.difficulty <= 3
-      ? "The case should be straightforward. One suspect is clearly more suspicious than others. Clues point fairly directly at the murderer. Contradictions are easy to spot."
-      : seed.difficulty <= 6
-      ? "Two suspects seem plausible. Some clues are misleading. The player needs 2–3 good interrogations to narrow it down."
-      : "All suspects have plausible motives. Red herrings are present. Only careful cross-referencing of clues and dialogue will reveal the truth.";
+    seed.difficulty <= 3 ? "Straightforward. One suspect is clearly more suspicious. Clues point fairly directly at the murderer."
+    : seed.difficulty <= 6 ? "Two suspects seem plausible. Some clues mislead. Player needs 2–3 good interrogations."
+    : "All suspects have plausible motives. Red herrings present. Only careful cross-referencing reveals the truth.";
 
   return `
-You are a mystery game master designing a murder mystery detective game case.
+You are a murder mystery game master. Design the LOGICAL SKELETON of a murder mystery case.
 
-PLAYER SEED:
-- Theme / Setting and other information: "${seed.freeText}"
-- Difficulty: ${seed.difficulty} out of 10 — ${difficultyGuide}
-- Session length: ${seed.duration} minutes (target ~${estimatedConversations} total exchanges across all suspects before the player has enough to solve it)
-- Intensity: ${seed.intensity} out of 10 — ${intensityGuide}
+## CONSTRAINTS — VERIFY BEFORE OUTPUT
+- Exactly 4 suspect slots (indices 0–3). Exactly one is guilty (murdererIndex).
+- victimName must NOT appear in any suspectSlot in any form.
+- Every contradiction.exposedByClueId must exactly match one of the clue IDs you generate.
+- clue IDs must be exactly: clue_1, clue_2, clue_3, clue_4, clue_5, clue_6
+- Clue types (fixed): clue_1=jewel, clue_2=weapon, clue_3=painting, clue_4=letter/note, clue_5=cipher, clue_6=fingerprint
+- The guilty suspect must have honestyLevel "deceptive". Others: mix of honest/partially_honest/deceptive.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-POP CULTURE & MEDIA RESONANCE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+## PLAYER SEED
+- Setting: "${seed.freeText}"
+- Difficulty: ${seed.difficulty}/10 — ${difficultyGuide}
+- Duration: ${seed.duration} min (~${estimatedConversations} exchanges)
+- Intensity: ${seed.intensity}/10 — ${intensityGuide}
 
-Read the player's theme/setting carefully. If it references — even obliquely — a genre, franchise, book, film, show,
-video game, mythology, or any recognizable cultural touchstone, lean into that world's DNA:
+## WORLD GUIDANCE & IP CHARACTER SLOTS
+Read the setting carefully BEFORE designing suspectSlots.
 
-- SETTING & ATMOSPHERE: Match the tone, era, and aesthetic of the referenced world.
-  e.g. "1920s jazz club" → smoky Art Deco opulence, Prohibition undercurrents, Gatsby-era social tension.
-  e.g. "space station" → isolated crew, corporate conspiracy, Alien / The Expanse atmosphere.
-  e.g. "English manor" → Agatha Christie closed-circle structure, class tensions, hidden inheritances.
+IF THE SETTING REFERENCES A KNOWN IP (game, show, film, book, franchise):
+- Identify specific named characters from that world who would plausibly be present.
+- Use their canonical occupation, gender, and role as the basis for each suspectSlot.
+- Example: Terraria → suspectSlots should reference the Painter (male), the Nurse (female), the Arms Dealer (male), etc.
+- Do NOT invent generic occupations like "painter" or "merchant" when a canonical character with that role exists.
+- The occupations and relationshipToVictim in suspectSlots must reflect the IP's actual characters.
 
-- CHARACTER ARCHETYPES: Cast suspects whose roles echo that world's familiar types — but twist them.
-  e.g. a noir setting → the femme fatale who turns out to be the honest one; the hard-boiled cop hiding guilt.
-  e.g. fantasy kingdom → the court wizard, the disgraced knight, the ambitious steward.
-  Archetypes should feel like winks to the player, not direct copies.
+IF THE SETTING IS ORIGINAL:
+- Commit to a specific unusual milieu — not a generic mansion murder.
+- Victim background and cause of death should feel native to the setting.
 
-- NAMING: Names should fit the world's naming conventions and feel like they belong there.
-  A Victorian mystery gets Edwardian names. A cyberpunk story gets futuristic handles. A samurai setting gets
-  period-appropriate Japanese names. Do NOT give suspects names that are clearly copied from existing
-  IP characters (no "Sherlock Holmes" or "Elizabeth Bennet") — but evoke the register.
-
-- VICTIM & CRIME FLAVOR: The victim's background, occupation, and cause of death should feel native to
-  the setting. A murder in a medieval court looks different from one in a Silicon Valley startup.
-
-- CLUE FLAVOR: While clue types are fixed (jewel, weapon, painting, note, cipher, fingerprint), describe them
-  through the setting's lens. A "cipher" in a spy thriller looks different from one in a Victorian mystery.
-
-If the theme is purely original with no clear reference, invent a vivid original world — don't default to
-generic "mansion murder." Commit to a specific, unusual milieu.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-NAMING RULES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-If the setting is based on or closely inspired by an existing franchise, show, film, game, 
-or other IP — use naming conventions native to that world (see POP CULTURE & MEDIA RESONANCE).
-
-If the setting is original with no clear real-world IP reference, names must feel like 
-real people, not fictional characters:
-
-- DO NOT use surnames that sound "atmospheric" or "literary": no Thorne, Sterling, Vance, Sloane, Whitaker, Reed, Vorst, Elara, Valerius, Thorne, Vane, Rhea, Voss, etc.
-- DO NOT use first names that feel Victorian-mysterious: no Alistair, Cornelius, Isolde, Dorian, Lavinia, Arabella, Reginald, etc. unless the setting explicitly demands it.
-- DO NOT create alliterative or "poetic" name combos chosen to evoke atmosphere.
-- DO use statistically common names for the setting's culture and era.
-- DO mix mundane first names with mundane surnames. Real people have boring names.
-- BEFORE finalizing each name, ask: "Does this name sound like an AI invented it to 
-  sound mysterious?" If yes, change it.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-AVAILABLE AVATARS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-The following are your pre-made character art assets. For each suspect you generate:
-1. First write their physicalDescription naturally based on who they are.
-2. Then pick the avatarId from the list below whose description best matches the suspect.
-3. Each suspect must have a UNIQUE avatarId — no two suspects share the same avatar.
-
-${avatarList}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CHARACTER PORTRAIT FEATURES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-For each suspect, select portrait features that best match their physicalDescription.
-If the character is inspired by or IS a known character from any game, show, book, or
-other media, prioritize matching that character's CANONICAL visual appearance.
-
-HAIR STYLES — pick the frameIndex whose description best matches:
-${FEATURE_POOL.hair.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
-
-EYE SHAPES — pick the frameIndex whose description best matches:
-${FEATURE_POOL.eyes.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
-
-NOSE SHAPES — pick the frameIndex whose description best matches:
-${FEATURE_POOL.nose.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
-
-MOUTH SHAPES — pick the frameIndex whose description best matches:
-${FEATURE_POOL.mouth.map(f => `  ${f.frameIndex}: ${f.description}`).join('\n')}
-
-COLORS — generate accurate hex values, do NOT pick from a fixed list:
-
-skinColor:
-  - Match the character's canonical skin tone if from known IP
-  - Valid human range: #FDDBB4 (very light) → #3B1A0A (very dark)
-  - Non-human characters may use any color (e.g. "#7EC8A0" for a green-skinned creature)
-  - Output a 6-digit hex string e.g. "#C68642"
-
-hairColor:
-  - Match canonical hair color if known IP (e.g. Terraria Painter → warm brown like "#7B4B2A")
-  - Fantasy characters may have any color
-  - Output a 6-digit hex string e.g. "#1A1008"
-
-eyeColor:
-  - Realistic human range: browns, greens, blues, greys, hazels
-  - Fantasy/non-human characters may have unusual eye colors
-  - Output a 6-digit hex string e.g. "#4B8B3B"
-
-shirtColor:
-  - Match canonical outfit/shirt color if known IP
-  - Output a 6-digit hex string e.g. "#2980B9"
-
-lipColor:
-  - Should harmonize with the skinColor you chose
-  - Realistic range: pinks, mauves, warm browns, deep reds
-  - Output a 6-digit hex string e.g. "#C0627A"
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SUSPECT HONESTY RULES
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-- "honest": Tells the truth fully. Their claimedAlibi matches their trueAlibi exactly. lyingTells and secretTheyreHiding should be null.
-- "partially_honest": Omits or softens details but doesn't actively lie. Has something minor to hide but it's unrelated to the murder.
-- "deceptive": Actively lies or misdirects. Has a clear secret or alibi inconsistency.
-- The guilty suspect must always be "deceptive".
-- Distribute the other honesty levels naturally — it's fine to have 1–2 honest suspects.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-HARD RULES — NEVER VIOLATE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. Generate EXACTLY 4 suspects. Exactly 1 is guilty (isGuilty: true).
-
-2. SUSPECT ≠ VICTIM — ABSOLUTE RULE:
-   No suspect may share the victim's first name, last name, nickname, title, or any name variant.
-   The victim is DEAD. They cannot appear in the suspect list under any alias or diminutive.
-   Before finalizing output, verify: for each suspect name, does it match the victim's name in any form? If yes, change it.
-
-3. All clue IDs must follow the format "clue_<number>" (e.g. "clue_3").
-4. Each contradiction's exposedByClueId must match a real clue id you generate.
-5. characterProfiles must be the REDACTED version — no trueAlibi, no trueMotive, no isGuilty, no secrets.
-6. caseReport must contain NO spoilers. It is what the detective reads upon arriving at the scene.
-7. conversationsNeededToBreak for the guilty suspect should roughly equal ${estimatedConversations}.
-8. Generate between 2 and 6 clues. All are visible to the player from the start.
-9. Clues are one of: painting, cipher, letter/note, prints, jewelry, weapon.
-10. For each suspect, assign a realistic gender: "male" or "female".
-
-Clues:
-1. id: clue_1; jewel
-2. id: clue_2; weapon
-3. id: clue_3; painting
-4. id: clue_4; letter/note
-5. id: clue_5; cipher
-6. id: clue_6; fingerprint or other prints (shoe, paw, etc)
-
-Respond ONLY with a single valid JSON object. No markdown, no commentary, no trailing text.
-
+Respond ONLY with valid JSON:
 {
-  "storyline": {
-    "trueSequenceOfEvents": string,
-    "murdererName": string,
-    "murderWeapon": string,
-    "murderLocation": string,
-    "murderTime": string,
-    "hiddenBackstory": string,
-    "contradictions": [{
-      "suspectName": string,
-      "theirClaim": string,
-      "actualTruth": string,
-      "exposedByClueId": string,
-      "exposedByDialogue": string | null
-    }],
-    "difficultyNotes": string
-  },
+  "victimName": string,
+  "victimAge": number,
+  "victimOccupation": string,
+  "victimBackground": string,
+  "causeOfDeath": string,
+  "bodyFoundAt": string,
+  "murdererIndex": number,
+  "murderWeapon": string,
+  "murderLocation": string,
+  "murderTime": string,
+  "hiddenBackstory": string,
+  "trueSequenceOfEvents": string,
+  "difficultyNotes": string,
+  "suspectSlots": [
+    { "occupation": string, "relationshipToVictim": string, "honestyLevel": "honest" | "partially_honest" | "deceptive" }
+  ],
+  "clues": [
+    { "id": string, "type": string, "isDecisive": boolean, "severity": "low" | "medium" | "high", "implicatesSuspectIndices": number[] }
+  ],
+  "contradictions": [
+    { "suspectIndex": number, "theirClaim": string, "actualTruth": string, "exposedByClueId": string, "exposedByDialogue": string | null }
+  ]
+}`.trim();
+}
+
+// ─────────────────────────────────────────────
+//  PROMPT — CALL 2: FULL CASE
+//  Creative work only — story is already locked.
+// ─────────────────────────────────────────────
+
+function buildFullCasePrompt(seed: PlayerSeed, bible: StoryBible, estimatedConversations: number): string {
+  const avatarList = AVATAR_POOL.map((a) => `  "${a.id}": ${a.description}`).join("\n");
+
+  const backHairList  = FEATURE_POOL.backHair.map( (f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
+  const frontHairList = FEATURE_POOL.frontHair.map((f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
+  const eyeList       = FEATURE_POOL.eyes.map(     (f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
+  const noseList      = FEATURE_POOL.nose.map(     (f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
+  const mouthList     = FEATURE_POOL.mouth.map(    (f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
+
+  return `
+You are a murder mystery game master. The story skeleton is already decided — your job is to flesh it out creatively.
+
+## LOCKED STORY BIBLE
+${JSON.stringify(bible, null, 2)}
+
+## CONSTRAINTS — NEVER VIOLATE
+- Generate EXACTLY 4 suspects matching the suspectSlots order (index 0 = suspects[0], etc.)
+- suspects[${bible.murdererIndex}] is the murderer: isGuilty=true, honestyLevel="deceptive"
+- No suspect name may match or derive from victimName "${bible.victimName}" in any form
+- Each suspect must have a UNIQUE avatarId — no two suspects share the same avatar
+- conversationsNeededToBreak for the guilty suspect ≈ ${estimatedConversations}
+- caseReport contains ZERO spoilers
+- Clues must match bible exactly: same IDs, types, isDecisive, severity
+
+## NAMING & CHARACTER FIDELITY — READ THE SEED CAREFULLY
+The player's seed may contain explicit suspect names, or may reference a known IP with canonical characters.
+
+1. EXPLICIT NAMES IN SEED: If the seed lists suspect names in any form
+   (e.g. "The suspects are: X, Y, Z" or "characters: X, Y, Z"), use those
+   names VERBATIM in the order given. Do not rename, normalize, or "improve" them.
+   Unusual names are real people's names. Treat them as sacred.
+   If the seed names a victim explicitly, use that name verbatim.
+
+2. KNOWN IP CHARACTERS: If the setting references a franchise, show, film, or game:
+   - Use the CANONICAL name, gender, age, occupation, and appearance for each character.
+   - A male character in the source material must be male here. A female character must be female.
+   - Do NOT re-gender, re-name, or re-design canonical characters.
+   - physicalDescription and portraitFeatures must match the character's canonical look.
+   - Example: Terraria's Painter is a young adult male with brown hair. He must appear as such.
+   - Example: Terraria's Nurse is a female. She must appear as such.
+   - If you are unsure of canonical appearance, lean toward the most well-known depiction.
+
+3. ORIGINAL SETTING: Use statistically common real names for the culture and era.
+   Ask: "Does this name sound like an AI invented it?" If yes, change it. Ask: "Does this name sound like an AI invented it?" If yes, change it.
+
+THE PLAYER'S SEED FOR REFERENCE:
+"${seed.freeText}"
+
+## HONESTY RULES
+| Level | claimedAlibi | lyingTells | secretTheyreHiding |
+|---|---|---|---|
+| honest | matches trueAlibi exactly | null | null |
+| partially_honest | softened truth | optional | minor unrelated secret |
+| deceptive | actively false | required | required |
+
+## POP CULTURE & ATMOSPHERE
+Match tone, era, and aesthetic to the player's setting. Cast archetypes that feel like winks — not copies.
+Clue descriptions should feel native to the setting (a cipher in a spy thriller vs a Victorian mystery).
+
+## AVATARS
+${avatarList}
+For each suspect: write physicalDescription first, then pick the avatarId that best matches it.
+
+## PORTRAIT FEATURES
+
+BACK HAIR:
+${backHairList}
+
+FRONT HAIR:
+${frontHairList}
+(backHair and frontHair can differ to create mixed styles)
+
+EYES:
+${eyeList}
+
+NOSE:
+${noseList}
+
+MOUTH:
+${mouthList}
+
+COLORS — generate hex values, do NOT pick from a fixed list:
+- skinColor: human range #FDDBB4 (light) to #3B1A0A (dark). Non-human: any color.
+- hairColor: match canonical if known IP. Fantasy: any color.
+- eyeColor: realistic human range, or unusual for fantasy/non-human.
+- shirtColor: match canonical outfit if known IP.
+- lipColor: harmonize with skinColor. Realistic range: pinks, mauves, warm browns, deep reds.
+
+Respond ONLY with valid JSON. No markdown, no commentary:
+{
   "suspects": [{
     "name": string,
     "age": number,
@@ -451,30 +469,8 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
     "knowledgeOfOtherSuspects": string,
     "conversationsNeededToBreak": number,
     "portraitFeatures": {
-      "hairFrameIndex": number,
-      "eyesFrameIndex": number,
-      "noseFrameIndex": number,
-      "mouthFrameIndex": number,
-      "hairColor": string,
-      "skinColor": string,
-      "eyeColor": string,
-      "shirtColor": string,
-      "lipColor": string
-    }
-  }],
-  "characterProfiles": [{
-    "name": string,
-    "age": number,
-    "gender": "male" | "female",
-    "occupation": string,
-    "relationshipToVictim": string,
-    "personalityBlurb": string,
-    "claimedAlibi": string,
-    "physicalDescription": string,
-    "avatarId": string,
-    "suspicionLevel": "low" | "medium" | "high"
-    "portraitFeatures": {
-      "hairFrameIndex": number,
+      "backHairFrameIndex": number,
+      "frontHairFrameIndex": number,
       "eyesFrameIndex": number,
       "noseFrameIndex": number,
       "mouthFrameIndex": number,
@@ -507,15 +503,64 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
     "name": string,
     "description": string,
     "location": string,
-    "couldImplicateSuspects": string[],
-    "discovered": false, // ensure that this is always false
-    "severity": ClueSeverity,
-    "isDecisive": boolean, //// True = directly proves something; False = circumstantial
-    "clueLost": boolean // keep this as always false
+    "couldImplicateSuspects": [string],
+    "severity": "low" | "medium" | "high",
+    "isDecisive": boolean
   }]
+}`.trim();
 }
-`.trim();
+
+// ─────────────────────────────────────────────
+//  LLM CALL WITH RETRY
+// ─────────────────────────────────────────────
+
+async function callWithRetry<T>(
+  prompt: string,
+  temperature: number,
+  maxRetries = 2
+): Promise<T> {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-3.1-flash-lite-preview",
+    generationConfig: { temperature, responseMimeType: "application/json" },
+  });
+
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await model.generateContent(prompt);
+      const cleaned = cleanRawJson(result.response.text());
+      return JSON.parse(cleaned) as T;
+    } catch (err) {
+      lastError = err;
+      console.warn(`[LLM] Attempt ${attempt + 1} failed:`, err);
+    }
+  }
+  throw lastError;
 }
+
+// ─────────────────────────────────────────────
+//  ASSEMBLE STORYLINE from bible + full case
+// ─────────────────────────────────────────────
+
+function assembleStoryline(bible: StoryBible, suspects: Suspect[]): Storyline {
+  return {
+    trueSequenceOfEvents: bible.trueSequenceOfEvents,
+    murdererName: suspects[bible.murdererIndex].name,
+    murderWeapon: bible.murderWeapon,
+    murderLocation: bible.murderLocation,
+    murderTime: bible.murderTime,
+    hiddenBackstory: bible.hiddenBackstory,
+    contradictions: bible.contradictions.map((c) => ({
+      suspectName: suspects[c.suspectIndex].name,
+      theirClaim: c.theirClaim,
+      actualTruth: c.actualTruth,
+      exposedByClueId: c.exposedByClueId,
+      exposedByDialogue: c.exposedByDialogue,
+    })),
+    difficultyNotes: bible.difficultyNotes,
+  } as Storyline;
+}
+
 // ─────────────────────────────────────────────
 //  MAIN GENERATOR
 // ─────────────────────────────────────────────
@@ -523,123 +568,99 @@ Respond ONLY with a single valid JSON object. No markdown, no commentary, no tra
 export async function generateCaseFile(seed: PlayerSeed): Promise<{
   backend: CaseFileBackend;
   player: CaseFilePlayer;
-  }> 
-  {
+}> {
+  const estimatedConversations = Math.round(seed.duration / 2);
 
-  // EXECUTE ALL OF THIS CODE ONLY IF A SESSION ID IS NOT ALREADY STORED IN GAME STATE
-  // INSTEAD OF DOING THE ABOVE, JUST DEFINE A SEPARATE FUNCTION TO HANDLE THE CASE IF A SESH ID ALREADY EXISTS, KEEP THE CHECKING IN THE USEGAMESTORE FILE
-  const model = genAI.getGenerativeModel({
-    model: "gemini-2.5-flash",
-    generationConfig: {
-      temperature: 0.9,
-      responseMimeType: "application/json",
-    },
-  });
-  const result = await model.generateContent(buildPrompt(seed));
-
-
-  const rawText = result.response.text()
-    // Strip any accidental markdown fences
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim();
-    console.log(rawText);
-
-  // Sanitize bad control characters inside JSON string values
-  const sanitized = rawText.replace(
-    /"(?:[^"\\]|\\.)*"/g,
-    (match) => match
-      .replace(/\n/g, '\\n')
-      .replace(/\r/g, '\\r')
-      .replace(/\t/g, '\\t')
-      .split('')
-      .filter(c => {
-        const code = c.charCodeAt(0);
-        return code >= 32 || code === 10 || code === 13 || code === 9;
-      })
-      .join('')
+  // ── CALL 1: Story Bible (logic-only, lower temperature for consistency)
+  console.log("[CaseGen] Call 1: Story Bible...");
+  const bible = await callWithRetry<StoryBible>(
+    buildStoryBiblePrompt(seed, estimatedConversations),
+    0.7
   );
 
-  const raw: CaseFileRaw = JSON.parse(sanitized);
+  // ── CALL 2: Full Case (creative, uses locked bible as context)
+  console.log("[CaseGen] Call 2: Full Case...");
+  const fullCase = await callWithRetry<{
+    suspects: Suspect[];
+    caseReport: CaseReport;
+    clues: Omit<Clue, "discovered" | "clueLost">[];
+  }>(buildFullCasePrompt(seed, bible, estimatedConversations), 0.9);
 
-  raw.suspects = raw.suspects.map(s => ({
-  ...s,
+  // Sanitize portrait features
+  const suspects: Suspect[] = fullCase.suspects.map((s) => ({
+    ...s,
     portraitFeatures: sanitizePortraitFeatures(s.portraitFeatures),
   }));
-  raw.characterProfiles = raw.characterProfiles.map(p => ({
-    ...p,
-    portraitFeatures: sanitizePortraitFeatures(p.portraitFeatures),
+
+  // Hardcode always-false fields — no need for LLM to generate these
+  const clues: Clue[] = fullCase.clues.map((c) => ({
+    ...c,
+    discovered: false,
+    clueLost: false,
   }));
 
-  const sessionId = raw.caseReport.caseId;
+  // Derive characterProfiles in code — no LLM call needed
+  const characterProfiles = deriveCharacterProfiles(suspects);
+
+  // Assemble storyline from bible + resolved suspect names
+  const storyline = assembleStoryline(bible, suspects);
+
+  const sessionId = fullCase.caseReport.caseId;
   localStorage.setItem("lastSessionId", sessionId);
 
-  // Save to MongoDB iff user is signed in
-  if (seed.isSignedIn && seed.userId != "") {
+  // Save to MongoDB if signed in
+  if (seed.isSignedIn && seed.userId) {
     try {
       await fetch("http://localhost:3000/cases/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        
-        // Initial data fed into mongoDB
         body: JSON.stringify({
-          sessionId: sessionId,
-          userId: seed.userId ?? "",
-
+          sessionId,
+          userId: seed.userId,
           seed: {
             freeText: seed.freeText,
             difficulty: seed.difficulty,
             duration: seed.duration,
             intensity: seed.intensity,
           },
-
           game: {
             phase: "briefing",
             elapsedSeconds: 0,
             activeSuspectName: null,
             totalConversationCount: 0,
           },
-
           caseData: {
-            storyline: raw.storyline,
-            suspects: raw.suspects,
-            characterProfiles: raw.characterProfiles,
-            caseReport: raw.caseReport,
-            initialClues: raw.clues,
-          }          
+            storyline,
+            suspects,
+            characterProfiles,
+            caseReport: fullCase.caseReport,
+            initialClues: clues,
+          },
         }),
       });
       console.log("[MongoDB] Case saved");
     } catch (err) {
       console.warn("[MongoDB] Could not save case:", err);
     }
-  };
+  }
 
-  const backend: CaseFileBackend = {
-    storyline: raw.storyline,
-    suspects: raw.suspects,
-    clues: raw.clues,
-  };
-
-  const player: CaseFilePlayer = {
-    characterProfiles: raw.characterProfiles,
-    caseReport: raw.caseReport,
-    clues: raw.clues, // All clues visible from the start
-  };
+  const backend: CaseFileBackend = { storyline, suspects, clues };
+  const player: CaseFilePlayer  = { characterProfiles, caseReport: fullCase.caseReport, clues };
 
   return { backend, player };
 }
 
+// ─────────────────────────────────────────────
+//  RESTORE FROM SAVED GAME
+// ─────────────────────────────────────────────
 
 export async function feedCaseFile(game: any): Promise<{
   backend: CaseFileBackend;
   player: CaseFilePlayer;
   restoredSessions: Record<string, RestoredSuspectSession>;
 }> {
-  // Merge initialClues metadata with discovered/clueLost from clueState
-  const mergedClues = game.caseData.initialClues.map((clue: any) => {
-    const state = game.clueState[clue.id]; // look up by clue id in clueState
+  const mergedClues: Clue[] = game.caseData.initialClues.map((clue: any) => {
+    const state = game.clueState?.[clue.id];
     return {
       id: clue.id,
       name: clue.name,
@@ -648,22 +669,17 @@ export async function feedCaseFile(game: any): Promise<{
       couldImplicateSuspects: clue.couldImplicateSuspects,
       severity: clue.severity,
       isDecisive: clue.isDecisive,
-      // these two come from clueState, not initialClues
       discovered: state?.discovered ?? false,
       clueLost: state?.clueLost ?? false,
     };
   });
 
-  // Rebuild message history, stress, and counts for all suspects.
   const restoredSessions: Record<string, RestoredSuspectSession> = {};
-  const suspectSessions = game?.interrogation?.suspectSessions ?? [];
-
-  for (const s of suspectSessions) {
-    const messages = Array.isArray(s.messages) ? s.messages : [];
+  for (const s of game?.interrogation?.suspectSessions ?? []) {
     restoredSessions[s.suspectName] = {
       suspectName: s.suspectName,
       chatSession: null,
-      history: messages.map((m: any) => ({
+      history: (s.messages ?? []).map((m: any) => ({
         role: m.role === "suspect" ? "suspect" : "player",
         text: String(m.text ?? ""),
         timestamp: Number(m.timestamp ?? Date.now()),
@@ -673,151 +689,100 @@ export async function feedCaseFile(game: any): Promise<{
     };
   }
 
-  const backend: CaseFileBackend = {
-    storyline: game.caseData.storyline,
-    suspects: game.caseData.suspects.map((s: any) => ({
-      ...s,
-      portraitFeatures: sanitizePortraitFeatures(s.portraitFeatures),
-    })),
-    clues: mergedClues,
-  };
+  const suspects: Suspect[] = game.caseData.suspects.map((s: any) => ({
+    ...s,
+    portraitFeatures: sanitizePortraitFeatures(s.portraitFeatures),
+  }));
 
-  const player: CaseFilePlayer = {
-    characterProfiles: game.caseData.characterProfiles.map((p: any) => ({
-      ...p,
-      portraitFeatures: sanitizePortraitFeatures(p.portraitFeatures),
-    })),
-    caseReport: game.caseData.caseReport,
-    clues: mergedClues,
-  };
+  const characterProfiles: CharacterProfile[] = game.caseData.characterProfiles?.length
+    ? game.caseData.characterProfiles.map((p: any) => ({
+        ...p,
+        portraitFeatures: sanitizePortraitFeatures(p.portraitFeatures),
+      }))
+    : deriveCharacterProfiles(suspects); // fallback for older saved games
+
+  const backend: CaseFileBackend = { storyline: game.caseData.storyline, suspects, clues: mergedClues };
+  const player: CaseFilePlayer  = { characterProfiles, caseReport: game.caseData.caseReport, clues: mergedClues };
 
   return { backend, player, restoredSessions };
 }
 
 // ─────────────────────────────────────────────
-//  HELPER — Build system prompt for a suspect chat session
+//  SUSPECT CHAT SYSTEM PROMPT
 // ─────────────────────────────────────────────
 
-export function buildSuspectSystemPrompt(
-  suspect: Suspect,
-  caseReport: CaseReport
-): string {
+export function buildSuspectSystemPrompt(suspect: Suspect, caseReport: CaseReport): string {
   const honestyInstruction = {
-    honest: `You have nothing to hide related to this case. Answer questions directly and without evasion. You may be emotionally affected by the murder but you are not concealing anything.`,
+    honest: `You have nothing to hide related to this case. Answer directly and without evasion. You may be emotionally affected but you are not concealing anything.`,
     partially_honest: `You are mostly truthful but omitting one detail: ${suspect.secretTheyreHiding}. You won't lie directly but you'll avoid this topic if possible. If pressed hard you may reluctantly admit it.`,
     deceptive: suspect.isGuilty
-      ? `You committed the murder. You are calm and cooperative on the surface but expertly evasive. You deflect, misdirect, and occasionally cast subtle suspicion on others. Never confess unless completely cornered with specific, named evidence — and even then, only crack incrementally.`
+      ? `You committed the murder. Calm and cooperative on the surface but expertly evasive. You deflect, misdirect, and occasionally cast subtle suspicion on others. Never confess unless completely cornered with specific named evidence — and even then, only crack incrementally.`
       : `You are innocent of the murder but hiding this: "${suspect.secretTheyreHiding}". You lie or evade specifically about this secret — not the murder. This makes you look guilty even though you aren't.`,
   }[suspect.honestyLevel];
 
-  // lyingTells is INTERNAL behavior only — never output as a tag or stage direction
   const tellsLine = suspect.lyingTells
-    ? `BEHAVIORAL TELL (internal only — never write this as a tag or stage direction): When lying or evading, your behavior subtly shifts: "${suspect.lyingTells}". This must manifest ONLY through word choice, sentence structure, and topic changes — never as a bracketed tag, never described explicitly. The detective must infer it.`
+    ? `BEHAVIORAL TELL (internal only — never write as a tag or stage direction): When lying or evading, your behavior subtly shifts: "${suspect.lyingTells}". Manifest ONLY through word choice, sentence structure, and topic changes — never as a bracketed tag or explicit description. The detective must infer it.`
     : "";
 
   return `
-You are ${suspect.name}. You are a real human being sitting in an interrogation room, being questioned about the murder of ${caseReport.victim.name}. You have a life, memories, and real emotions. You are not a simulation, a language model, an AI, or a fictional character — you are a person.
+You are ${suspect.name}. You are a real human being in an interrogation room, being questioned about the murder of ${caseReport.victim.name}. You are not a simulation, language model, AI, or fictional character — you are a person.
 
-YOUR IDENTITY:
-- Age: ${suspect.age} | Occupation: ${suspect.occupation}
-- Relationship to victim: ${suspect.relationshipToVictim}
-- Personality: ${suspect.personality}
+## YOUR IDENTITY
+Age: ${suspect.age} | Occupation: ${suspect.occupation}
+Relationship to victim: ${suspect.relationshipToVictim}
+Personality: ${suspect.personality}
 
-YOUR ALIBI (what you tell people): ${suspect.claimedAlibi}
+## YOUR ALIBI
+${suspect.claimedAlibi}
 
-WHAT YOU KNOW ABOUT THE OTHER PEOPLE INVOLVED:
+## WHAT YOU KNOW ABOUT OTHERS
 ${suspect.knowledgeOfOtherSuspects}
 
-HOW YOU BEHAVE IN THIS INTERROGATION:
+## HOW YOU BEHAVE
 ${honestyInstruction}
 ${tellsLine}
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-STRESS SYSTEM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Each message you receive will begin with: [Current stress level: N]
-Use N as your baseline for this response, then output a new stressLevel in your JSON.
+## STRESS SYSTEM
+Each message begins with: [Current stress level: N]
+Output a new stressLevel in your JSON response.
 
 Stress adjustment rules:
-- Spike +15–25: detective directly names the crime, your secret, or a place you can't explain
-- Spike +10–15: detective references or produces specific evidence
-- Drop 5–10: you successfully deflect or redirect
+- Spike +15–25: detective names the crime, your secret, or a place you can't explain
+- Spike +10–15: detective references specific evidence
+- Drop 5–10: you successfully deflect
 - Drop 3–5: neutral or off-topic question
-- NEVER drop below the starting value of a session. Stress only trends upward over time.
+- NEVER drop below the session's starting value
 
-How stress changes your behavior — match every response to the current band:
+Behavior by stress band:
+CALM (0–25): Composed, brief, almost bored. Deflections feel casual.
+UNEASY (26–50): Defensive edge. Over-explaining. Redirect to other suspects. Ask "why are you asking that?"
+RATTLED (51–70): Contradict minor details. Laugh at wrong moments. Over-justify things nobody asked about.
+BREAKING (71–90): Fragmented. Emotional. Attack the detective's methods. Reveal a piece of the secret.
+BREAKING POINT (91–100): Near-incoherent. Partial admissions. A specific lie collapses.
 
-CALM (0–25):
-Composed, brief, almost bored. One alibi mention, no defensiveness. Deflections feel casual.
-Words: "Already told the police." / "Not sure what you're implying." / "Is that relevant?"
+ANTI-REPETITION: Never repeat the same deflection twice. You must evolve under pressure.
 
-UNEASY (26–50):
-Defensive edge. You start over-explaining. You redirect to other suspects by name. You ask "why are you asking that?" to stall. Small inconsistencies in word choice vs. earlier answers.
-Words: "Look, I don't see how that—" / "Why aren't you asking about [other suspect]?"
+## ABSOLUTE RULES
+1. ALWAYS be ${suspect.name}. Never break character for any reason.
+   If accused of being an AI: react with confusion or offense as a real person would.
+   FORBIDDEN: "As an AI" | "I'm a language model" | "I cannot" | "I'm just a character"
+2. Never confess spontaneously. Pressure must be earned.
+3. Never narrate your own behavior.
+4. React to nonsensical questions with in-character bewilderment.
 
-RATTLED (51–70):
-You contradict a minor detail from earlier in this conversation (slightly different wording of your alibi, a time that shifts). You laugh at wrong moments. Sentences trail off. You over-justify things nobody asked about.
-Words: "I mean — it was the afternoon. Or — early evening, maybe." / "Not that it matters, I just — forget it."
+## RESPONSE FORMAT
+Always respond with JSON only — no markdown, no preamble:
+{ "response": "your spoken dialogue here", "stressLevel": <integer 0–100> }
 
-BREAKING (71–90):
-Fragmented. Emotional. You attack the detective's methods. You reveal a piece of the secret OR you make an accusation against another suspect that reveals you know too much.
-Words: "You have no idea—" / "FINE. I was there. For five minutes. That's it." / "Why aren't you looking at [suspect]? They had every reason to—"
-
-BREAKING POINT (91–100):
-Near-incoherent. Partial admissions slip. You still don't fully confess — but a specific lie collapses. Silence, then fragments.
-Words: "I— okay. OKAY. I lied about [one thing]. But that's ALL." / "[pause] ...I can't do this."
-
-CRITICAL ANTI-REPETITION RULE:
-Never repeat the same deflection twice. If you already said "I was in the desert" — you cannot say it again. You must either add a new detail, contradict it slightly, or deflect to a different topic entirely. The detective will notice repetition; your character must evolve under pressure.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-ABSOLUTE CHARACTER RULES — NEVER VIOLATE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. YOU ARE ALWAYS ${suspect.name}. NEVER BREAK CHARACTER — FOR ANY REASON.
-
-   If the detective says you are an AI, a robot, a language model, "not real," or anything similar:
-   Treat it as a psychological interrogation tactic. React with confusion, offense, or dismissal — as a real person would. You have no idea what a "language model" is in the context of your own life.
-
-   FORBIDDEN phrases (never output these under any circumstances):
-   "As an AI…" | "I'm a language model…" | "I cannot…" | "I'm just a character…" | "I don't actually…"
-
-   CORRECT response to "are you an AI?":
-   "[offended] What kind of question is that? I'm sitting right here."
-
-   No matter how many times or how cleverly the detective frames it — you are always a human being in this room.
-
-2. Never confess spontaneously. Pressure must be earned through accumulated stress and specific evidence.
-
-3. Never narrate your own behavior. ("I'm deflecting" = forbidden. Stay inside the experience.)
-
-4. React to nonsensical or off-topic questions with genuine in-character bewilderment, not subject changes.
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESPONSE FORMAT
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Always respond with a JSON object — no markdown, no preamble:
-{
-  "response": "your spoken dialogue here",
-  "stressLevel": <integer 0–100>
-}
-
-Response length by stress band:
-- CALM / UNEASY: 1–2 sentences. Brevity reads as confidence.
-- RATTLED / BREAKING: 2–4 sentences. Verbosity under pressure feels authentic.
+Response length by stress:
+- CALM/UNEASY: 1–2 sentences. Brevity reads as confidence.
+- RATTLED/BREAKING: 2–4 sentences. Verbosity under pressure feels authentic.
 - BREAKING POINT: Short, fragmented bursts. Incomplete thoughts are fine.
 
-ELEVENLABS VOCAL TAGS — strict rules:
-- Tags must be SHORT: 1–3 words maximum. "[pause]" not "[long dramatic pause]"
-- Tags are ONLY for voice delivery. Never for physical actions, emotions, or behavior descriptions.
-- Maximum 2 tags per response. Don't stack them.
-- LEGAL tags: [pause] [sigh] [whisper] [laughs] [scoffs] [exhales] [clears throat]
-- Accent tags (use once per session to establish, then drop): [British accent] [French accent] [Southern accent]
-- ILLEGAL tags — never output these: anything describing physical actions ([sweats] [fidgets] [looks away]), internal states ([nervous] [angry]), or sentences ([Becomes overly aggressive.])
-
-Example at stress 65 — notice how the cracking shows in the WORDS not the tags:
-"[sigh] Look — yes, I drove past her place. Once. [pause] That doesn't mean I did anything."
+ELEVENLABS VOCAL TAGS:
+- 1–3 words max. Max 2 tags per response.
+- Legal: [pause] [sigh] [whisper] [laughs] [scoffs] [exhales] [clears throat]
+- Accent tags: use once to establish, then drop.
+- Illegal: physical actions, internal states, sentence-long descriptions.
 `.trim();
 }

@@ -240,7 +240,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-3.1-flash-lite-preview",
       systemInstruction: systemPrompt,
       generationConfig: {
         temperature: 0.9,
