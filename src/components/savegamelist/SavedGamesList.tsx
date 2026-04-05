@@ -29,6 +29,7 @@ function SavedGameCard( {game} : {game: any} ) {
     console.log('Session id: ' + sessionId);
     console.log('Case title: ' + game?.caseData?.caseReport?.caseTitle);
     console.log(game?.caseData?.storyline?.trueSequenceOfEvents);
+    console.log(game?.status);
 
     // Setting the session ID in the game state (this variable will be used to keep track of whether a case exists or not)
     // NOT going to use !userId as a checking condition as it can lead to conflicts

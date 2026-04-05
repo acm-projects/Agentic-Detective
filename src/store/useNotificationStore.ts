@@ -11,12 +11,27 @@ import type {
 } from "../obj/notificationInterfaces";
 
 // Schedule Config
+/*
 const SCHEDULE_CONFIG = {
     firstNotificationWindow: [1_000, 2_000] as [number, number], // 120, 180
     cooldown: 10_000, // 90
     toastLifetime: 40_000, // Toast: a gui element that shows up, then disappears; 30
     minGameTimeRemaining: 60_000, // 60
 };
+*/
+
+const MESSAGE_SCHEDULE_CONFIG = {
+  firstNotificationWindowMessageCount: [2, 5] as [number, number], // originally 5, 10
+  cooldownMessageCount: [2, 5] as [number, number], // originally 5, 10
+  toastLifetime: 40_000,
+  minGameTimeRemaining: 60_000,
+};
+
+interface PersistedSchedulerState {
+        lastFiredAt?: number | null;
+        nextFireAt?: number | null;
+        timerPaused?: boolean;
+}
 
 // Helper Functions and Constants
 function randBetween(min: number, max: number): number {
@@ -136,12 +151,18 @@ function generateMinigameData(type: MinigameType): MinigameData {
 };
 
 function saveClueProgress(get: any) {
-  const sessionId = localStorage.getItem("lastSessionId") || localStorage.getItem("lastCaseId");
-  
-  if (sessionId) {
     void import("../useGameStore").then(({ useGameStore }) => {
-      const seed = useGameStore.getState().seed;
+            const gameStoreState = useGameStore.getState();
+            const seed = gameStoreState.seed;
       if (!seed?.isSignedIn || !seed?.userId) return;
+
+            const sessionId =
+                gameStoreState.currentSessionId ||
+                gameStoreState.player?.caseReport?.caseId ||
+                localStorage.getItem("lastSessionId") ||
+                localStorage.getItem("lastCaseId");
+
+            if (!sessionId) return;
 
       const s = get();
       const clueState = Object.fromEntries(
@@ -158,7 +179,14 @@ function saveClueProgress(get: any) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          status: "in_progress",
+                    status: gameStoreState.phase === "resolved" ? "resolved" : "in_progress",
+                    game: {
+                        phase: gameStoreState.phase,
+                        elapsedSeconds: gameStoreState.elapsed,
+                        activeSuspectName: gameStoreState.activeSuspectName,
+                        totalConversationCount: gameStoreState.totalConversationCount,
+                        seed: gameStoreState.seed,
+                    },
           clueState,
           schedulerState: {
             lastFiredAt: s.lastFiredAt,
@@ -167,8 +195,8 @@ function saveClueProgress(get: any) {
           }
         }),
       }).catch(() => {});
-    });
-}}
+        });
+}
 
 
 
@@ -184,12 +212,13 @@ interface NotificationState {
     timerPaused: boolean;
 
     initClues: (clues: Clue[]) => void;
-    tick: (elapsed: number, totalGameDuration: number) => void;
+    tick: (elapsed: number, totalGameDuration: number, messageCount: number) => void;
     openNotification: (id: string) => void;
     dismissNotification: (id: string) => void;
     abandonMinigame: (id: string) => void;
     resolveMinigame: (notificationId: string, success: boolean) => void;
     setTimerPaused: (paused: boolean) => void;
+    hydrateSchedulerState: (schedulerState?: PersistedSchedulerState | null) => void;
     purgeExpired: () => void;
 };
 
@@ -218,22 +247,28 @@ export const useNotificationStore = create<NotificationState>()(
             });
         },
 
-        tick(elapsed, totalGameDuration) {
+        tick(elapsed, totalGameDuration, messageCount) {
             const state = get();
             if (state.timerPaused) return;
 
             const remaining = totalGameDuration - elapsed;
-            if (remaining < SCHEDULE_CONFIG.minGameTimeRemaining) return;
+            if (remaining < MESSAGE_SCHEDULE_CONFIG.minGameTimeRemaining) return;
 
-            const now = Date.now();
+            const nowMessageCount = messageCount;
+            console.log("message count: " + messageCount);
+            console.log("next fire at: " + state.nextFireAt);
+            console.log("last fired at: " + state.lastFiredAt);
 
             if (state.nextFireAt === null) {
-                const delay = randBetween(...SCHEDULE_CONFIG.firstNotificationWindow);
-                set(s => { s.nextFireAt = now + delay; });
+                const delay = randBetween(...MESSAGE_SCHEDULE_CONFIG.firstNotificationWindowMessageCount);
+                set(s => {
+                    s.nextFireAt = nowMessageCount + delay;
+                });
+                saveClueProgress(get);
                 return;
             }
 
-            if (now < state.nextFireAt) return;
+            if (nowMessageCount < state.nextFireAt) return;
 
             const pendingClueIds = new Set(
                 state.notifications
@@ -257,8 +292,8 @@ export const useNotificationStore = create<NotificationState>()(
                 clueId: clue.id,
                 minigameType,
                 minigameData: generateMinigameData(minigameType),
-                createdAt: now,
-                expiresAt: now + SCHEDULE_CONFIG.toastLifetime,
+                createdAt: Date.now(),
+                expiresAt: Date.now() + MESSAGE_SCHEDULE_CONFIG.toastLifetime,
                 opened: false,
                 dismissed: false,
             };
@@ -267,9 +302,10 @@ export const useNotificationStore = create<NotificationState>()(
                 const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
                 if (idx >= 0) s.clues[idx].notificationId = notification.id;
                 s.notifications.push(notification);
-                s.lastFiredAt = now;
-                s.nextFireAt = now + SCHEDULE_CONFIG.cooldown + randBetween(0, 30_000);
+                s.lastFiredAt = nowMessageCount;
+                s.nextFireAt = nowMessageCount + randBetween(...MESSAGE_SCHEDULE_CONFIG.cooldownMessageCount);
             });
+            saveClueProgress(get);
         },
 
         openNotification(id) {
@@ -280,6 +316,7 @@ export const useNotificationStore = create<NotificationState>()(
                     s.timerPaused = true;
                 }
             });
+            saveClueProgress(get);
         },
 
         dismissNotification(id) {
@@ -291,6 +328,7 @@ export const useNotificationStore = create<NotificationState>()(
                 }
                 s.timerPaused = false;
             });
+            saveClueProgress(get);
         },
 
     abandonMinigame(notificationId) {
@@ -341,9 +379,9 @@ export const useNotificationStore = create<NotificationState>()(
             console.log(clue.name, "is lost");
           }
         }
-
-        saveClueProgress(get);
       })
+
+            saveClueProgress(get);
 
             if (discoveredClueId) {
                 void import('../useGameStore').then(({ useGameStore }) => {
@@ -354,6 +392,15 @@ export const useNotificationStore = create<NotificationState>()(
 
         setTimerPaused(paused) {
             set(s => { s.timerPaused = paused; });
+            saveClueProgress(get);
+        },
+
+        hydrateSchedulerState(schedulerState) {
+            set(s => {
+                s.lastFiredAt = typeof schedulerState?.lastFiredAt === "number" ? schedulerState.lastFiredAt : null;
+                s.nextFireAt = typeof schedulerState?.nextFireAt === "number" ? schedulerState.nextFireAt : null;
+                s.timerPaused = Boolean(schedulerState?.timerPaused);
+            });
         },
 
         purgeExpired() {
