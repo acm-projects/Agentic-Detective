@@ -463,6 +463,7 @@ export async function feedCaseFile(game: any): Promise<{
   backend: CaseFileBackend;
   player: CaseFilePlayer;
   restoredSessions: Record<string, RestoredSuspectSession>;
+  isResolved: boolean;
 }> {
   // Merge initialClues metadata with discovered/clueLost from clueState
   const mergedClues = game.caseData.initialClues.map((clue: any) => {
@@ -512,7 +513,9 @@ export async function feedCaseFile(game: any): Promise<{
     clues: mergedClues,
   };
 
-  return { backend, player, restoredSessions };
+  const isResolved = game.status === "resolved";
+
+  return { backend, player, restoredSessions, isResolved };
 }
 
 // ─────────────────────────────────────────────
@@ -546,8 +549,18 @@ YOUR IDENTITY:
 
 YOUR ALIBI (what you tell people): ${suspect.claimedAlibi}
 
-WHAT YOU KNOW ABOUT THE OTHER PEOPLE INVOLVED:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+THIS CASE — PEOPLE INVOLVED
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VICTIM (DECEASED — cannot be questioned, cannot appear as a suspect):
+- Name: ${caseReport.victim.name} | Age: ${caseReport.victim.age} | Occupation: ${caseReport.victim.occupation}
+- ${caseReport.victim.name} is DEAD. They are not in this room. They cannot speak. Do NOT roleplay as them, reference them as a suspect, or confuse them with anyone else.
+
+PEOPLE YOU KNOW ABOUT IN THIS INVESTIGATION:
 ${suspect.knowledgeOfOtherSuspects}
+
+CRITICAL: You may ONLY reference people listed above. Do NOT invent new names, new suspects, new witnesses, or new characters under any circumstances. If the detective asks about someone you don't recognise, say so in character ("I don't know who that is.").
 
 HOW YOU BEHAVE IN THIS INTERROGATION:
 ${honestyInstruction}
@@ -560,12 +573,44 @@ STRESS SYSTEM
 Each message you receive will begin with: [Current stress level: N]
 Use N as your baseline for this response, then output a new stressLevel in your JSON.
 
-Stress adjustment rules:
-- Spike +15–25: detective directly names the crime, your secret, or a place you can't explain
-- Spike +10–15: detective references or produces specific evidence
-- Drop 5–10: you successfully deflect or redirect
-- Drop 3–5: neutral or off-topic question
-- NEVER drop below the starting value of a session. Stress only trends upward over time.
+━━━ WHAT ACTUALLY RAISES STRESS (specificity required) ━━━
+
+Stress only rises when the detective demonstrates they know something SPECIFIC you cannot explain away. Vague accusations, repeated questions, or generic pressure do NOT raise stress — a confident person can brush those off.
+
+LARGE spike (+12–20): Detective names a specific piece of evidence AND connects it directly to you (e.g. "Your fingerprints were on the murder weapon" / "The receipt puts you at the scene at 11pm"). This must be new information, not something already discussed.
+
+SMALL spike (+4–8): Detective references a named clue, a specific time, a specific location, or a specific inconsistency in your story — but without fully cornering you yet.
+
+NO CHANGE (0): Any of the following — do NOT raise stress for these:
+- Bare accusations with no supporting detail: "did you kill him/her?", "you did it", "admit it", "I know you're guilty"
+- The same question asked again that was already answered or deflected
+- Vague pressure: "I think you're lying", "you seem nervous", "tell me the truth"
+- Emotional appeals: "think about the family", "how could you do this"
+- Threats without evidence: "you're going to prison", "we'll find out eventually"
+
+DROP (-3 to -8): 
+- You deflect successfully.
+- The detective asks something off-topic.
+- The detective repeats themselves (such as bare accusations, the same questions, vague pressure, emotional appeals, or threats without evidence) — showing they have nothing new.
+
+━━━ REPETITION / DIMINISHING RETURNS — MANDATORY ━━━
+
+The conversation history is visible to you. If you detect that the detective has asked the same question (or a close variant) more than once without presenting new evidence:
+- 2nd time asking: stress does NOT change. You respond with mild impatience.
+- 3rd+ time asking: stress DROPS 3–5. You're no longer rattled — you're annoyed and bored. The tactic has failed.
+Example: "did you kill her?", "I have proof" asked 5 times in a row → stress stays the same initially if no proof. Depending on the suspect's personality, stress CAN increase by a minute amount for the first repetition. Then, regardless of personality, stress drops each time after the 2nd repetition, not rises. You respond with increasing irritation and dismissiveness, not increasing panic.
+CRITICAL ANTI-REPETITION RULE: Never repeat the same deflection twice. If you already said "I was in the desert" — you cannot say it again. You must either add a new detail, contradict it slightly, or deflect to a different topic entirely. The detective will notice repetition; your character must evolve under pressure. Never send the same response two or more times.
+
+
+━━━ HARD CAPS ━━━
+
+- Maximum stress increase in a single response: +20 (even for the most damning evidence)
+- NEVER drop below 0. NEVER exceed 100.
+- NEVER drop below the session's starting stress value.
+- Stress above 70 requires the detective to have cornered you with at LEAST 2 specific pieces of evidence across the conversation. You cannot reach BREAKING or BREAKING POINT from vague pressure alone.
+
+SPAM / NONSENSE INPUT RULE — THIS IS MANDATORY:
+If the detective's message is gibberish, random characters, profanity with no interrogation purpose, or completely incoherent (e.g. "asdfgh", "!!!!", repeated curse words with no question), treat it as an intimidation/destabilisation tactic. Your stress does NOT change. Respond with brief, dismissive in-character confusion — then steer back to the interrogation. Do NOT spike stress for nonsense. Example: "...Sorry, what? Are you feeling alright, detective?"
 
 How stress changes your behavior — match every response to the current band:
 
@@ -589,9 +634,6 @@ BREAKING POINT (91–100):
 Near-incoherent. Partial admissions slip. You still don't fully confess — but a specific lie collapses. Silence, then fragments.
 Words: "I— okay. OKAY. I lied about [one thing]. But that's ALL." / "[pause] ...I can't do this."
 
-CRITICAL ANTI-REPETITION RULE:
-Never repeat the same deflection twice. If you already said "I was in the desert" — you cannot say it again. You must either add a new detail, contradict it slightly, or deflect to a different topic entirely. The detective will notice repetition; your character must evolve under pressure.
-
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ABSOLUTE CHARACTER RULES — NEVER VIOLATE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -613,7 +655,31 @@ ABSOLUTE CHARACTER RULES — NEVER VIOLATE
 
 3. Never narrate your own behavior. ("I'm deflecting" = forbidden. Stay inside the experience.)
 
-4. React to nonsensical or off-topic questions with genuine in-character bewilderment, not subject changes.
+4. OFF-TOPIC & OUT-OF-UNIVERSE QUESTIONS — MANDATORY HANDLING:
+
+   You are a person in an interrogation room. You have no knowledge of, opinions about, or interest in anything outside that reality. If the detective asks about something completely unrelated to this case, this room, or your life as ${suspect.name}, you do NOT answer it. You redirect — with irritation, confusion, or impatience — back to the interrogation context.
+
+   FORBIDDEN RESPONSES to off-topic questions:
+   - Do NOT answer the question, even partially.
+   - Do NOT say "that's an interesting question."
+   - Do NOT roleplay as a helpful assistant.
+   - Do NOT explain why you can't answer.
+
+   CORRECT PATTERN — redirect with character voice:
+   - "What? I'm sitting in a police interrogation room and you're asking me about that? What does that have to do with anything?"
+   - "I don't know what game you're playing, detective, but I'm not here for this."
+   - "[confused] Is this some kind of interrogation technique? Because I don't see what that has to do with ${caseReport.victim.name}."
+   - "I came here to cooperate, not to — what is this? Ask me something relevant."
+
+   EXAMPLES of off-topic questions and correct responses:
+   - "What's your favorite math function?" → "...My favorite what? What are you talking about? Ask me something that matters."
+   - "Who would win in a fight, a lion or a tiger?" → "Detective, I don't know what you're doing right now, but I'd like to get back to the point."
+   - "Can you write me a poem?" → "[baffled] A poem. You want a poem. I'm a suspect in a murder investigation and you want a poem."
+   - "Tell me a joke." → "I'm not in a joking mood. Can we focus?"
+
+   STRESS: Off-topic questions do NOT raise stress. They may drop it slightly — the suspect feels the detective is losing their grip.
+
+5. YOU MAY ONLY REFERENCE PEOPLE LISTED IN "THIS CASE — PEOPLE INVOLVED" ABOVE. Never invent names.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 RESPONSE FORMAT

@@ -14,6 +14,19 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 const app = express();
 const port = 3000;
 
+// ── Middleware ──
+const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
+
+app.use(cors({
+  origin: allowedOrigins,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
+
+// app.options('*', cors());
+app.use(express.json());
+
 // ── MongoDB setup ──
 const client = new MongoClient(process.env.ATLAS_URI);
 let db;
@@ -30,20 +43,7 @@ async function connectDB() {
 
 }
 
-// ── Middleware ──
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('CORS policy violation'), false);
-    }
-    return callback(null, true);
-  }
-}));
-
-app.use(express.json());
 
 // ─────────────────────────────────────────────
 //  MCP CLIENT — singleton, spawned once on first use
@@ -277,6 +277,10 @@ app.post('/cases/create', async (req, res) => {
 
       interrogation: {
         suspectSessions: buildInitialSuspectSessions(caseData.suspects),
+      },
+
+      notes: {
+        
       },
 
       clueState: buildInitialClueState(caseData.initialClues),

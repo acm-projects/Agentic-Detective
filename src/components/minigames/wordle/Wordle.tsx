@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { WordleData } from '../../../obj/notificationInterfaces'
 import styles from '../MinigameModal.module.css'
+import acceptedWords from './acceptedWords'
 
 interface Props {
   data: WordleData
@@ -53,8 +54,13 @@ const KEYBOARD_ROWS = [
   ['ENTER','Z','X','C','V','B','N','M','⌫'],
 ]
 
+const ACCEPTED_WORDS = new Set(
+  [...acceptedWords.words, ...acceptedWords.valid].map((word: string) => word.trim().toUpperCase())
+)
+
 export function WordleMinigame({ data, onSuccess, onFailure }: Props) {
   const { answer, maxNumGuesses, hint } = data
+  const normalizedAnswer = answer.toUpperCase()
   const [pressedKey, setPressedKey] = useState<string | null>(null)
   const [rows, setRows] = useState<GuessRow[]>(() => Array(maxNumGuesses).fill(null).map(emptyRow))
   const [currentRow, setCurrentRow] = useState(0)
@@ -75,8 +81,9 @@ export function WordleMinigame({ data, onSuccess, onFailure }: Props) {
     if (currentCol < 5) { triggerShake(); return }
     const guess = rows[currentRow].letters.join('')
     if (guess.length < 5) { triggerShake(); return }
+    if (guess !== normalizedAnswer && !ACCEPTED_WORDS.has(guess)) { triggerShake(); return }
 
-    const states = evaluateGuess(guess, answer)
+    const states = evaluateGuess(guess, normalizedAnswer)
     const newRows = rows.map((r, i) =>
       i === currentRow ? { ...r, states, submitted: true } : r
     )
@@ -111,7 +118,7 @@ export function WordleMinigame({ data, onSuccess, onFailure }: Props) {
     }
     setCurrentRow(nextRow)
     setCurrentCol(0)
-  }, [currentCol, currentRow, rows, answer, maxNumGuesses, onSuccess, onFailure])
+  }, [currentCol, currentRow, rows, normalizedAnswer, maxNumGuesses, onSuccess, onFailure])
 
   const handleKey = useCallback((key: string) => {
     setPressedKey(key);
