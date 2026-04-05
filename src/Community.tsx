@@ -109,7 +109,6 @@ export default function Community({ onCloseModal }: CommunityProps) {
                         </div>
                     ))}
                 </div>
-                {error && <p className="community-share-error">{error}</p>}
             </div>
 
             <div className="community-section">
