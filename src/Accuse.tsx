@@ -172,9 +172,7 @@ function Accuse() {
 
     const sessionId =
       currentSessionId ||
-      player?.caseReport?.caseId ||
       localStorage.getItem('lastSessionId') ||
-      localStorage.getItem('lastCaseId') ||
       '';
 
     if (!sessionId) {
@@ -192,7 +190,8 @@ function Accuse() {
           gameplayRating: nextRating,
           featured: nextFeatured,
         }),
-      });
+      }
+    );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setFeedbackSaved(true);
     } catch {

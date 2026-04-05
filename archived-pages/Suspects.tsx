@@ -1,212 +1,150 @@
-import { useState, useEffect } from 'react';
-import './Suspects.css';
-import { useGameStore } from './useGameStore';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useGameStore } from './useGameStore';
+import s1 from './assets/s1.png';
+import s2 from './assets/s2.png';
+import s3 from './assets/s3.png';
+import s4 from './assets/s4.png';
+import jailHer from './assets/jailher.gif';
+import suspectavatar from './assets/portraitguy.png';
+import who from './assets/updatedwho.png';
+import decor from './assets/decor.png';
+import newspaper from './assets/newsdecor.png';
+import victim from './assets/choppedvictim.png';
+import clipping from './assets/clipping.png';
+import layout from './assets/layout.png';
+import './Suspects.css';
 
-// ── Tag config (from NotesPage) ──
-const TAG_CONFIG = {
-  neutral:    { label: "Neutral",    color: "#4a3f2f" },
-  suspicious: { label: "Suspicious", color: "#8b1a1a" },
-  cleared:    { label: "Cleared",    color: "#1a4a2f" },
-  alibi:      { label: "Alibi",      color: "#1a2f4a" },
-} as const;
+// ─────────────────────────────────────────────
+const WHO = { x: 50, y: 38 };
 
-type TagKey = keyof typeof TAG_CONFIG;
+const POLAROID_PINS = {
+  'top-left':     { x: 22, y: 12 },
+  'top-right':    { x: 79, y: 12 },
+  'bottom-left':  { x: 24, y: 56 },
+  'bottom-right': { x: 74, y: 56 },
+};
+// ─────────────────────────────────────────────
 
-interface SuspectNote {
-  suspectName: string;
-  note: string;
-  tag: TagKey;
-}
+const CORNER_KEYS = ['top-left', 'top-right', 'bottom-left', 'bottom-right'] as const;
+type CornerCls = typeof CORNER_KEYS[number];
+
+const CORNER_IMGS: Record<CornerCls, string> = {
+  'top-left':     s1,
+  'top-right':    s2,
+  'bottom-left':  s3,
+  'bottom-right': s4,
+};
+
+const dot = (x: number, y: number): React.CSSProperties => ({
+  position: 'absolute',
+  width: '10px',
+  height: '10px',
+  borderRadius: '50%',
+  background: '#af0f0f',
+  left: `calc(${x}% - 5px)`,
+  top: `calc(${y}% - 5px)`,
+  pointerEvents: 'none',
+  zIndex: 10,
+});
 
 function Suspects() {
   const navigate = useNavigate();
-  const { player, interrogateSuspects } = useGameStore();
+  const { player, makeAccusation } = useGameStore();
   const profiles = player?.characterProfiles ?? [];
 
-  // ── Selected suspect (UI from Suspects.tsx) ──
-  const [selectedSuspect, setSelectedSuspect] = useState<typeof profiles[number] | undefined>(
-    profiles[0]
-  );
+  // Map first 4 profiles to corners in order
+  const cornerProfiles: Partial<Record<CornerCls, typeof profiles[number]>> = {};
+  CORNER_KEYS.forEach((cls, i) => {
+    if (profiles[i]) cornerProfiles[cls] = profiles[i];
+  });
 
-  // ── Per-suspect notes + tags (functionality from NotesPage) ──
-  const [suspectNotes, setSuspectNotes] = useState<SuspectNote[]>(
-    profiles.map(p => ({
-      suspectName: p.name,
-      note: '',
-      tag: 'neutral' as TagKey,
-    }))
-  );
+  const [popup, setPopup] = useState<{ cls: CornerCls; name: string } | null>(null);
+  const [arrestedCorner, setArrestedCorner] = useState<CornerCls | null>(null);
 
-  useEffect(() => {
-    if (!selectedSuspect && profiles.length > 0) {
-      setSelectedSuspect(profiles[0]);
-    }
-  }, []);
-
-  const updateSuspectNote = (name: string, field: Partial<SuspectNote>) => {
-    setSuspectNotes(prev =>
-      prev.map(n => n.suspectName === name ? { ...n, ...field } : n)
-    );
+  const handlePolaroidClick = (cls: CornerCls) => {
+    if (arrestedCorner) return; // already arrested someone
+    const profile = cornerProfiles[cls];
+    if (!profile) return;
+    setPopup({ cls, name: profile.name });
   };
 
-  const activeSuspectNote = suspectNotes.find(
-    n => n.suspectName === selectedSuspect?.name
-  );
+  const handleArrest = () => {
+    if (!popup) return;
+    setArrestedCorner(popup.cls);
+    setPopup(null);
+    // show jailher gif for 1.2s then makeAccusation navigates to /accuse
+    setTimeout(() => makeAccusation(popup.name, navigate), 1700);
+  };
 
   return (
-    <div className="suspects-wrapper">
-      <div className="suspects-container">
+    <div className="suspects-page">
 
-        {/* Header */}
-        <div className="suspects-header">
-          <h1>{player.caseReport.caseTitle}</h1>
+      {/* Red strings SVG layer */}
+      <svg className="strings-svg">
+        {CORNER_KEYS.map((cls) => {
+          const pin = POLAROID_PINS[cls];
+          return (
+            <line
+              key={cls}
+              x1={`${pin.x}%`}  y1={`${pin.y}%`}
+              x2={`${WHO.x}%`}  y2={`${WHO.y}%`}
+              stroke="#af0f0f"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              opacity="0.85"
+            />
+          );
+        })}
+      </svg>
+
+      {/* Dots at polaroid ends */}
+      {CORNER_KEYS.map((cls) => {
+        const pin = POLAROID_PINS[cls];
+        return <div key={`dot-${cls}`} style={dot(pin.x, pin.y)} />;
+      })}
+
+      {/* Dot at who center */}
+      <div style={dot(WHO.x, WHO.y)} />
+
+      <h1 className="arrest-title">ARREST</h1>
+
+      {CORNER_KEYS.map((cls) => (
+        <div
+          key={cls}
+          className={`suspect-corner ${cls}`}
+          onClick={() => handlePolaroidClick(cls)}
+        >
+          <img src={CORNER_IMGS[cls]} alt="polaroid" className="polaroid-bg" />
+          <img src={suspectavatar} alt="character" className="character-avatar" />
+          {arrestedCorner === cls && (
+            <img src={jailHer} alt="jail" className="jailher-overlay" />
+          )}
         </div>
-       
-        {/* Main Layout */}
-        <div className="suspects-layout">
+      ))}
 
-          {/* Left Sidebar — suspect list with tag dot */}
-          <div className="suspects-sidebar">
-            <button className="main-header" onClick={() => interrogateSuspects(navigate)}>
-        <div className="back-button">
-              CASE NOTEPAD
-        </div>
-        </button>
+      <img src={who}       alt="who"       className="who-center" />
+      <img src={decor}     alt="decor"     className="decor" />
+      <img src={newspaper} alt="newspaper" className="newspaper" />
+      <img src={victim}    alt="victim"    className="victim" />
+      <img src={clipping}  alt="clipping"  className="clipping" />
+      <img src={layout}    alt="layout"    className="layout" />
 
-            <div className="suspect-list">
-              {profiles.map((suspect) => {
-                const note = suspectNotes.find(n => n.suspectName === suspect.name);
-                return (
-                  <button
-                    key={suspect?.id}
-                    className={`suspect-button ${selectedSuspect?.id === suspect?.id ? 'active' : ''}`}
-                    onClick={() => setSelectedSuspect(suspect)}
-                  >
-                    <span>{suspect.name}</span>
-                    {note?.tag !== 'neutral' && (
-                      <span
-                        className="suspect-tag-dot"
-                        style={{ background: TAG_CONFIG[note?.tag ?? 'neutral'].color }}
-                      />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <button className="back-button" onClick={() => navigate('/desk')}>
-                ← Desk
-              </button>
+      {/* Arrest popup */}
+      {popup && (
+        <>
+          <div className="arrest-overlay" onClick={() => setPopup(null)} />
+          <div className="arrest-popup">
+            <p className="arrest-popup-label">ARREST</p>
+            <p className="arrest-popup-name">{popup.name.toUpperCase()}?</p>
+            <div className="arrest-popup-buttons">
+              <button className="arrest-confirm" onClick={handleArrest}>CONFIRM</button>
+              <button className="arrest-cancel"  onClick={() => setPopup(null)}>CANCEL</button>
             </div>
           </div>
+        </>
+      )}
 
-          {/* Right Main Area — suspect details + notes */}
-          <div className="suspects-main">
-           
-
-            {selectedSuspect && activeSuspectNote ? (
-              <div className="suspect-details-container">
-
-                {/* Name / Info Section */}
-                <div className="suspect-name-section">
-                  <h4>NAME</h4>
-                  <div className="suspect-info">
-                    <p>{selectedSuspect.name.toUpperCase()}</p>
-                    <ul>
-                      <li>Age: {selectedSuspect.age}</li>
-                      <li>Occupation: {selectedSuspect.occupation}</li>
-                      <li>Relationship to Victim: {selectedSuspect.relationshipToVictim}</li>
-                    </ul>
-                  </div>
-                </div>
-
-                {/* Polaroid + Biodata */}
-                <div className="suspect-biodata-section">
-
-                  {/* Polaroid Frame */}
-                  <div className="polaroid">
-                    <div className="polaroid-content">
-                      <img
-                        src={`/avatars/${selectedSuspect.avatarId}.png`}
-                        alt={selectedSuspect.name}
-                        onError={e => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                      />
-                    </div>
-                    <p className="polaroid-label">{selectedSuspect.name}</p>
-                  </div>
-
-                  {/* Biodata */}
-                  <div className="biodata-section">
-                    <h4>BIODATA</h4>
-                    <ul>
-                      <li>{selectedSuspect.personalityBlurb}</li>
-                      <li>
-                        Claimed Alibi:
-                        <em>"{selectedSuspect.claimedAlibi}"</em>
-                      </li>
-                    </ul>
-
-                    {/* ── Tag assessment row (from NotesPage) ── */}
-                    <div className="tag-row">
-                      <span className="tag-row-label" >Your assessment:</span>
-                      {(Object.keys(TAG_CONFIG) as TagKey[]).map(tag => (
-                        <button
-                          key={tag}
-                          className={`tag-btn ${activeSuspectNote.tag === tag ? 'active' : ''}`}
-                          style={{ '--tag-color': TAG_CONFIG[tag].color } as React.CSSProperties}
-                          onClick={() => updateSuspectNote(selectedSuspect.name, { tag })}
-                        >
-                          {TAG_CONFIG[tag].label}
-                        </button>
-                      ))}
-                    </div>
-
-                    {/* ── Free-text notes (from NotesPage) ── */}
-                    <div className="Notes-section">
-                      <h4>Notes</h4>
-                      <textarea
-                        className="notepad-textarea"
-                        placeholder={`Write your observations about ${selectedSuspect.name}…\n\nWhat did they say? What felt off? Any contradictions?`}
-                        value={activeSuspectNote.note}
-                        onChange={e =>
-                          updateSuspectNote(selectedSuspect.name, { note: e.target.value })
-                        }
-                        rows={3}
-                        />
-                        <button className="tag-row-label tag-row" onClick={async () => {
-                           const caseId = player?.caseReport?.caseId;
-                           if (!caseId) return;
-                           await fetch(`http://localhost:3000/case/${sessionId}/suspectNotes`, {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                              suspectName: selectedSuspect.name,
-                              suspectNotes: activeSuspectNote.note,
-                            }),
-                           })
-                        }}>
-                          Save
-                        </button>
-                      
-                      <div className="notepad-char-count">
-                        {activeSuspectNote.note.length} chars
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p style={{ padding: '1rem', opacity: 0.5 }}>Select a suspect to view their profile.</p>
-            )}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

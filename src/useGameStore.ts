@@ -154,7 +154,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         const { backend, player } = await generateCaseFile(seed);
         // Select voices server-side (non-blocking — falls back to defaults on failure)
         const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
-        set({ backend, player, phase: "briefing", elapsed: 0 });
+        set({ backend, player, phase: "briefing", elapsed: 0, voiceIds});
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues)
         navigate("/report");           // ← instead of set({ phase: "briefing" })
@@ -246,7 +246,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-3.1-flash-lite-preview",
       systemInstruction: systemPrompt,
       generationConfig: {
         temperature: 0.7,
@@ -547,7 +547,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       )?.gender ?? "female";
 
         
-      //tts streamed better\
+      //tts streamed better
       const voiceId = get().voiceIds[activeSuspectName];
 
       if (voiceId) {
