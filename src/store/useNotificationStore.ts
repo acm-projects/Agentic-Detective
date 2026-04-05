@@ -1,13 +1,14 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import type {
-    NotificationPayload,
-    Clue,
-    WordleData,
-    ImageUnshuffleData,
-    NotificationType,
-    MinigameData,
-    MinigameType,
+  NotificationPayload,
+  Clue,
+  WordleData,
+  ImageUnshuffleData,
+  CaesarCipherData,
+  NotificationType,
+  MinigameData,
+  MinigameType,
 } from "../obj/notificationInterfaces";
 
 // Schedule Config
@@ -28,91 +29,85 @@ const MESSAGE_SCHEDULE_CONFIG = {
 };
 
 interface PersistedSchedulerState {
-        lastFiredAt?: number | null;
-        nextFireAt?: number | null;
-        timerPaused?: boolean;
+  lastFiredAt?: number | null;
+  nextFireAt?: number | null;
+  timerPaused?: boolean;
 }
 
 // Helper Functions and Constants
 function randBetween(min: number, max: number): number {
-    return Math.floor(Math.random() * (max - min + 1) + min);
-};
+  return Math.floor(Math.random() * (max - min + 1) + min);
+}
 
 function pickRandom<T>(arr: T[]) {
-    return arr[randBetween(0, arr.length - 1)];
-};
+  return arr[randBetween(0, arr.length - 1)];
+}
 
 const NOTIFICATION_TYPES: NotificationType[] = ["mail"];
-const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle"];
+const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle", "cipher"];
 
 const HEADLINES: Record<NotificationType, string[]> = {
-    mail: [
-        'A sealed envelope was found beneath the victim\'s pillow.',
-        'The postmaster delivered a letter addressed to the deceased.',
-        'A crumpled note surfaced in the wastepaper basket.',
-    ]
-}
+  mail: [
+    "A sealed envelope was found beneath the victim's pillow.",
+    "The postmaster delivered a letter addressed to the deceased.",
+    "A crumpled note surfaced in the wastepaper basket.",
+  ],
+};
 
 const FLAVOR_TEXTS: Record<NotificationType, string[]> = {
-    mail: [
-        'The envelope is sealed with wax — whoever wrote this wanted it kept private.',
-        'To read it, you\'ll need to work through the lock.',
-        'The letter appears to be written in code. Whoever sent this didn\'t want it read by the wrong eyes.',
-    ]
-}
+  mail: [
+    "The envelope is sealed with wax — whoever wrote this wanted it kept private.",
+    "To read it, you'll need to work through the lock.",
+    "The letter appears to be written in code. Whoever sent this didn't want it read by the wrong eyes.",
+  ],
+};
 
 // ─────────────────────────────────────────────
 //  Wordle Data Generator
 // ─────────────────────────────────────────────
 
 const WORDLE_DETECTIVE_WORDS = [
-    { answer: 'KNIFE', hint: 'The murder weapon may be closer than you think.' },
-    { answer: 'ALIBI', hint: 'Someone\'s story doesn\'t quite add up.' },
-    { answer: 'BLOOD', hint: 'The forensics report holds a grim detail.' },
-    { answer: 'VAULT', hint: 'Something was locked away the night of the murder.' },
-    { answer: 'CLOAK', hint: 'A witness described what the figure was wearing.' },
-    { answer: 'FORGE', hint: 'A document in the study may not be authentic.' },
-    { answer: 'DECOY', hint: 'Not everything found at the scene was accidental.' },
-    { answer: 'GUEST', hint: 'An unexpected visitor arrived that evening.' },
-    { answer: 'LYING', hint: 'One suspect\'s testimony contradicts another.' },
-    { answer: 'MOTIVE', hint: 'Follow the money.' },
-    { answer: 'TRACE', hint: 'A tiny piece of evidence was left behind.' },
-    { answer: 'STAIN', hint: 'Something spilled during the struggle.' },
-    { answer: 'PRINT', hint: 'A mark on the glass could identify the culprit.' },
-    { answer: 'SCENE', hint: 'Reconstruct what happened where the body was found.' },
-    { answer: 'CHASE', hint: 'Someone was seen running shortly after the crime.' },
-    { answer: 'RIVAL', hint: 'The victim had a bitter competitor.' },
-    { answer: 'MONEY', hint: 'A suspicious transfer happened before the murder.' },
-    { answer: 'RUMOR', hint: 'Whispers around town hint at a dark secret.' },
-    { answer: 'STEAL', hint: 'Was the killing tied to a theft?' },
-    { answer: 'ENTRY', hint: 'How did the killer get inside?' },
-    { answer: 'NOTES', hint: 'The victim wrote something important before dying.' },
-    { answer: 'CLOCK', hint: 'The stopped time may reveal when it happened.' },
-    { answer: 'DOORS', hint: 'One of them was left unlocked that night.' },
-    { answer: 'PANEL', hint: 'A hidden compartment may conceal evidence.' },
-    { answer: 'DRINK', hint: 'What the victim consumed might hold a clue.' },
+  { answer: "KNIFE", hint: "The murder weapon may be closer than you think." },
+  { answer: "ALIBI", hint: "Someone's story doesn't quite add up." },
+  { answer: "BLOOD", hint: "The forensics report holds a grim detail." },
+  { answer: "VAULT", hint: "Something was locked away the night of the murder." },
+  { answer: "CLOAK", hint: "A witness described what the figure was wearing." },
+  { answer: "FORGE", hint: "A document in the study may not be authentic." },
+  { answer: "DECOY", hint: "Not everything found at the scene was accidental." },
+  { answer: "GUEST", hint: "An unexpected visitor arrived that evening." },
+  { answer: "LYING", hint: "One suspect's testimony contradicts another." },
+  { answer: "MOTIVE", hint: "Follow the money." },
+  { answer: "TRACE", hint: "A tiny piece of evidence was left behind." },
+  { answer: "STAIN", hint: "Something spilled during the struggle." },
+  { answer: "PRINT", hint: "A mark on the glass could identify the culprit." },
+  { answer: "SCENE", hint: "Reconstruct what happened where the body was found." },
+  { answer: "CHASE", hint: "Someone was seen running shortly after the crime." },
+  { answer: "RIVAL", hint: "The victim had a bitter competitor." },
+  { answer: "MONEY", hint: "A suspicious transfer happened before the murder." },
+  { answer: "RUMOR", hint: "Whispers around town hint at a dark secret." },
+  { answer: "STEAL", hint: "Was the killing tied to a theft?" },
+  { answer: "ENTRY", hint: "How did the killer get inside?" },
+  { answer: "NOTES", hint: "The victim wrote something important before dying." },
+  { answer: "CLOCK", hint: "The stopped time may reveal when it happened." },
+  { answer: "DOORS", hint: "One of them was left unlocked that night." },
+  { answer: "PANEL", hint: "A hidden compartment may conceal evidence." },
+  { answer: "DRINK", hint: "What the victim consumed might hold a clue." },
 ];
 
 function generateWordleData(): WordleData {
-    const entry = pickRandom(WORDLE_DETECTIVE_WORDS);
-    return {
-        kind: 'wordle',
-        answer: entry.answer.toUpperCase(),
-        maxNumGuesses: 6,
-        hint: entry.hint,
-    };
-};
+  const entry = pickRandom(WORDLE_DETECTIVE_WORDS);
+  return {
+    kind: "wordle",
+    answer: entry.answer.toUpperCase(),
+    maxNumGuesses: 6,
+    hint: entry.hint,
+  };
+}
 
 // ─────────────────────────────────────────────
 //  Image Unshuffle Data Generator
 // ─────────────────────────────────────────────
 
-/**
- * Each entry describes what the reconstructed image reveals.
- * `solution` is always [0..8] — the canonical solved order.
- * On game init, the UI shuffles the tiles; the player restores them
- * by clicking to rotate each cell back to 0°.
- */
 const IMAGE_UNSHUFFLE_CLUES = [
     { hint: 'The photograph reveals a face you weren\'t meant to recognise.' },
     { hint: 'A torn image from the victim\'s coat pocket — piece it together.' },
@@ -124,11 +119,17 @@ const IMAGE_UNSHUFFLE_CLUES = [
     { hint: 'The image was deliberately scrambled. Someone didn\'t want it seen.' },
 ];
 
+const IMAGE_UNSHUFFLE_IMAGES = [
+  '../../assets/Key.png',
+  '../../assets/Outline.png',
+  // add more as needed
+];
+
 function generateImageUnshuffleData(): ImageUnshuffleData {
     const entry = pickRandom(IMAGE_UNSHUFFLE_CLUES);
     return {
         kind: 'image-unshuffle',
-        imagePath: 'assets/meme.png',
+        imagePath: pickRandom(IMAGE_UNSHUFFLE_IMAGES),
         // solution is always the identity order; the UI owns the scrambled state
         solution: [0, 1, 2, 3, 4, 5, 6, 7, 8],
         hint: entry.hint,
@@ -140,53 +141,49 @@ function generateImageUnshuffleData(): ImageUnshuffleData {
 // ─────────────────────────────────────────────
 
 function generateMinigameData(type: MinigameType): MinigameData {
-    switch (type) {
-        case 'wordle':
-            return generateWordleData();
-        case 'image-unshuffle':
-            return generateImageUnshuffleData();
-        default:
-            throw new Error(`Unknown minigame type: ${type}`);
-    };
-};
+  switch (type) {
+    case "wordle":
+      return generateWordleData();
+    case "image-unshuffle":
+      return generateImageUnshuffleData();
+    case "cipher":
+      return generateCipherData();
+    default:
+      throw new Error(`Unknown minigame type: ${type}`);
+  }
+}
 
 function saveClueProgress(get: any) {
-    void import("../useGameStore").then(({ useGameStore }) => {
-            const gameStoreState = useGameStore.getState();
-            const seed = gameStoreState.seed;
-      if (!seed?.isSignedIn || !seed?.userId) return;
+  void import("../useGameStore").then(({ useGameStore }) => {
+    const gameStoreState = useGameStore.getState();
+    const seed = gameStoreState.seed;
 
-            const sessionId =
-                gameStoreState.currentSessionId ||
-                gameStoreState.player?.caseReport?.caseId ||
-                localStorage.getItem("lastSessionId") ||
-                localStorage.getItem("lastCaseId");
+    if (!seed?.isSignedIn || !seed?.userId) return;
 
-            if (!sessionId) return;
+    const sessionId =
+      gameStoreState.currentSessionId ||
+      gameStoreState.player?.caseReport?.caseId ||
+      localStorage.getItem("lastSessionId") ||
+      localStorage.getItem("lastCaseId");
 
-      const s = get();
-      const clueState = Object.fromEntries(
-        s.clues.map((clue: Clue) => [
-          clue.id,
-          {
-            discovered: Boolean(clue.discovered),
-            clueLost: Boolean(clue.clueLost),
-          },
-        ])
-      );
+    if (!sessionId) return;
+
+    const s = get();
+    const clueState = Object.fromEntries(
+      s.clues.map((clue: Clue) => [
+        clue.id,
+        {
+          discovered: Boolean(clue.discovered),
+          clueLost: Boolean(clue.clueLost),
+        },
+      ])
+    );
 
       fetch(`http://localhost:3000/cases/${sessionId}/progress`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-                    status: gameStoreState.phase === "resolved" ? "resolved" : "in_progress",
-                    game: {
-                        phase: gameStoreState.phase,
-                        elapsedSeconds: gameStoreState.elapsed,
-                        activeSuspectName: gameStoreState.activeSuspectName,
-                        totalConversationCount: gameStoreState.totalConversationCount,
-                        seed: gameStoreState.seed,
-                    },
+          status: "in_progress",
           clueState,
           schedulerState: {
             lastFiredAt: s.lastFiredAt,
@@ -205,151 +202,152 @@ function saveClueProgress(get: any) {
 // ─────────────────────────────────────────────
 
 interface NotificationState {
-    notifications: NotificationPayload[];
-    clues: Clue[];
-    lastFiredAt: number | null;
-    nextFireAt: number | null;
-    timerPaused: boolean;
+  notifications: NotificationPayload[];
+  clues: Clue[];
+  lastFiredAt: number | null;
+  nextFireAt: number | null;
+  timerPaused: boolean;
 
-    initClues: (clues: Clue[]) => void;
-    tick: (elapsed: number, totalGameDuration: number, messageCount: number) => void;
-    openNotification: (id: string) => void;
-    dismissNotification: (id: string) => void;
-    abandonMinigame: (id: string) => void;
-    resolveMinigame: (notificationId: string, success: boolean) => void;
-    setTimerPaused: (paused: boolean) => void;
-    hydrateSchedulerState: (schedulerState?: PersistedSchedulerState | null) => void;
-    purgeExpired: () => void;
-};
+  initClues: (clues: Clue[]) => void;
+  tick: (elapsed: number, totalGameDuration: number, messageCount: number) => void;
+  openNotification: (id: string) => void;
+  dismissNotification: (id: string) => void;
+  abandonMinigame: (id: string) => void;
+  resolveMinigame: (notificationId: string, success: boolean) => void;
+  setTimerPaused: (paused: boolean) => void;
+  hydrateSchedulerState: (schedulerState?: PersistedSchedulerState | null) => void;
+  purgeExpired: () => void;
+}
 
 function clearClueNotification(clues: Clue[], clueId: string) {
-    const clue = clues.find(c => c.id === clueId);
-    if (clue) clue.notificationId = undefined;
+  const clue = clues.find((c) => c.id === clueId);
+  if (clue) clue.notificationId = undefined;
 }
 
 export const useNotificationStore = create<NotificationState>()(
-    immer((set, get) => ({
-        notifications: [],
-        clues: [],
-        lastFiredAt: null,
-        nextFireAt: null,
-        timerPaused: false,
+  immer((set, get) => ({
+    notifications: [],
+    clues: [],
+    lastFiredAt: null,
+    nextFireAt: null,
+    timerPaused: false,
 
-        initClues(clues) {
-            console.log('[notif] initClues called with', clues.length, 'clues');
-            set(s => {
-                s.clues = clues.map(clue => ({
-                    ...clue,
-                    discovered: Boolean(clue.discovered),
-                    clueLost: Boolean(clue.clueLost),
-                    notificationId: undefined,
-                }));
-            });
-        },
+    initClues(clues) {
+      console.log("[notif] initClues called with", clues.length, "clues");
+      set((s) => {
+        s.clues = clues.map((clue) => ({
+          ...clue,
+          discovered: Boolean(clue.discovered),
+          clueLost: Boolean(clue.clueLost),
+          notificationId: undefined,
+        }));
+      });
+    },
 
-        tick(elapsed, totalGameDuration, messageCount) {
-            const state = get();
-            if (state.timerPaused) return;
+    tick(elapsed, totalGameDuration, messageCount) {
+      const state = get();
+      if (state.timerPaused) return;
 
-            const remaining = totalGameDuration - elapsed;
-            if (remaining < MESSAGE_SCHEDULE_CONFIG.minGameTimeRemaining) return;
+      const remaining = totalGameDuration - elapsed;
+      if (remaining < MESSAGE_SCHEDULE_CONFIG.minGameTimeRemaining) return;
 
-            const nowMessageCount = messageCount;
-            console.log("message count: " + messageCount);
-            console.log("next fire at: " + state.nextFireAt);
-            console.log("last fired at: " + state.lastFiredAt);
+      const nowMessageCount = messageCount;
+      console.log("message count: " + messageCount);
+      console.log("next fire at: " + state.nextFireAt);
+      console.log("last fired at: " + state.lastFiredAt);
 
-            if (state.nextFireAt === null) {
-                const delay = randBetween(...MESSAGE_SCHEDULE_CONFIG.firstNotificationWindowMessageCount);
-                set(s => {
-                    s.nextFireAt = nowMessageCount + delay;
-                });
-                saveClueProgress(get);
-                return;
-            }
+      if (state.nextFireAt === null) {
+        const delay = randBetween(...MESSAGE_SCHEDULE_CONFIG.firstNotificationWindowMessageCount);
+        set((s) => {
+          s.nextFireAt = nowMessageCount + delay;
+        });
+        saveClueProgress(get);
+        return;
+      }
 
-            if (nowMessageCount < state.nextFireAt) return;
+      if (nowMessageCount < state.nextFireAt) return;
 
-            const pendingClueIds = new Set(
-                state.notifications
-                    .filter(n => !n.dismissed)
-                    .map(n => n.clueId)
-            );
-            const available = state.clues.filter(
-                c => !c.discovered && !c.clueLost && !pendingClueIds.has(c.id) && !c.notificationId
-            );
-            if (available.length === 0) return;
+      const pendingClueIds = new Set(
+        state.notifications.filter((n) => !n.dismissed).map((n) => n.clueId)
+      );
 
-            const clue = pickRandom(available);
-            const type = pickRandom(NOTIFICATION_TYPES);
-            const minigameType = pickRandom(MINIGAME_TYPES);
+      const available = state.clues.filter(
+        (c) => !c.discovered && !c.clueLost && !pendingClueIds.has(c.id) && !c.notificationId
+      );
 
-            const notification: NotificationPayload = {
-                id: crypto.randomUUID(),
-                type,
-                headline: pickRandom(HEADLINES[type]),
-                flavorText: pickRandom(FLAVOR_TEXTS[type]),
-                clueId: clue.id,
-                minigameType,
-                minigameData: generateMinigameData(minigameType),
-                createdAt: Date.now(),
-                expiresAt: Date.now() + MESSAGE_SCHEDULE_CONFIG.toastLifetime,
-                opened: false,
-                dismissed: false,
-            };
+      if (available.length === 0) return;
 
-            set(s => {
-                const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
-                if (idx >= 0) s.clues[idx].notificationId = notification.id;
-                s.notifications.push(notification);
-                s.lastFiredAt = nowMessageCount;
-                s.nextFireAt = nowMessageCount + randBetween(...MESSAGE_SCHEDULE_CONFIG.cooldownMessageCount);
-            });
-            saveClueProgress(get);
-        },
+      const clue = pickRandom(available);
+      const type = pickRandom(NOTIFICATION_TYPES);
+      const minigameType = pickRandom(MINIGAME_TYPES);
 
-        openNotification(id) {
-            set(s => {
-                const n = s.notifications.find((n: { id: string }) => n.id === id);
-                if (n) {
-                    n.opened = true;
-                    s.timerPaused = true;
-                }
-            });
-            saveClueProgress(get);
-        },
+      const notification: NotificationPayload = {
+        id: crypto.randomUUID(),
+        type,
+        headline: pickRandom(HEADLINES[type]),
+        flavorText: pickRandom(FLAVOR_TEXTS[type]),
+        clueId: clue.id,
+        minigameType,
+        minigameData: generateMinigameData(minigameType),
+        createdAt: Date.now(),
+        expiresAt: Date.now() + MESSAGE_SCHEDULE_CONFIG.toastLifetime,
+        opened: false,
+        dismissed: false,
+      };
 
-        dismissNotification(id) {
-            set(s => {
-                const n = s.notifications.find((n: { id: string }) => n.id === id);
-                if (n) {
-                    n.dismissed = true;
-                    clearClueNotification(s.clues, n.clueId);
-                }
-                s.timerPaused = false;
-            });
-            saveClueProgress(get);
-        },
-
-    abandonMinigame(notificationId) {
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
-        if (!n) return
-
-        n.dismissed = true
-        s.timerPaused = false
-        clearClueNotification(s.clues, n.clueId)
-
-        const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId)
-        if (clue) {
-          clue.clueLost = true // if clueLost is true, it cannot be fed into a notification again
-          console.log(clue.name, "is lost");
-        }
-      })
+      set((s) => {
+        const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
+        if (idx >= 0) s.clues[idx].notificationId = notification.id;
+        s.notifications.push(notification);
+        s.lastFiredAt = nowMessageCount;
+        s.nextFireAt = nowMessageCount + randBetween(...MESSAGE_SCHEDULE_CONFIG.cooldownMessageCount);
+      });
 
       saveClueProgress(get);
     },
- 
+
+    openNotification(id) {
+      set((s) => {
+        const n = s.notifications.find((n: { id: string }) => n.id === id);
+        if (n) {
+          n.opened = true;
+          s.timerPaused = true;
+        }
+      });
+      saveClueProgress(get);
+    },
+
+    dismissNotification(id) {
+      set((s) => {
+        const n = s.notifications.find((n: { id: string }) => n.id === id);
+        if (n) {
+          n.dismissed = true;
+          clearClueNotification(s.clues, n.clueId);
+        }
+        s.timerPaused = false;
+      });
+      saveClueProgress(get);
+    },
+
+    abandonMinigame(notificationId) {
+      set((s) => {
+        const n = s.notifications.find((n: { id: string }) => n.id === notificationId);
+        if (!n) return;
+
+        n.dismissed = true;
+        s.timerPaused = false;
+        clearClueNotification(s.clues, n.clueId);
+
+        const clue = s.clues.find((c: { id: string }) => c.id === n.clueId);
+        if (clue) {
+          clue.clueLost = true;
+          console.log(clue.name, "is lost");
+        }
+      });
+
+      saveClueProgress(get);
+    },
+
     /*
     resolveMinigame() runs when a minigame ends. 
     - If success is true, it finds the clue linked to that notification and flips clue.discovered = true. 
@@ -358,71 +356,78 @@ export const useNotificationStore = create<NotificationState>()(
     */
     resolveMinigame(notificationId, success) {
       let discoveredClueId: string | null = null;
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
+
+      set((s) => {
+        const n = s.notifications.find((n: { id: string }) => n.id === notificationId);
         if (!n) return;
+
         n.dismissed = true;
         s.timerPaused = false;
         clearClueNotification(s.clues, n.clueId);
- 
+
         if (success) {
-          const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId) // cross-check this parameter type
+          const clue = s.clues.find((c: { id: string }) => c.id === n.clueId);
           if (clue) {
             clue.discovered = true;
             discoveredClueId = clue.id;
           }
-        }
-        else { // maybe replace with abandon
-          const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId);
+        } else {
+          const clue = s.clues.find((c: { id: string }) => c.id === n.clueId);
           if (clue) {
-            clue.clueLost = true; // if clueLost is true, it cannot be fed into a notification again
+            clue.clueLost = true;
             console.log(clue.name, "is lost");
           }
         }
-      })
+      });
 
-            saveClueProgress(get);
+      saveClueProgress(get);
 
-            if (discoveredClueId) {
-                void import('../useGameStore').then(({ useGameStore }) => {
-                    useGameStore.getState().markClueDiscovered(discoveredClueId as string);
-                });
+      if (discoveredClueId) {
+        void import("../useGameStore").then(({ useGameStore }) => {
+          useGameStore.getState().markClueDiscovered(discoveredClueId as string);
+        });
+      }
+    },
+
+    setTimerPaused(paused) {
+      set((s) => {
+        s.timerPaused = paused;
+      });
+      saveClueProgress(get);
+    },
+
+    hydrateSchedulerState(schedulerState) {
+      set((s) => {
+        s.lastFiredAt =
+          typeof schedulerState?.lastFiredAt === "number" ? schedulerState.lastFiredAt : null;
+        s.nextFireAt =
+          typeof schedulerState?.nextFireAt === "number" ? schedulerState.nextFireAt : null;
+        s.timerPaused = Boolean(schedulerState?.timerPaused);
+      });
+    },
+
+    purgeExpired() {
+      const now = Date.now();
+      set((s) => {
+        s.notifications.forEach(
+          (n: { opened: boolean; dismissed: boolean; expiresAt: number; clueId: string }) => {
+            if (!n.opened && !n.dismissed && now > n.expiresAt) {
+              n.dismissed = true;
+              clearClueNotification(s.clues, n.clueId);
             }
-        },
-
-        setTimerPaused(paused) {
-            set(s => { s.timerPaused = paused; });
-            saveClueProgress(get);
-        },
-
-        hydrateSchedulerState(schedulerState) {
-            set(s => {
-                s.lastFiredAt = typeof schedulerState?.lastFiredAt === "number" ? schedulerState.lastFiredAt : null;
-                s.nextFireAt = typeof schedulerState?.nextFireAt === "number" ? schedulerState.nextFireAt : null;
-                s.timerPaused = Boolean(schedulerState?.timerPaused);
-            });
-        },
-
-        purgeExpired() {
-            const now = Date.now();
-            set(s => {
-                s.notifications.forEach((n: { opened: any; dismissed: boolean; expiresAt: number; clueId: string }) => {
-                    if (!n.opened && !n.dismissed && now > n.expiresAt) {
-                        n.dismissed = true;
-                        clearClueNotification(s.clues, n.clueId);
-                    }
-                });
-            });
-        },
-    }))
+          }
+        );
+      });
+    },
+  }))
 );
 
 // Selectors
 export const selectActiveToast = (s: NotificationState) =>
-    s.notifications.find(n => !n.opened && !n.dismissed) ?? null;
+  s.notifications.find((n) => !n.opened && !n.dismissed) ?? null;
 
 export const selectOpenMinigame = (s: NotificationState) =>
-    s.notifications.find(n => n.opened && !n.dismissed) ?? null;
+  s.notifications.find((n) => n.opened && !n.dismissed) ?? null;
 
 export const selectDiscoveredClues = (s: NotificationState) =>
-    s.clues.filter(c => c.discovered);
+  s.clues.filter((c) => c.discovered);
