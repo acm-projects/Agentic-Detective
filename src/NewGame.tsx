@@ -178,6 +178,8 @@ function NewGame() {
           </div>
         </div>
 
+       
+
         <div className="controls-panel">
           <h2 className="section-heading">PERSONALIZE YOUR GAMEPLAY</h2>
 
@@ -285,6 +287,10 @@ function NewGame() {
             >
               SOLVE!
             </button>
+
+      
+
+      
 
             <button
               onClick={toggleMute}

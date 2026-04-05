@@ -15,6 +15,7 @@ import './desk.css';
 import ScrabbleImg from './assets/newscrabble.png';
 
 
+
 function Message() {
   const { phase, goToBriefing, makeAccusation, player } = useGameStore();
   const navigate = useNavigate();
