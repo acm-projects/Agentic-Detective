@@ -546,7 +546,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       )?.gender ?? "female";
 
         
-      //tts streamed better\
+      //tts streamed better
       const voiceId = get().voiceIds[activeSuspectName];
 
       if (voiceId) {
