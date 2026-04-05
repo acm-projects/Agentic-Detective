@@ -109,106 +109,32 @@ function generateWordleData(): WordleData {
 // ─────────────────────────────────────────────
 
 const IMAGE_UNSHUFFLE_CLUES = [
-  { hint: "The photograph reveals a face you weren't meant to recognise." },
-  { hint: "A torn image from the victim's coat pocket — piece it together." },
-  { hint: "Security footage, corrupted and scrambled. Restore it." },
-  { hint: "A portrait found behind the bookcase. Something is off about it." },
-  { hint: "The picture was cut apart to hide what it showed." },
-  { hint: "A map fragment. The location marked may be the key." },
-  { hint: "A photo slipped under the door the morning of the murder." },
-  { hint: "The image was deliberately scrambled. Someone didn't want it seen." },
+    { hint: 'The photograph reveals a face you weren\'t meant to recognise.' },
+    { hint: 'A torn image from the victim\'s coat pocket — piece it together.' },
+    { hint: 'Security footage, corrupted and scrambled. Restore it.' },
+    { hint: 'A portrait found behind the bookcase. Something is off about it.' },
+    { hint: 'The picture was cut apart to hide what it showed.' },
+    { hint: 'A map fragment. The location marked may be the key.' },
+    { hint: 'A photo slipped under the door the morning of the murder.' },
+    { hint: 'The image was deliberately scrambled. Someone didn\'t want it seen.' },
+];
+
+const IMAGE_UNSHUFFLE_IMAGES = [
+  '../../assets/Key.png',
+  '../../assets/Outline.png',
+  // add more as needed
 ];
 
 function generateImageUnshuffleData(): ImageUnshuffleData {
-  const entry = pickRandom(IMAGE_UNSHUFFLE_CLUES);
-  return {
-    kind: "image-unshuffle",
-    imagePath: "assets/meme.png",
-    solution: [0, 1, 2, 3, 4, 5, 6, 7, 8],
-    hint: entry.hint,
-  };
-}
-
-// ─────────────────────────────────────────────
-//  Cipher Data Generator
-// ─────────────────────────────────────────────
-
-const CIPHER_CLUES: { plain: string; shift: number; clues: string[] }[] = [
-  {
-    plain: "POISON",
-    shift: 3,
-    clues: [
-      "The shift is the number of sides on a triangle.",
-      "The answer is what ended the victim's life.",
-    ],
-  },
-  {
-    plain: "BUTLER",
-    shift: 5,
-    clues: [
-      "The shift matches the fingers on one hand.",
-      "The answer is a household role.",
-    ],
-  },
-  {
-    plain: "CELLAR",
-    shift: 7,
-    clues: [
-      "The shift is a lucky number.",
-      "The answer is where the body was hidden.",
-    ],
-  },
-  {
-    plain: "DAGGER",
-    shift: 4,
-    clues: [
-      "The shift is the number of seasons.",
-      "The answer is a bladed weapon.",
-    ],
-  },
-  {
-    plain: "WINDOW",
-    shift: 6,
-    clues: [
-      "The shift is half a dozen.",
-      "The answer is how the killer escaped.",
-    ],
-  },
-  {
-    plain: "LOCKET",
-    shift: 2,
-    clues: [
-      "The shift is the number of eyes on a face.",
-      "The answer is a piece of jewellery found at the scene.",
-    ],
-  },
-  {
-    plain: "RANSOM",
-    shift: 8,
-    clues: [
-      "The shift is the number of tentacles on an octopus, minus two.",
-      "The answer is what the letter demanded.",
-    ],
-  },
-  {
-    plain: "MIRROR",
-    shift: 9,
-    clues: [
-      "The shift is the number of lives a cat has.",
-      "The answer is where the clue was hidden in plain sight.",
-    ],
-  },
-];
-
-function generateCipherData(): CaesarCipherData {
-  const entry = pickRandom(CIPHER_CLUES);
-  return {
-    kind: "cipher",
-    plain: entry.plain,
-    shift: entry.shift,
-    clues: entry.clues,
-  };
-}
+    const entry = pickRandom(IMAGE_UNSHUFFLE_CLUES);
+    return {
+        kind: 'image-unshuffle',
+        imagePath: pickRandom(IMAGE_UNSHUFFLE_IMAGES),
+        // solution is always the identity order; the UI owns the scrambled state
+        solution: [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        hint: entry.hint,
+    };
+};
 
 // ─────────────────────────────────────────────
 //  Minigame Dispatcher
