@@ -44,6 +44,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
             setFeedError(null);
             try {
                 const res = await fetch('http://localhost:3000/community/feed?limit=12');
+                console.log("Community feed response:", res.status, res.statusText);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 if (!mounted) return;
@@ -62,8 +63,9 @@ export default function Community({ onCloseModal }: CommunityProps) {
     }, []);
 
     const handlePlayByCode = async (inputCode?: string) => {
-        const trimmedCode = (inputCode ?? caseCode).trim();
+        const trimmedCode = inputCode; //(inputCode ?? caseCode).trim();
         if (!trimmedCode || loadingCase) return;
+        console.log("Attempting to load case with code:", trimmedCode);
 
         setLoadingCase(true);
         setError(null);
@@ -93,6 +95,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
                         <p className="community-share-help">No featured community cases yet. Rate a finished game and enable featuring.</p>
                     )}
                     {!feedLoading && feedError && <p className="community-share-error">{feedError}</p>}
+                    
                     {!feedLoading && !feedError && communityCases.map((c) => (
                         <div className="community-case-card" key={c.caseCode}>
                             <h4>{c.title}</h4>
@@ -106,13 +109,14 @@ export default function Community({ onCloseModal }: CommunityProps) {
                         </div>
                     ))}
                 </div>
+                {error && <p className="community-share-error">{error}</p>}
             </div>
 
             <div className="community-section">
                 <h3>Community Leaderboard</h3>
                 <ul className="community-list">
-                    {feedLoading && <li>Loading contributors...</li>}
-                    {!feedLoading && contributors.length === 0 && <li>No leaderboard entries yet.</li>}
+                    {feedLoading && <li className="community-share-help">Loading contributors...</li>}
+                    {!feedLoading && contributors.length === 0 && <li className="community-share-help">No leaderboard entries yet.</li>}
                     {!feedLoading && contributors.map((contributor) => (
                         <li key={contributor.name}>🔍 {contributor.name} · Avg {contributor.averageRating}/5 · Best {contributor.bestRating}/5 · {contributor.caseCount} featured case(s)</li>
                     ))}
@@ -135,7 +139,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
                     <button
                         type="button"
                         className="detective-button"
-                        onClick={handlePlayByCode}
+                        onClick={handlePlayByCode(caseCode)}
                         disabled={loadingCase || !caseCode.trim()}
                     >
                         {loadingCase ? 'Loading...' : 'Play'}

@@ -542,8 +542,6 @@ app.get('/community/cases/:caseCode/template', async (req, res) => {
     const doc = await db.collection('cases').findOne(
       {
         $or: [
-          { 'caseData.caseReport.caseId': caseCodeRegex },
-          { caseId: caseCodeRegex },
           { sessionId: caseCodeRegex },
         ],
       },
@@ -557,7 +555,7 @@ app.get('/community/cases/:caseCode/template', async (req, res) => {
       }
     );
 
-    if (!doc?.caseData?.caseReport?.caseId) {
+    if (!doc?.sessionId) {
       return res.status(404).json({ error: 'Case code not found' });
     }
 
