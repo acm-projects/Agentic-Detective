@@ -302,8 +302,8 @@ function Interrogate() {
                 title={p.name}
               >
                 {p.portraitFeatures
-                  ? <SuspectPortrait features={p.portraitFeatures} size={384} />
-                  : <div style={{ width: 384, height: 384, background: '#111' }} />
+                  ? <SuspectPortrait features={p.portraitFeatures} size={80} />
+                  : <div style={{ width: 80, height: 80, background: '#111' }} />
                 }
                 <span className="suspect-avatar-name">{p.name}</span>
               </button>
