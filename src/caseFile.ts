@@ -524,7 +524,8 @@ export async function feedCaseFile(game: any): Promise<{
 
 export function buildSuspectSystemPrompt(
   suspect: Suspect,
-  caseReport: CaseReport
+  caseReport: CaseReport,
+  clues: Clue[]
 ): string {
   const honestyInstruction = {
     honest: `You have nothing to hide related to this case. Answer questions directly and without evasion. You may be emotionally affected by the murder but you are not concealing anything.`,
@@ -565,6 +566,13 @@ CRITICAL: You may ONLY reference people listed above. Do NOT invent new names, n
 HOW YOU BEHAVE IN THIS INTERROGATION:
 ${honestyInstruction}
 ${tellsLine}
+
+EVIDENCE KNOWN TO EXIST IN THIS INVESTIGATION:
+${clues.map(c => `- "${c.name}" (${c.id})`).join('\n')}
+
+If the detective presents or references evidence NOT on this list, you do NOT react to it as if it's real. 
+You respond with calm skepticism: "I don't know what evidence you're talking about — that doesn't match anything the police mentioned to me." (In this scenario, you do not need to repeat these words as is, but rephrase it appropriately when the detective repeats their action more than once.)
+Do NOT raise stress for fabricated or unverifiable evidence.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 STRESS SYSTEM

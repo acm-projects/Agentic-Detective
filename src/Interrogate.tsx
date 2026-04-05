@@ -9,6 +9,7 @@ import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
 import { Show, UserButton, useClerk } from '@clerk/react-router';
 import { Tooltip } from './components/tooltip/Tooltip';
+import TutorialModal from './components/tutorial-modal/Tutorial';
 
 import './Interrogate.css';
 
@@ -139,6 +140,8 @@ function Interrogate() {
     isFirstClueDiscovery,
     isResponding,
     elapsed,
+    accusationUnlocked,
+    totalConversationCount,
     startInterrogation,
     sendMessage,
     makeAccusation,
@@ -152,13 +155,23 @@ function Interrogate() {
   const [showNotebook, setShowNotebook] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
+  const [tutorialOpenOnce, setTutorialOpenOnce] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
+  const numConversations = totalConversationCount; // totalConversationCount is used to keep track of 
+                                                   // whether the user is a first time player or not
+  const isFirstTimePlayer = numConversations === 0 || numConversations === 1; // classified as first time player if 1 or less messages sent
+  console.log("first time? " + isFirstTimePlayer);
 
   // ── Evidence / clue state ──────────────────────────────
   const allClues = useNotificationStore(s => s.clues);
   const discoveredClues = allClues.filter(c => c.discovered);
+  const ACCUSATION_MIN_CLUES = 2;
+  const cluesRemainingForAccusation = Math.max(0, ACCUSATION_MIN_CLUES - discoveredClues.length);
+  const accusationLockTooltip = cluesRemainingForAccusation === 1
+    ? 'Unlock 1 more clue to use this feature.'
+    : `Unlock ${cluesRemainingForAccusation} more clues to use this feature.`;
   const [attachedClues, setAttachedClues] = useState<AttachedClue[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -314,6 +327,12 @@ function Interrogate() {
     localStorage.removeItem("lastCaseId");
   };
 
+  const handleOpenTutorial = () => {
+    localStorage.removeItem('tutorialSeen');
+    localStorage.removeItem('tutorialStep');
+    setTutorialOpenOnce(prev => prev + 1);
+  };
+
   useEffect(() => {
     const handlePotentialSignOutClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
@@ -388,6 +407,7 @@ function Interrogate() {
             );
           })}
         </div>
+            
 
         <button
           className={isFirstClueDiscovery ? 'desk-guide-button' : ''}
@@ -414,24 +434,51 @@ function Interrogate() {
           </form>
         </dialog>
 
-        <button onClick={() =>
-          (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
-        }>Accuse</button>
-
-        <dialog className="nes-dialog" id="accuse">
-          <form method="dialog">
-            <h3>Make Your Accusation</h3>
-            <p>Who do you think did it?</p>
-            {profiles.map(p => (
-              <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
-                {p.name}
+        {!accusationUnlocked ? (
+          <Tooltip<HTMLButtonElement>
+            content={accusationLockTooltip}
+            className="item-tooltip"
+            placement="right"
+            offsetPx={8}
+          >
+            {({ ref, getReferenceProps }) => (
+              <button
+                ref={ref}
+                type="button"
+                className="disabled-button"
+                aria-label="Accuse locked"
+                {...getReferenceProps()}
+              >
+                Accuse
               </button>
-            ))}
-            <menu className="dialog-menu">
-              <button>Cancel</button>
-            </menu>
-          </form>
-        </dialog>
+            )}
+          </Tooltip>
+        ) : (
+          <button
+            onClick={() =>
+              (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
+            }
+          >
+            Accuse
+          </button>
+        )}
+        {accusationUnlocked && (
+          <dialog className="nes-dialog" id="accuse">
+            <form method="dialog">
+              <h3>Make Your Accusation</h3>
+              <p>Who do you think did it?</p>
+              {profiles.map(p => (
+                <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
+                  {p.name}
+                </button>
+              ))}
+              <menu className="dialog-menu">
+                <button>Cancel</button>
+              </menu>
+            </form>
+          </dialog>
+        )}
+        
 
         <dialog className="nes-dialog" id="signout-warning">
           <form method="dialog">
@@ -458,6 +505,14 @@ function Interrogate() {
             </div>
           </Show>
         </div> */}
+        {isFirstTimePlayer && (
+          <>
+            <button className='tutorial-button' onClick={handleOpenTutorial}>Open tutorial?</button>
+            <TutorialModal key={tutorialOpenOnce} />
+          </>
+          
+          )}
+        
         <div className='notification-board'>
           {isFirstClueDiscovery && (
             <div className="first-clue-guide" role="status" aria-live="polite">

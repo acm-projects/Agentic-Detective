@@ -143,6 +143,23 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
+.navigate > button.disabled-button {
+  background-color: #464646;
+}
+
+.navigate > button.disabled-button:hover {
+  border: 3px solid #1a1a1a;
+  color: var(--ink-color);
+  transform: none;
+  box-shadow: 3px 3px 0px #1a1a1a;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.navigate > button.disabled-button:active {
+  transform: none;
+}
+
 .nav-auth { margin-top: auto; }
 
 .notification-board {
@@ -541,6 +558,7 @@ a { color: inherit; text-decoration: none; }
 .submit-button button:disabled {
   background: #555; box-shadow: none; transform: none; cursor: not-allowed;
 }
+
 
 /* ── Notes-window (notepad image, opens notebook modal) ── */
 .notes-window {

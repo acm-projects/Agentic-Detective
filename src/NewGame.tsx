@@ -9,6 +9,7 @@ import { FaSave } from "react-icons/fa";
 function NewGame() {
   const setSeed = useGameStore((s) => s.setSeed);
   const startCase = useGameStore((s) => s.startCase);
+  const clearLoadedCase = useGameStore((s) => s.clearLoadedCase);
     const navigate = useNavigate();
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -19,6 +20,10 @@ function NewGame() {
     const [isMuted, setIsMuted] = useState(false);
 
     const { userId, isSignedIn, isLoaded } = useAuth();
+
+    useEffect(() => {
+      clearLoadedCase();
+    }, [clearLoadedCase]);
 
 
     // Setup background music on mount
@@ -163,8 +168,10 @@ function NewGame() {
           className="slider"
         />
       </div>
-        <button className="detective-button" onClick={()=>{
+        <button className="detective-button" onClick={async () =>{
           playClickSound();
+          localStorage.removeItem('tutorialSeen');
+          localStorage.removeItem('tutorialStep');
           setSeed({
             freeText: personalization,        // "1920s jazz club", "remote Antarctic base", etc
             difficulty: difficulty,  // 1–10 slider ("on a scale of 1 to 10")
@@ -179,8 +186,10 @@ function NewGame() {
             alert("Please enter a case theme before starting.");
             return;
           }
-          startCase(navigate); // check for userId here
-          navigate('/desk');
+          const isReloadFlow = await startCase(navigate); // check for userId here
+          if (!isReloadFlow) {
+            navigate('/desk');
+          }
         }} >
         SOLVE! 
       </button>
