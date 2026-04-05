@@ -153,10 +153,54 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame, player } = useGameStore();
+  const { accusationResult, resetGame, player, currentSessionId } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
+  const [gameplayRating, setGameplayRating] = useState<number | null>(null);
+  const [featureOnLeaderboard, setFeatureOnLeaderboard] = useState(false);
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const audioRefs = useRef<HTMLAudioElement[]>([]);
+
+  const saveFeedback = async (nextRating: number, nextFeatured: boolean) => {
+    if (feedbackSaving) return;
+    if (nextRating === null) {
+      setFeedbackError('Please choose a rating first.');
+      return;
+    }
+
+    const sessionId =
+      currentSessionId ||
+      player?.caseReport?.caseId ||
+      localStorage.getItem('lastSessionId') ||
+      localStorage.getItem('lastCaseId') ||
+      '';
+
+    if (!sessionId) {
+      setFeedbackError('Could not determine case session id.');
+      return;
+    }
+
+    setFeedbackSaving(true);
+    setFeedbackError(null);
+    try {
+      const res = await fetch(`http://localhost:3000/cases/${encodeURIComponent(sessionId)}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameplayRating: nextRating,
+          featured: nextFeatured,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setFeedbackSaved(true);
+    } catch {
+      setFeedbackError('Could not save rating right now.');
+    } finally {
+      setFeedbackSaving(false);
+    }
+  };
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('dark'),   120);
@@ -234,6 +278,49 @@ function Accuse() {
             Case ID: <span>{caseCode}</span>
           </p>
         )}
+
+        <div className="accuse-feedback-panel">
+          <p className="accuse-feedback-title">Rate this game</p>
+          <div className="accuse-rating-buttons" role="group" aria-label="Game rating">
+            {[1, 2, 3, 4, 5].map((rating) => (
+              <button
+                key={rating}
+                type="button"
+                className={`accuse-rate-btn accuse-rate-star ${gameplayRating !== null && rating <= gameplayRating ? 'active' : ''}`}
+                aria-label={`Rate ${rating} star${rating > 1 ? 's' : ''}`}
+                onClick={async () => {
+                  setGameplayRating(rating);
+                  setFeedbackSaved(false);
+                  setFeedbackError(null);
+                  await saveFeedback(rating, featureOnLeaderboard);
+                }}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+
+          <label className="accuse-feature-toggle">
+            <input
+              type="checkbox"
+              checked={featureOnLeaderboard}
+              onChange={async (e) => {
+                const nextFeatured = e.target.checked;
+                setFeatureOnLeaderboard(nextFeatured);
+                setFeedbackSaved(false);
+                if (gameplayRating !== null) {
+                  await saveFeedback(gameplayRating, nextFeatured);
+                }
+              }}
+            />
+            Do you want this game on the community board?
+          </label>
+
+          {feedbackSaving && <p className="accuse-feedback-saving">Saving...</p>}
+
+          {feedbackSaved && <p className="accuse-feedback-success">Saved to community.</p>}
+          {feedbackError && <p className="accuse-feedback-error">{feedbackError}</p>}
+        </div>
 
         <div className="accuse-buttons">
           <button

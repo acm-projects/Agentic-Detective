@@ -78,6 +78,20 @@
   font-family: 'Courier Prime', monospace;
 }
 
+.community-case-code {
+  font-size: 0.72rem;
+  color: #f5c2c2;
+  margin: 4px 0 8px;
+  font-family: 'Courier Prime', monospace;
+}
+
+.community-case-rating {
+  font-size: 0.72rem;
+  color: #ffd27d;
+  margin: 0 0 10px;
+  font-family: 'Courier Prime', monospace;
+}
+
 .case-description {
   font-size: 0.8rem;
   color: #ccc;

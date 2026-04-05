@@ -4,11 +4,9 @@ import { Routes, Route, useLocation } from 'react-router';
 import Message from './desk/DeskMessage.tsx';
 import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
-import Suspects from './Suspects.tsx';
 import './App.css';
 import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
-import NotesPage from './NotesPage.tsx';
 import Accuse from './Accuse.tsx';
 import CaseResolvedErrorScreen from './components/CaseResolvedErrorScreen/CaseResolvedErrorScreen.tsx';
 import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
@@ -78,10 +76,8 @@ function AppInner() {
       <Route path="/user-profile/*" element={<UserProfile />} />
       <Route path="/desk" element={<Message />} />
         <Route path="/report" element={<CaseReportScreen />} />
-        <Route path="/investigate" element={<NotesPage />} />
         <Route path="/clues" element={<ClueBook />} />
         <Route path="/interrogate" element={<Interrogate />} />
-        <Route path="/suspects" element={<Suspects />} />
         <Route path="/accuse" element={<Accuse />} />
         <Route path="/case-already-resolved-error" element={<CaseResolvedErrorScreen />} />
     </Routes>

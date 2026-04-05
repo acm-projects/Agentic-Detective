@@ -1,11 +1,27 @@
 import { useAuth } from '@clerk/react-router';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useGameStore } from './useGameStore';
 import './Community.css';
 
 interface CommunityProps {
     onCloseModal?: () => void;
+}
+
+interface CommunityCase {
+    caseCode: string;
+    title: string;
+    author: string;
+    description: string;
+    gameplayRating: number;
+    updatedAt?: string | null;
+}
+
+interface Contributor {
+    name: string;
+    caseCount: number;
+    averageRating: number;
+    bestRating: number;
 }
 
 export default function Community({ onCloseModal }: CommunityProps) {
@@ -15,9 +31,38 @@ export default function Community({ onCloseModal }: CommunityProps) {
     const [caseCode, setCaseCode] = useState('');
     const [loadingCase, setLoadingCase] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [communityCases, setCommunityCases] = useState<CommunityCase[]>([]);
+    const [contributors, setContributors] = useState<Contributor[]>([]);
+    const [feedLoading, setFeedLoading] = useState(true);
+    const [feedError, setFeedError] = useState<string | null>(null);
 
-    const handlePlayByCode = async () => {
-        const trimmedCode = caseCode.trim();
+    useEffect(() => {
+        let mounted = true;
+
+        const loadFeed = async () => {
+            setFeedLoading(true);
+            setFeedError(null);
+            try {
+                const res = await fetch('http://localhost:3000/community/feed?limit=12');
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (!mounted) return;
+                setCommunityCases(Array.isArray(data.cases) ? data.cases : []);
+                setContributors(Array.isArray(data.contributors) ? data.contributors : []);
+            } catch {
+                if (!mounted) return;
+                setFeedError('Could not load community feed right now.');
+            } finally {
+                if (mounted) setFeedLoading(false);
+            }
+        };
+
+        loadFeed();
+        return () => { mounted = false; };
+    }, []);
+
+    const handlePlayByCode = async (inputCode?: string) => {
+        const trimmedCode = (inputCode ?? caseCode).trim();
         if (!trimmedCode || loadingCase) return;
 
         setLoadingCase(true);
@@ -43,33 +88,34 @@ export default function Community({ onCloseModal }: CommunityProps) {
             <div className="community-section">
                 <h3>Featured Cases</h3>
                 <div className="community-grid">
-                    <div className="community-case-card">
-                        <h4>The Museum Heist</h4>
-                        <p className="case-author">By Detective Smith</p>
-                        <p className="case-description">A daring theft from the city's most prestigious museum. Can you uncover the thief?</p>
-                        <button className="detective-button">Play</button>
-                    </div>
-                    <div className="community-case-card">
-                        <h4>Restaurant Secrets</h4>
-                        <p className="case-author">By Detective Johnson</p>
-                        <p className="case-description">Something sinister is happening behind closed kitchen doors...</p>
-                        <button className="detective-button">Play</button>
-                    </div>
-                    <div className="community-case-card">
-                        <h4>The Missing Painting</h4>
-                        <p className="case-author">By Detective Williams</p>
-                        <p className="case-description">Find out who took the priceless artwork before it's gone forever.</p>
-                        <button className="detective-button">Play</button>
-                    </div>
+                    {feedLoading && <p className="community-share-help">Loading community cases...</p>}
+                    {!feedLoading && communityCases.length === 0 && !feedError && (
+                        <p className="community-share-help">No featured community cases yet. Rate a finished game and enable featuring.</p>
+                    )}
+                    {!feedLoading && feedError && <p className="community-share-error">{feedError}</p>}
+                    {!feedLoading && !feedError && communityCases.map((c) => (
+                        <div className="community-case-card" key={c.caseCode}>
+                            <h4>{c.title}</h4>
+                            <p className="case-author">By {c.author}</p>
+                            <p className="community-case-code">Case ID: {c.caseCode}</p>
+                            <p className="community-case-rating">Rating: {c.gameplayRating || 0}/5</p>
+                            <p className="case-description">{c.description}</p>
+                            <button className="detective-button" onClick={() => handlePlayByCode(c.caseCode)}>
+                                Play
+                            </button>
+                        </div>
+                    ))}
                 </div>
             </div>
 
             <div className="community-section">
-                <h3>Top Contributors</h3>
+                <h3>Community Leaderboard</h3>
                 <ul className="community-list">
-                    <li>🔍 Detective Smith - 15 cases</li>
-                    <li>🔍 Detective Johnson - 12 cases</li>
-                    <li>🔍 Detective Williams - 8 cases</li>
+                    {feedLoading && <li>Loading contributors...</li>}
+                    {!feedLoading && contributors.length === 0 && <li>No leaderboard entries yet.</li>}
+                    {!feedLoading && contributors.map((contributor) => (
+                        <li key={contributor.name}>🔍 {contributor.name} · Avg {contributor.averageRating}/5 · Best {contributor.bestRating}/5 · {contributor.caseCount} featured case(s)</li>
+                    ))}
                 </ul>
             </div>
 
