@@ -5,6 +5,7 @@ import type {
     Clue,
     WordleData,
     ImageUnshuffleData,
+    CaesarCipherData,
     NotificationType,
     MinigameData,
     MinigameType,
@@ -28,7 +29,7 @@ function pickRandom<T>(arr: T[]) {
 };
 
 const NOTIFICATION_TYPES: NotificationType[] = ["mail"];
-const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle"];
+const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle", "cipher"];
 
 const HEADLINES: Record<NotificationType, string[]> = {
     mail: [
@@ -92,12 +93,6 @@ function generateWordleData(): WordleData {
 //  Image Unshuffle Data Generator
 // ─────────────────────────────────────────────
 
-/**
- * Each entry describes what the reconstructed image reveals.
- * `solution` is always [0..8] — the canonical solved order.
- * On game init, the UI shuffles the tiles; the player restores them
- * by clicking to rotate each cell back to 0°.
- */
 const IMAGE_UNSHUFFLE_CLUES = [
     { hint: 'The photograph reveals a face you weren\'t meant to recognise.' },
     { hint: 'A torn image from the victim\'s coat pocket — piece it together.' },
@@ -114,9 +109,33 @@ function generateImageUnshuffleData(): ImageUnshuffleData {
     return {
         kind: 'image-unshuffle',
         imagePath: 'assets/meme.png',
-        // solution is always the identity order; the UI owns the scrambled state
         solution: [0, 1, 2, 3, 4, 5, 6, 7, 8],
         hint: entry.hint,
+    };
+};
+
+// ─────────────────────────────────────────────
+//  Cipher Data Generator
+// ─────────────────────────────────────────────
+
+const CIPHER_CLUES: { plain: string; shift: number; clues: string[] }[] = [
+    { plain: 'POISON', shift: 3, clues: ['The shift is the number of sides on a triangle.', 'The answer is what ended the victim\'s life.'] },
+    { plain: 'BUTLER', shift: 5, clues: ['The shift matches the fingers on one hand.', 'The answer is a household role.'] },
+    { plain: 'CELLAR', shift: 7, clues: ['The shift is a lucky number.', 'The answer is where the body was hidden.'] },
+    { plain: 'DAGGER', shift: 4, clues: ['The shift is the number of seasons.', 'The answer is a bladed weapon.'] },
+    { plain: 'WINDOW', shift: 6, clues: ['The shift is half a dozen.', 'The answer is how the killer escaped.'] },
+    { plain: 'LOCKET', shift: 2, clues: ['The shift is the number of eyes on a face.', 'The answer is a piece of jewellery found at the scene.'] },
+    { plain: 'RANSOM', shift: 8, clues: ['The shift is the number of tentacles on an octopus, minus two.', 'The answer is what the letter demanded.'] },
+    { plain: 'MIRROR', shift: 9, clues: ['The shift is the number of lives a cat has.', 'The answer is where the clue was hidden in plain sight.'] },
+];
+
+function generateCipherData(): CaesarCipherData {
+    const entry = pickRandom(CIPHER_CLUES);
+    return {
+        kind: 'cipher',
+        plain: entry.plain,
+        shift: entry.shift,
+        clues: entry.clues,
     };
 };
 
@@ -130,6 +149,8 @@ function generateMinigameData(type: MinigameType): MinigameData {
             return generateWordleData();
         case 'image-unshuffle':
             return generateImageUnshuffleData();
+        case 'cipher':
+            return generateCipherData();
         default:
             throw new Error(`Unknown minigame type: ${type}`);
     };
@@ -168,9 +189,8 @@ function saveClueProgress(get: any) {
         }),
       }).catch(() => {});
     });
-}}
-
-
+  }
+}
 
 // ─────────────────────────────────────────────
 //  Notification Store
@@ -293,57 +313,50 @@ export const useNotificationStore = create<NotificationState>()(
             });
         },
 
-    abandonMinigame(notificationId) {
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
-        if (!n) return
+        abandonMinigame(notificationId) {
+            set(s => {
+                const n = s.notifications.find((n: { id: string }) => n.id === notificationId);
+                if (!n) return;
 
-        n.dismissed = true
-        s.timerPaused = false
-        clearClueNotification(s.clues, n.clueId)
+                n.dismissed = true;
+                s.timerPaused = false;
+                clearClueNotification(s.clues, n.clueId);
 
-        const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId)
-        if (clue) {
-          clue.clueLost = true // if clueLost is true, it cannot be fed into a notification again
-          console.log(clue.name, "is lost");
-        }
-      })
+                const clue = s.clues.find((c: { id: string }) => c.id === n.clueId);
+                if (clue) {
+                    clue.clueLost = true;
+                    console.log(clue.name, "is lost");
+                }
+            });
 
-      saveClueProgress(get);
-    },
- 
-    /*
-    resolveMinigame() runs when a minigame ends. 
-    - If success is true, it finds the clue linked to that notification and flips clue.discovered = true. 
-    - Makes it appear in the evidence board. 
-    - Whether success or failure, it also dismisses the notification and unpauses the timer
-    */
-    resolveMinigame(notificationId, success) {
-      let discoveredClueId: string | null = null;
-      set(s => {
-        const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
-        if (!n) return;
-        n.dismissed = true;
-        s.timerPaused = false;
-        clearClueNotification(s.clues, n.clueId);
- 
-        if (success) {
-          const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId) // cross-check this parameter type
-          if (clue) {
-            clue.discovered = true;
-            discoveredClueId = clue.id;
-          }
-        }
-        else { // maybe replace with abandon
-          const clue = s.clues.find((c: { id: string; }) => c.id === n.clueId);
-          if (clue) {
-            clue.clueLost = true; // if clueLost is true, it cannot be fed into a notification again
-            console.log(clue.name, "is lost");
-          }
-        }
+            saveClueProgress(get);
+        },
 
-        saveClueProgress(get);
-      })
+        resolveMinigame(notificationId, success) {
+            let discoveredClueId: string | null = null;
+            set(s => {
+                const n = s.notifications.find((n: { id: string }) => n.id === notificationId);
+                if (!n) return;
+                n.dismissed = true;
+                s.timerPaused = false;
+                clearClueNotification(s.clues, n.clueId);
+
+                if (success) {
+                    const clue = s.clues.find((c: { id: string }) => c.id === n.clueId);
+                    if (clue) {
+                        clue.discovered = true;
+                        discoveredClueId = clue.id;
+                    }
+                } else {
+                    const clue = s.clues.find((c: { id: string }) => c.id === n.clueId);
+                    if (clue) {
+                        clue.clueLost = true;
+                        console.log(clue.name, "is lost");
+                    }
+                }
+
+                saveClueProgress(get);
+            });
 
             if (discoveredClueId) {
                 void import('../useGameStore').then(({ useGameStore }) => {
