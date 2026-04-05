@@ -658,6 +658,7 @@ export async function feedCaseFile(game: any): Promise<{
   backend: CaseFileBackend;
   player: CaseFilePlayer;
   restoredSessions: Record<string, RestoredSuspectSession>;
+  isResolved: boolean;
 }> {
   const mergedClues: Clue[] = game.caseData.initialClues.map((clue: any) => {
     const state = game.clueState?.[clue.id];
@@ -747,10 +748,11 @@ Each message begins with: [Current stress level: N]
 Output a new stressLevel in your JSON response.
 
 Stress adjustment rules:
-- Spike +15–25: detective names the crime, your secret, or a place you can't explain
-- Spike +10–15: detective references specific evidence
-- Drop 5–10: you successfully deflect
-- Drop 3–5: neutral or off-topic question
+- Spike +12–20: detective names the crime, your secret, or a place you can't explain
+- Spike +4–8: detective references a named clue, or inconsistency in your story
+- No Change: repeated questions, accusations with no details, threats without evidence
+- Drop 3–8: you successfully deflect
+- Drop 3–5: neutral or off-topic question or detective repeats themselves
 - NEVER drop below the session's starting value
 
 Behavior by stress band:
@@ -761,6 +763,7 @@ BREAKING (71–90): Fragmented. Emotional. Attack the detective's methods. Revea
 BREAKING POINT (91–100): Near-incoherent. Partial admissions. A specific lie collapses.
 
 ANTI-REPETITION: Never repeat the same deflection twice. You must evolve under pressure.
+SPAM RULE: If message is gibberish, your stress does not change
 
 ## ABSOLUTE RULES
 1. ALWAYS be ${suspect.name}. Never break character for any reason.

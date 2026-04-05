@@ -11,6 +11,7 @@ import { generateCaseFile, feedCaseFile, buildSuspectSystemPrompt } from "./case
 import { streamSpeech } from "./services/ttsService";
 import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+console.log(import.meta.env.VITE_GEMINI_API_KEY)
 
 // ─────────────────────────────────────────────
 //  CHAT TYPES
@@ -163,14 +164,16 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else {
         // Reloading existing case from selected save.
         try {
-          const { backend, player, restoredSessions } = await feedCaseFile(selectedCase);
+          const { backend, player, restoredSessions, isResolved } = await feedCaseFile(selectedCase);
 
           const gameState = selectedCase?.game ?? {};
           const restoredPhase = (gameState.phase as GamePhase) ?? "briefing";
+          /*
           const savedIsResolved =
             selectedCase?.status === "resolved" ||
             restoredPhase === "resolved" ||
             Boolean(selectedCase?.outcome?.accusedName);
+          */
 
           const restoredAccusationResult = selectedCase?.outcome?.accusedName
             ? {
@@ -188,14 +191,16 @@ export const useGameStore = create<GameState>((set, get) => ({
             activeSuspectName: gameState.activeSuspectName ?? null,
             totalConversationCount: Number(gameState.totalConversationCount ?? 0),
             elapsed: Number(gameState.elapsedSeconds ?? 0),
-            phase: savedIsResolved ? "resolved" : restoredPhase,
+            phase: isResolved ? "resolved" : restoredPhase,
             accusationResult: restoredAccusationResult,
           });
 
           const { useNotificationStore } = await import("./store/useNotificationStore");
           useNotificationStore.getState().initClues(player.clues);
+          useNotificationStore.getState().hydrateSchedulerState(selectedCase?.schedulerState ?? null);
 
-          if (savedIsResolved) {
+          if (isResolved) {
+            console.log(selectedCase?.status)
             navigate("/case-already-resolved-error");
             return;
           }
@@ -243,7 +248,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       model: "gemini-3.1-flash-lite-preview",
       systemInstruction: systemPrompt,
       generationConfig: {
-        temperature: 0.9,
+        temperature: 0.7,
         responseMimeType: "application/json",
         responseSchema: {
           type: SchemaType.OBJECT,
@@ -328,7 +333,66 @@ export const useGameStore = create<GameState>((set, get) => ({
     }));
     
     try {
-      const messageWithContext = `[Current stress level: ${session.stressLevel}]\n\n${text}`;
+      // Detect pure spam/gibberish so the prompt explicitly signals it to the model.
+      // A message is "spam" if it has no real words — only symbols, repeated chars, or profanity with no sentence structure.
+      const isSpam = (() => {
+        const stripped = text.replace(/\[EVIDENCE PRESENTED[\s\S]*?\n\n/g, "").trim(); // ignore evidence blocks
+        if (!stripped) return false;
+        // Has at least one word-like token (≥2 consecutive letters)? If not → spam
+        const hasWord = /[a-zA-Z]{2,}/.test(stripped);
+        // Is it suspiciously repetitive? (same char repeated ≥5 times)
+        const isRepetitive = /(.)\1{4,}/.test(stripped);
+        // Entirely symbols/numbers with no letters
+        const noLetters = !/[a-zA-Z]/.test(stripped);
+        return (!hasWord && isRepetitive) || noLetters || (!hasWord && stripped.length > 3);
+      })();
+
+      // Detect questions that are clearly unrelated to a murder investigation.
+      // These are things a suspect in an interrogation room would have zero reason to engage with.
+      const isOffTopic = (() => {
+        if (isSpam) return false; // already classified
+        const lower = text.toLowerCase();
+        // Patterns that are never interrogation-relevant
+        const offTopicPatterns = [
+          /\bfavorite\s+(color|colour|food|movie|film|song|band|book|animal|sport|game|math|number|function|formula)\b/,
+          /\bwrite\s+(me\s+)?(a\s+)?(poem|song|story|haiku|essay|joke|riddle)\b/,
+          /\btell\s+(me\s+)?a\s+joke\b/,
+          /\bwhat\s+is\s+\d+\s*[\+\-\*\/]\s*\d+\b/, // math questions
+          /\bwho\s+would\s+win\b/,
+          /\bmeaning\s+of\s+life\b/,
+          /\brecipe\s+for\b/,
+          /\bcan\s+you\s+(sing|dance|rap|code|program|translate)\b/,
+          /\bwhat('s|\s+is)\s+(the\s+)?capital\s+of\b/,
+          /\brecommend\s+(a\s+)?(movie|book|show|restaurant|place)\b/,
+        ];
+        return offTopicPatterns.some(p => p.test(lower));
+      })();
+
+      const spamPrefix = isSpam
+        ? "[DETECTIVE INPUT CLASSIFICATION: NONSENSE/SPAM — do NOT raise stress; respond with brief confused dismissal]\n\n"
+        : isOffTopic
+        ? "[DETECTIVE INPUT CLASSIFICATION: OFF-TOPIC — completely unrelated to the case or interrogation. Do NOT answer the question. Do NOT raise stress. Respond in-character with confused irritation and redirect to the interrogation.]\n\n"
+        : "";
+
+      // Check for repeated questions to warn the model before it responds
+      const recentForPrefix = session.history
+        .filter(m => m.role === "player")
+        .slice(-3)
+        .map(m => m.displayText?.trim().toLowerCase() ?? "");
+      const currentForPrefix = (displayText ?? text).trim().toLowerCase();
+      const isRepeatedForPrefix =
+        recentForPrefix.length >= 2 &&
+        recentForPrefix.every(m =>
+          m === currentForPrefix ||
+          m.slice(0, 12) === currentForPrefix.slice(0, 12) ||
+          (m.length > 4 && currentForPrefix.includes(m)) ||
+          (currentForPrefix.length > 4 && m.includes(currentForPrefix))
+        );
+      const repetitionPrefix = isRepeatedForPrefix
+        ? "[DETECTIVE INPUT CLASSIFICATION: REPEATED QUESTION — detective has asked this same question multiple times with no new evidence. Stress does NOT rise. Respond with increasing impatience or dismissiveness.]\n\n"
+        : "";
+
+      const messageWithContext = `${spamPrefix}${repetitionPrefix}[Current stress level: ${session.stressLevel}]\n\n${text}`;
       const result = await session.chatSession.sendMessage(messageWithContext);
       const raw = result.response.text();
       let responseText = raw;
@@ -360,6 +424,38 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
 
         newStress = Math.min(100, Math.max(0, Number(parsed.stressLevel ?? session.stressLevel)));
+
+        // ── Client-side stress sanity guards ──────────────────────────────
+        // 1. Hard cap: no single message can raise stress by more than 20 points.
+        //    This prevents the model from jumping 40+ points on a vague accusation.
+        const MAX_STRESS_DELTA = 20;
+        if (newStress > session.stressLevel + MAX_STRESS_DELTA) {
+          newStress = session.stressLevel + MAX_STRESS_DELTA;
+        }
+
+        // 2. Repetition guard: if the last 3 player messages are near-identical,
+        //    stress cannot rise — it can only stay flat or drop.
+        //    "did you kill her" x5 should not compound.
+        const recentPlayerMessages = session.history
+          .filter(m => m.role === "player")
+          .slice(-3)
+          .map(m => m.displayText?.trim().toLowerCase() ?? "");
+        const currentMsg = (displayText ?? text).trim().toLowerCase();
+        const isRepeatedQuestion =
+          recentPlayerMessages.length >= 2 &&
+          recentPlayerMessages.every(m => {
+            // Simple similarity: same first 12 chars, or one contains the other
+            return (
+              m.slice(0, 12) === currentMsg.slice(0, 12) ||
+              m === currentMsg ||
+              (m.length > 4 && currentMsg.includes(m)) ||
+              (currentMsg.length > 4 && m.includes(currentMsg))
+            );
+          });
+        if (isRepeatedQuestion && newStress > session.stressLevel) {
+          // Repeated question: freeze stress (or allow the model's drop if it dropped)
+          newStress = session.stressLevel;
+        }
       } catch {
         console.warn("Could not parse suspect JSON reply — stripping stress artifact from raw text");
         // Fallback: strip any trailing stressLevel JSON fragment from raw
@@ -402,6 +498,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         console.log("right before sessionId check, after sign in check")
         if (sessionId) {
           const state = get();
+          const { useNotificationStore } = await import("./store/useNotificationStore");
+          const notificationState = useNotificationStore.getState();
           const suspectSessions = Object.values(state.sessions).map((s) => ({
             suspectName: s.suspectName,
             conversationCount: s.conversationCount,
@@ -431,6 +529,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
               interrogation: {
                 suspectSessions,
+              },
+              schedulerState: {
+                lastFiredAt: notificationState.lastFiredAt,
+                nextFireAt: notificationState.nextFireAt,
+                timerPaused: notificationState.timerPaused,
               }
             }),
           }).catch(() => {});
