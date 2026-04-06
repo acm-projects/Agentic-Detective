@@ -80,7 +80,7 @@ a { color: inherit; text-decoration: none; }
   gap: 12px; padding: 16px 10px;
   background-color: #475257;
   border-right: 4px solid var(--ink-color);
-  width: 15vw; min-width: 160px;
+  width: 16vw; min-width: 160px;
   height: 100vh;
   overflow-y: auto;
   margin-top: auto;
@@ -232,6 +232,9 @@ a { color: inherit; text-decoration: none; }
 .suspect-avatar-picker {
   display: flex; flex-direction: column; gap: 8px;
   margin-top: 8px;
+  padding: 0px 3px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .suspect-picker-label {
@@ -251,13 +254,23 @@ a { color: inherit; text-decoration: none; }
   border: 2px solid transparent;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, transform 0.08s;
+  overflow: hidden;
 }
 .suspect-avatar-btn img {
-  width: 56px; height: 56px;
+  width: 65px; height: 56px;
   object-fit: cover;
   image-rendering: pixelated;
   border: 2px solid #333;
 }
+
+.suspect-picker-portrait {
+  width: clamp(62px, 7.2vw, 86px) !important;
+  height: auto !important;
+  border: 2px solid #333;
+  background: transparent;
+}
+
+
 .suspect-avatar-btn .suspect-avatar-name {
   font-family: 'VT323', monospace;
   font-size: 0.9rem;
@@ -269,6 +282,22 @@ a { color: inherit; text-decoration: none; }
 .suspect-avatar-btn:hover {
   background: rgba(255,255,255,0.16);
   transform: translateX(3px);
+}
+/* Can remove the stuff below here (until .suspect-avatar-btn:focus-visible */
+/* Purpose was to remove the default blue "selected" ring that showed up upon clicking */
+.suspect-avatar-btn:focus {
+  outline: none;
+}
+
+.suspect-avatar-btn:focus-visible {
+  outline: none;
+  border-color: #e3d5a5;
+  box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px #e3d5a5;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.suspect-avatar-btn:focus-visible .suspect-picker-portrait {
+  border-color: #e3d5a5;
 }
 .suspect-avatar-btn.active {
   background: rgba(255,255,255,0.22);
@@ -328,7 +357,7 @@ a { color: inherit; text-decoration: none; }
   position: absolute;
   left: 30px;
   bottom: 15px;
-  width: 230px;
+  width: 300px;
   height: auto;
   cursor: pointer;
   z-index: 5;
@@ -347,7 +376,13 @@ a { color: inherit; text-decoration: none; }
   left: 125px;
   top: 175px;
   width: 250px;
-  height: 170px;
+  height: 170px; 
+  /*
+    left: 45px;
+  top: 150px;
+  width: 400px;
+  height: auto;
+  */
   cursor: pointer;
   z-index: 5;
   transition: filter 0.15s, transform 0.1s;
@@ -387,6 +422,20 @@ a { color: inherit; text-decoration: none; }
   z-index: 12;
 }
 
+.user-icon .cl-userButtonOuterIdentifier,
+.user-icon .cl-userButtonBox,
+.user-icon .cl-userButtonTrigger,
+.user-icon .cl-userButtonTrigger span {
+  color: #ffffff !important;
+}
+
+.user-icon .cl-userButtonTrigger {
+  background: rgba(17, 17, 17, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 3px;
+  padding: 0.18rem 0.4rem !important;
+}
+
 /* ── Windows ── */
 .windows-container {
   display: flex; flex-direction: row; gap: 1.5rem;
@@ -412,6 +461,12 @@ a { color: inherit; text-decoration: none; }
 .character-avatar img {
   height: clamp(220px, 28vh, 285px); width: auto;
   object-fit: contain; image-rendering: pixelated;
+}
+
+.interrogate-main-portrait {
+  width: clamp(230px, 30vh, 340px) !important;
+  height: auto !important;
+  image-rendering: pixelated;
 }
 
 .first-clue-guide {
@@ -562,14 +617,17 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Notes-window (notepad image, opens notebook modal) ── */
 .notes-window {
-  width: 25%; position: relative;
+  width: 29%; position: relative;
   padding: 2.5em 1.5em; font-size: 1.6rem;
   background-image: url("./assets/bettershadethemednotepad.png");
   background-size: 85%; background-position: center; background-repeat: no-repeat;
   margin-top: auto; margin-bottom: 0; margin-right: 2.5rem;
   height: 40%; top: 2rem; cursor: pointer; transition: opacity 0.1s;
 }
-.notes-window:hover { opacity: 0.85; }
+.notes-window:hover { 
+  filter: brightness(1.12) drop-shadow(0 0 6px rgba(0,0,0,0.4));
+  transform: scale(1.02);
+ }
 
 /* ── Dialogs ── */
 .nes-dialog {
@@ -624,7 +682,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* Notebook modal is a bit wider */
-.notebook-drag-modal { width: 380px; }
+.notebook-drag-modal { width: 420px; }
 
 .clue-modal-handle {
   background: #14161e;
@@ -851,16 +909,29 @@ a { color: inherit; text-decoration: none; }
 ═══════════════════════════════════════════ */
 .notebook-modal-body {
   background: var(--bg-paper);
-  max-height: 420px;
+  max-height: min(72vh, 560px);
+  overflow-y: auto;
+  padding: clamp(0.55rem, 1.3vw, 0.9rem);
 }
 
 .notebook-suspect-card {
   background: var(--white);
   border: 3px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
-  padding: 1em;
+  padding: clamp(0.7rem, 1.4vw, 1rem);
+  overflow: hidden;
 }
-.notebook-suspect-header { display: flex; gap: 1em; align-items: flex-start; margin-bottom: 0.5em; }
+.notebook-suspect-header {
+  display: flex;
+  gap: clamp(0.55rem, 1.3vw, 1rem);
+  align-items: flex-start;
+  margin-bottom: 0.5em;
+}
+
+.notebook-suspect-header > div {
+  min-width: 0;
+  flex: 1;
+}
 .notebook-suspect-avatar {
   width: 72px; height: 72px;   /* a bit bigger */
   object-fit: contain; image-rendering: pixelated;
@@ -870,6 +941,7 @@ a { color: inherit; text-decoration: none; }
   font-family: 'Press Start 2P', cursive;
   font-size: 0.75rem;          /* bumped */
   color: var(--ink-color); margin-bottom: 5px; letter-spacing: 2px;
+  overflow-wrap: anywhere;
 }
 .notebook-suspect-meta {
   color: #555; margin-bottom: 6px;
@@ -884,6 +956,38 @@ a { color: inherit; text-decoration: none; }
 .notebook-suspicion-tag.suspicion-medium { background: #e3d5a5; color: var(--ink-color); }
 .notebook-suspicion-tag.suspicion-high   { background: #7a2f2f; color: var(--white); }
 
+.notebook-suspicion-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.notebook-suspicion-btn {
+  font-size: 0.48rem;
+  padding: 4px 7px;
+  border: 2px solid var(--ink-color);
+  font-family: 'Press Start 2P', cursive;
+  letter-spacing: 1px;
+  cursor: pointer;
+  opacity: 0.6;
+  transform: translateY(0);
+  transition: transform 0.1s, opacity 0.1s, box-shadow 0.1s;
+}
+
+.notebook-suspicion-btn.active {
+  opacity: 1;
+  box-shadow: 2px 2px 0 var(--ink-color);
+}
+
+.notebook-suspicion-btn:hover {
+  transform: translateY(-1px);
+  opacity: 0.85;
+}
+
+.notebook-suspicion-btn.suspicion-low { background: #2e7d4c; color: var(--white); }
+.notebook-suspicion-btn.suspicion-medium { background: #e3d5a5; color: var(--ink-color); }
+.notebook-suspicion-btn.suspicion-high { background: #7a2f2f; color: var(--white); }
+
 .notebook-suspect-divider {
   height: 2px; margin: 0.8em 0;
   background: repeating-linear-gradient(
@@ -895,11 +999,125 @@ a { color: inherit; text-decoration: none; }
   font-family: 'VT323', monospace;
   font-size: 1.2rem;           /* bumped */
   color: var(--ink-color); margin-bottom: 5px; line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 .notebook-suspect-field span {
   font-family: 'Press Start 2P', cursive;
   font-size: 0.48rem; text-transform: uppercase;
   letter-spacing: 1px; margin-right: 6px;
+}
+
+.notebook-suspect-portrait {
+  width: clamp(104px, 15vw, 150px) !important;
+  height: auto !important;
+  border: 2px solid var(--ink-color);
+  background: #141414;
+  flex-shrink: 0;
+}
+
+.notes-loading {
+  margin: 0.6rem 0 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+  color: #3d4d66;
+}
+
+.notes-list {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notes-list-item {
+  background: #f3ede2;
+  border-left: 3px solid #5b6f95;
+  padding: 0.5rem 0.6rem;
+}
+
+.notes-list-item p {
+  margin: 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  color: #141414;
+  overflow-wrap: anywhere;
+}
+
+.notes-list-date {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: #51607b;
+}
+
+.note-input-area {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  background: #ece4d5;
+  border: 2px solid #3a2f14;
+  padding: 0.55rem;
+}
+
+.note-draft-textarea {
+  width: 100%;
+  min-height: 86px;
+  resize: vertical;
+  border: 2px solid #2d2d2d;
+  background: #fff;
+  font-family: 'VT323', monospace;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  padding: 0.45rem 0.55rem;
+  color: #171717;
+}
+
+.note-input-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.note-save-btn,
+.note-cancel-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.42rem;
+  border: 2px solid #1a1a1a;
+  padding: 0.45rem 0.5rem;
+  cursor: pointer;
+}
+
+.note-save-btn {
+  background: #2d4c82;
+  color: #fff;
+}
+
+.note-save-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.note-cancel-btn {
+  background: #f8f2e7;
+  color: #111;
+}
+
+@media (max-width: 1080px) {
+  .notebook-suspect-header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .notebook-suspect-header > div {
+    width: 100%;
+  }
+
+  .notebook-suspect-portrait {
+    width: clamp(120px, 28vw, 168px) !important;
+  }
 }
 
 /* ═══════════════════════════════════════════

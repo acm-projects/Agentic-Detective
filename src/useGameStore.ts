@@ -98,6 +98,7 @@ interface GameState {
   setCurrentSessionId: (sessionId: string) => void; // This function can only be called when the user is signed in
   setSelectedCase: (caseDoc: any) => void;
   setSessions: (sessions: Record<string, SuspectSession>) => void;
+  loadSharedCaseTemplate: (template: any, navigate: (path: string) => void) => Promise<void>;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -160,7 +161,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       try {
         const { backend, player } = await generateCaseFile(seed);
         // Select voices server-side (non-blocking — falls back to defaults on failure)
-        await selectVoicesForCase(backend.suspects, seed.freeText);
+        const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
         set({
           backend,
           player,
@@ -168,6 +169,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           elapsed: 0,
           numDiscoveredClues: 0,
           isFirstClueDiscovery: false,
+          voiceIds,
         });
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues)
@@ -269,7 +271,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport, player.clues);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-3.1-flash-lite-preview",
       systemInstruction: systemPrompt,
       generationConfig: {
         temperature: 0.7,
@@ -565,7 +567,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
 
       // Generate and play speech asynchronously (don't block UI)
-      //tts streamed better\
+      const suspectGender = get().player?.characterProfiles.find(
+        p => p.name === activeSuspectName
+      )?.gender ?? "female";
+
+        
+      //tts streamed better
       const voiceId = get().voiceIds[activeSuspectName];
 
       if (voiceId) {
@@ -715,6 +722,90 @@ export const useGameStore = create<GameState>((set, get) => ({
   setSelectedCase: (caseDoc) => set({ selectedCase: caseDoc }), // stores caseDoc from mongo in zustand
 
   setSessions: (sessions) => set({ sessions }),
+
+  loadSharedCaseTemplate: async (template, navigate) => {
+    try {
+      const currentSeed = get().seed ?? DEFAULT_SEED;
+      const templateSeed = template?.seed ?? {};
+      const mergedSeed: PlayerSeed = {
+        ...DEFAULT_SEED,
+        ...templateSeed,
+        userId: currentSeed.userId ?? "",
+        isSignedIn: currentSeed.isSignedIn ?? false,
+      };
+
+      const initialClues = (template?.caseData?.initialClues ?? []).map((clue: any) => ({
+        ...clue,
+        discovered: Boolean(clue?.discovered ?? false),
+        clueLost: Boolean(clue?.clueLost ?? false),
+      }));
+
+      const backend: CaseFileBackend = {
+        storyline: template.caseData.storyline,
+        suspects: template.caseData.suspects,
+        clues: initialClues,
+      };
+
+      const player: CaseFilePlayer = {
+        characterProfiles: template.caseData.characterProfiles,
+        caseReport: template.caseData.caseReport,
+        clues: initialClues,
+      };
+
+      const voiceIds = await selectVoicesForCase(backend.suspects, mergedSeed.freeText);
+      const sharedSessionId = `SHARE-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+      set({
+        phase: "briefing",
+        seed: mergedSeed,
+        backend,
+        player,
+        activeSuspectName: null,
+        sessions: {},
+        totalConversationCount: 0,
+        elapsed: 0,
+        selectedCase: null,
+        accusationResult: null,
+        error: null,
+        isResponding: false,
+        voiceIds,
+        currentSessionId: sharedSessionId,
+      });
+
+      const { useNotificationStore } = await import("./store/useNotificationStore");
+      useNotificationStore.getState().initClues(player.clues);
+
+      if (mergedSeed.isSignedIn && mergedSeed.userId) {
+        fetch('http://localhost:3000/cases/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: sharedSessionId,
+            userId: mergedSeed.userId,
+            seed: mergedSeed,
+            game: {
+              phase: 'briefing',
+              elapsedSeconds: 0,
+              activeSuspectName: null,
+              totalConversationCount: 0,
+            },
+            caseData: {
+              storyline: template.caseData.storyline,
+              suspects: template.caseData.suspects,
+              caseReport: template.caseData.caseReport,
+              characterProfiles: template.caseData.characterProfiles,
+              initialClues,
+            },
+          }),
+        }).catch(() => {});
+      }
+
+      navigate('/report');
+    } catch (err) {
+      console.error('Could not load shared case template:', err);
+      set({ error: 'Could not load shared case template.' });
+    }
+  },
 }));
 
 // ─────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react'
 import { useGameStore } from '../useGameStore';
 import { Tooltip } from '../components/tooltip/Tooltip';
 import cluebookImg from './assets/themedcluebook.png';
@@ -43,11 +44,16 @@ function DeskItemWithTooltip({ src, alt, tooltip, className, style, onClick }: D
 }
 
 function Message() {
-  const { phase } = useGameStore();
+  const { phase, goToBriefing, makeAccusation, player } = useGameStore();
   const navigate = useNavigate();
   const { isFirstClueDiscovery, clearFirstClueDiscovery } = useGameStore();
 
 
+  const profiles = player?.characterProfiles ?? [];
+
+  const [suspectsOpen, setSuspectsOpen] = useState(false);
+
+  const caseCode = player?.caseReport?.caseId;
   if (phase === 'generating') {
     return <LoadingScreen />;
   }
@@ -66,11 +72,7 @@ function Message() {
   const handleClueBookClick = () => {
     clearFirstClueDiscovery();
     navigate('/clues');
-  }
-
-  const handleSuspectClick = () => {
-    navigate('/suspects');
-  }
+  };
 
   const handleCaseFileClick = () => {
     navigate('/report');
@@ -80,6 +82,25 @@ function Message() {
     <>
       <TutorialModal />
       <div style={{ width: '100vw', height: '100vh', position: 'relative', backgroundImage: `url(${deskBgImg})`, backgroundSize: 'cover' }}>
+        {caseCode && (
+          <div style={{
+            position: 'absolute',
+            top: '16px',
+            left: '18px',
+            zIndex: 10001,
+            background: 'rgba(10,10,10,0.78)',
+            color: '#fff',
+            border: '1px solid #ffffff66',
+            padding: '8px 10px',
+            fontSize: '0.72rem',
+            letterSpacing: '0.06em',
+            fontFamily: 'Press Start 2P, cursive'
+          }}>
+            CASE ID: {caseCode}
+          </div>
+        )}
+        
+        {/* 1. CLUE BOOK */}
         <div className='icons'>
           {/* 1. CLUE BOOK */}
           <DeskItemWithTooltip
@@ -132,7 +153,7 @@ function Message() {
             alt="Notebook" 
             tooltip="Notebook: inspect all suspect profiles."
             style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
-            onClick={handleSuspectClick}
+            onClick={() => setSuspectsOpen(true)}
           />
 
           {/* 6. PENCIL */}
@@ -175,7 +196,75 @@ function Message() {
         )}
       </div>
     </div>
-    
+    {/* ── Suspects Modal Overlay ── */}
+      {suspectsOpen && (
+        <>
+          {/* Dimmed backdrop — click to close */}
+          <div
+            onClick={() => setSuspectsOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.65)',
+              zIndex: 100,
+              animation: 'fadeIn 0.2s ease',
+            }}
+          />
+
+          {/* Modal panel */}
+          <div
+            style={{
+              position: 'fixed',
+              top: '4vh',
+              left: '4vw',
+              width: '92vw',
+              height: '92vh',
+              zIndex: 101,
+              animation: 'slideUp 0.25s ease',
+              overflow: 'hidden',
+              border: '4px solid #111',
+              boxShadow: '6px 6px 0 #111',
+            }}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setSuspectsOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '0.6em',
+                right: '0.75em',
+                zIndex: 102,
+                fontFamily: "'Press Start 2P', cursive",
+                fontSize: '0.5rem',
+                background: '#111',
+                color: '#fff',
+                border: '3px solid #fff',
+                boxShadow: '3px 3px 0 #111',
+                padding: '0.5em 0.8em',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              ✕ Close
+            </button>
+
+            {/* Suspects component rendered inside modal */}
+            {/*<Suspects />*/}
+          </div>
+        </>
+      )}
+
+      {/* Keyframe animations */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </>
   );
 }
