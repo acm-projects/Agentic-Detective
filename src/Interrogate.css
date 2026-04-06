@@ -80,7 +80,7 @@ a { color: inherit; text-decoration: none; }
   gap: 12px; padding: 16px 10px;
   background-color: #475257;
   border-right: 4px solid var(--ink-color);
-  width: 15vw; min-width: 160px;
+  width: 16vw; min-width: 160px;
   height: 100vh;
   overflow-y: auto;
   margin-top: auto;
@@ -108,12 +108,131 @@ a { color: inherit; text-decoration: none; }
   transform: translate(4px, 4px); box-shadow: none;
 }
 
+.navigate > button.desk-guide-button {
+  background: #8a1515;
+  color: #fff5db;
+  border-color: #fff5db;
+  box-shadow: 0 0 0 2px #8a1515, 0 0 0 4px #fff5db;
+  animation: desk-guide-pulse 1.45s cubic-bezier(0.22, 0.61, 0.36, 1) infinite;
+  will-change: transform, box-shadow, background-color;
+}
+
+@keyframes desk-guide-pulse {
+  0% {
+    transform: translate(0, 0) scale(1);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 4px #fff5db;
+    background-color: #8a1515;
+  }
+
+  38% {
+    transform: translate(0, -1px) scale(1.02);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 8px rgba(241, 213, 140, 0.75);
+    background-color: #d32c2c;
+  }
+
+  68% {
+    transform: translate(0, 0.5px) scale(1.008);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 6px rgba(241, 213, 140, 0.55);
+    background-color: #be2424;
+  }
+
+  100% {
+    transform: translate(0, 0) scale(1);
+    box-shadow: 0 0 0 1px #8a1515, 0 0 0 4px #fff5db;
+    background-color: #8a1515;
+  }
+}
+
+.navigate > button.disabled-button {
+  background-color: #464646;
+}
+
+.navigate > button.disabled-button:hover {
+  border: 3px solid #1a1a1a;
+  color: var(--ink-color);
+  transform: none;
+  box-shadow: 3px 3px 0px #1a1a1a;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.navigate > button.disabled-button:active {
+  transform: none;
+}
+
 .nav-auth { margin-top: auto; }
+
+.notification-board {
+  margin-top: auto;
+  width: 100%;
+  min-height: 132px;
+  padding: 0.45rem;
+  border: 2px solid rgba(20, 20, 20, 0.75);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, #1a1b2c 0%, #212338 100%);
+  display: flex;
+  align-items: stretch;
+}
+
+.notification-board:empty::before {
+  content: 'No Active Notifications';
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.43rem;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(233, 231, 206, 0.78);
+  border: 2px dashed rgba(233, 231, 206, 0.28);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.notification-board .first-clue-guide {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+  border: 3px solid #1a1a1a;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  background:
+    linear-gradient(180deg, #fff4d8 0%, #f0ddb6 100%);
+  padding: 0.7rem 0.65rem;
+}
+
+.notification-board .first-clue-guide-title {
+  margin: 0 0 0.5rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.44rem;
+  line-height: 1.45;
+  text-transform: uppercase;
+  color: #7f1a1a;
+}
+
+.notification-board .first-clue-guide-body {
+  margin: 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.08rem;
+  line-height: 1.15;
+  color: #111111;
+}
+
+.notification-board .first-clue-guide-body strong {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.42rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #7f1a1a;
+}
 
 /* ── Vertical suspect avatar picker ── */
 .suspect-avatar-picker {
   display: flex; flex-direction: column; gap: 8px;
   margin-top: 8px;
+  padding: 0px 3px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -143,6 +262,15 @@ a { color: inherit; text-decoration: none; }
   image-rendering: pixelated;
   border: 2px solid #333;
 }
+
+.suspect-picker-portrait {
+  width: clamp(62px, 7.2vw, 86px) !important;
+  height: auto !important;
+  border: 2px solid #333;
+  background: transparent;
+}
+
+
 .suspect-avatar-btn .suspect-avatar-name {
   font-family: 'VT323', monospace;
   font-size: 0.9rem;
@@ -154,6 +282,22 @@ a { color: inherit; text-decoration: none; }
 .suspect-avatar-btn:hover {
   background: rgba(255,255,255,0.16);
   transform: translateX(3px);
+}
+/* Can remove the stuff below here (until .suspect-avatar-btn:focus-visible */
+/* Purpose was to remove the default blue "selected" ring that showed up upon clicking */
+.suspect-avatar-btn:focus {
+  outline: none;
+}
+
+.suspect-avatar-btn:focus-visible {
+  outline: none;
+  border-color: #e3d5a5;
+  box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px #e3d5a5;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.suspect-avatar-btn:focus-visible .suspect-picker-portrait {
+  border-color: #e3d5a5;
 }
 .suspect-avatar-btn.active {
   background: rgba(255,255,255,0.22);
@@ -189,6 +333,23 @@ a { color: inherit; text-decoration: none; }
   background-repeat: no-repeat;
 }
 
+.item-tooltip {
+  background: rgba(17, 17, 17, 0.94);
+  color: #f3f0e4;
+  border: 2px solid #f3f0e4;
+  border-radius: 4px;
+  font-family: 'Press Start 2P', cursive;
+  text-transform: uppercase;
+  font-size: 8px;
+  line-height: 1.4;
+  text-align: center;
+  max-width: 230px;
+  padding: 6px 8px;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.55);
+  z-index: 11000;
+  pointer-events: none;
+}
+
 /* ── Clickable background-replacement images ── */
 
 /* updatedcasedetails.png — was: left 30px bottom 15px, 230px auto */
@@ -212,15 +373,23 @@ a { color: inherit; text-decoration: none; }
 /* locker.png — was: left 95px top 150px, 250px auto */
 .bg-img-locker {
   position: absolute;
-  left: 45px;
+  left: 125px;
+  top: 175px;
+  width: 250px;
+  height: 170px; 
+  /*
+    left: 45px;
   top: 150px;
   width: 400px;
   height: auto;
+  */
   cursor: pointer;
   z-index: 5;
   transition: filter 0.15s, transform 0.1s;
   image-rendering: pixelated;
   user-select: none;
+  object-fit: cover;
+  object-position: center 46%;
 }
 .bg-img-locker:hover {
   filter: brightness(1.12) drop-shadow(0 0 6px rgba(0,0,0,0.4));
@@ -253,6 +422,20 @@ a { color: inherit; text-decoration: none; }
   z-index: 12;
 }
 
+.user-icon .cl-userButtonOuterIdentifier,
+.user-icon .cl-userButtonBox,
+.user-icon .cl-userButtonTrigger,
+.user-icon .cl-userButtonTrigger span {
+  color: #ffffff !important;
+}
+
+.user-icon .cl-userButtonTrigger {
+  background: rgba(17, 17, 17, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.32) !important;
+  border-radius: 3px;
+  padding: 0.18rem 0.4rem !important;
+}
+
 /* ── Windows ── */
 .windows-container {
   display: flex; flex-direction: row; gap: 1.5rem;
@@ -278,6 +461,37 @@ a { color: inherit; text-decoration: none; }
 .character-avatar img {
   height: clamp(220px, 28vh, 285px); width: auto;
   object-fit: contain; image-rendering: pixelated;
+}
+
+.interrogate-main-portrait {
+  width: clamp(230px, 30vh, 340px) !important;
+  height: auto !important;
+  image-rendering: pixelated;
+}
+
+.first-clue-guide {
+  margin-top: 0.8rem;
+  border: 3px solid #1a1a1a;
+  box-shadow: 4px 4px 0 #1a1a1a;
+  background: #fff4d8;
+  padding: 0.7rem 1rem;
+  z-index: 3;
+}
+
+.first-clue-guide-title {
+  margin: 0 0 0.35rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.52rem;
+  text-transform: uppercase;
+  color: #8a1515;
+}
+
+.first-clue-guide-body {
+  margin: 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.2rem;
+  line-height: 1.2;
+  color: #111111;
 }
 
 /* ── Chat ── */
@@ -400,6 +614,7 @@ a { color: inherit; text-decoration: none; }
   background: #555; box-shadow: none; transform: none; cursor: not-allowed;
 }
 
+
 /* ── Notes-window (notepad image, opens notebook modal) ── */
 .notes-window {
   width: 29%; position: relative;
@@ -407,7 +622,7 @@ a { color: inherit; text-decoration: none; }
   background-image: url("./assets/bettershadethemednotepad.png");
   background-size: 85%; background-position: center; background-repeat: no-repeat;
   margin-top: auto; margin-bottom: 0; margin-right: 2.5rem;
-  height: 50%; top: 2rem; cursor: pointer; transition: opacity 0.1s;
+  height: 40%; top: 2rem; cursor: pointer; transition: opacity 0.1s;
 }
 .notes-window:hover { 
   filter: brightness(1.12) drop-shadow(0 0 6px rgba(0,0,0,0.4));
@@ -467,7 +682,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* Notebook modal is a bit wider */
-.notebook-drag-modal { width: 380px; }
+.notebook-drag-modal { width: 420px; }
 
 .clue-modal-handle {
   background: #14161e;
@@ -694,16 +909,29 @@ a { color: inherit; text-decoration: none; }
 ═══════════════════════════════════════════ */
 .notebook-modal-body {
   background: var(--bg-paper);
-  max-height: 420px;
+  max-height: min(72vh, 560px);
+  overflow-y: auto;
+  padding: clamp(0.55rem, 1.3vw, 0.9rem);
 }
 
 .notebook-suspect-card {
   background: var(--white);
   border: 3px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
-  padding: 1em;
+  padding: clamp(0.7rem, 1.4vw, 1rem);
+  overflow: hidden;
 }
-.notebook-suspect-header { display: flex; gap: 1em; align-items: flex-start; margin-bottom: 0.5em; }
+.notebook-suspect-header {
+  display: flex;
+  gap: clamp(0.55rem, 1.3vw, 1rem);
+  align-items: flex-start;
+  margin-bottom: 0.5em;
+}
+
+.notebook-suspect-header > div {
+  min-width: 0;
+  flex: 1;
+}
 .notebook-suspect-avatar {
   width: 72px; height: 72px;   /* a bit bigger */
   object-fit: contain; image-rendering: pixelated;
@@ -713,6 +941,7 @@ a { color: inherit; text-decoration: none; }
   font-family: 'Press Start 2P', cursive;
   font-size: 0.75rem;          /* bumped */
   color: var(--ink-color); margin-bottom: 5px; letter-spacing: 2px;
+  overflow-wrap: anywhere;
 }
 .notebook-suspect-meta {
   color: #555; margin-bottom: 6px;
@@ -770,11 +999,125 @@ a { color: inherit; text-decoration: none; }
   font-family: 'VT323', monospace;
   font-size: 1.2rem;           /* bumped */
   color: var(--ink-color); margin-bottom: 5px; line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 .notebook-suspect-field span {
   font-family: 'Press Start 2P', cursive;
   font-size: 0.48rem; text-transform: uppercase;
   letter-spacing: 1px; margin-right: 6px;
+}
+
+.notebook-suspect-portrait {
+  width: clamp(104px, 15vw, 150px) !important;
+  height: auto !important;
+  border: 2px solid var(--ink-color);
+  background: #141414;
+  flex-shrink: 0;
+}
+
+.notes-loading {
+  margin: 0.6rem 0 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.05rem;
+  color: #3d4d66;
+}
+
+.notes-list {
+  margin-top: 0.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.notes-list-item {
+  background: #f3ede2;
+  border-left: 3px solid #5b6f95;
+  padding: 0.5rem 0.6rem;
+}
+
+.notes-list-item p {
+  margin: 0;
+  font-family: 'VT323', monospace;
+  font-size: 1.1rem;
+  line-height: 1.3;
+  color: #141414;
+  overflow-wrap: anywhere;
+}
+
+.notes-list-date {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.72rem;
+  color: #51607b;
+}
+
+.note-input-area {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  background: #ece4d5;
+  border: 2px solid #3a2f14;
+  padding: 0.55rem;
+}
+
+.note-draft-textarea {
+  width: 100%;
+  min-height: 86px;
+  resize: vertical;
+  border: 2px solid #2d2d2d;
+  background: #fff;
+  font-family: 'VT323', monospace;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  padding: 0.45rem 0.55rem;
+  color: #171717;
+}
+
+.note-input-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.note-save-btn,
+.note-cancel-btn {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.42rem;
+  border: 2px solid #1a1a1a;
+  padding: 0.45rem 0.5rem;
+  cursor: pointer;
+}
+
+.note-save-btn {
+  background: #2d4c82;
+  color: #fff;
+}
+
+.note-save-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.note-cancel-btn {
+  background: #f8f2e7;
+  color: #111;
+}
+
+@media (max-width: 1080px) {
+  .notebook-suspect-header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .notebook-suspect-header > div {
+    width: 100%;
+  }
+
+  .notebook-suspect-portrait {
+    width: clamp(120px, 28vw, 168px) !important;
+  }
 }
 
 /* ═══════════════════════════════════════════

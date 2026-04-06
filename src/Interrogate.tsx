@@ -8,6 +8,9 @@ import { NotificationToast } from './components/notifications/NotificationToast'
 import { MinigameModal } from './components/minigames/MinigameModal'
 import { AudioContext } from './App';
 import { Show, UserButton, useClerk } from '@clerk/react-router';
+import { Tooltip } from './components/tooltip/Tooltip';
+import TutorialModal from './components/tutorial-modal/Tutorial';
+
 import './Interrogate.css';
 import SuspectPortrait from './components/SuspectPortrait'
 
@@ -27,6 +30,24 @@ interface SuspectNote {
 }
 
 type SuspicionLevel = 'low' | 'medium' | 'high';
+
+interface InterrogateImageProp {
+  src: string;
+  alt: string;
+  tooltip: string;
+  className?: string;
+  title?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+}
+
+interface InterrogatePanelProp {
+  tooltip: string;
+  className?: string;
+  title?: string;
+  style?: React.CSSProperties;
+  onClick?: () => void;
+}
 
 // ── Draggable hook ─────────────────────────────────────
 function useDraggableModal(initialPos: { x: number; y: number }) {
@@ -60,6 +81,53 @@ function useDraggableModal(initialPos: { x: number; y: number }) {
   return { pos, onMouseDown };
 }
 
+// Tooltip
+function InterrogateImagePropWithToolTip( { src, alt, tooltip, className, style, title, onClick}: InterrogateImageProp) {
+  return (
+    <Tooltip<HTMLImageElement> 
+      content={tooltip} 
+      className='item-tooltip'
+      placement='top'
+      offsetPx={1}
+    >
+     {({ ref, getReferenceProps }) => (
+        <img
+          className={className}
+          src={src}
+          alt={alt}
+          ref={ref}
+          aria-label={title ?? tooltip}
+          style={style}
+          {...getReferenceProps()}
+          onClick={onClick}
+        />
+      )}
+    </Tooltip>
+  )
+}
+
+function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick }: InterrogatePanelProp) {
+  return (
+    <Tooltip<HTMLDivElement>
+      content={tooltip}
+      className='item-tooltip'
+      placement='top'
+      offsetPx={-1}
+    >
+      {({ ref, getReferenceProps }) => (
+        <div
+          className={className}
+          ref={ref}
+          aria-label={title ?? tooltip}
+          style={style}
+          {...getReferenceProps()}
+          onClick={onClick}
+        />
+      )}
+    </Tooltip>
+  )
+}
+
 function Interrogate() {
   const navigate = useNavigate();
   const { signOut } = useClerk();
@@ -67,8 +135,11 @@ function Interrogate() {
     player,
     seed,
     activeSuspectName,
+    isFirstClueDiscovery,
     isResponding,
     elapsed,
+    accusationUnlocked,
+    totalConversationCount,
     startInterrogation,
     sendMessage,
     makeAccusation,
@@ -83,13 +154,23 @@ function Interrogate() {
   const [showNotes, setShowNotes] = useState(false);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
   const [selectedSuspicionLevel, setSelectedSuspicionLevel] = useState<SuspicionLevel | null>(null);
+  const [tutorialOpenOnce, setTutorialOpenOnce] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
+  const numConversations = totalConversationCount; // totalConversationCount is used to keep track of 
+                                                   // whether the user is a first time player or not
+  const isFirstTimePlayer = numConversations === 0 || numConversations === 1; // classified as first time player if 1 or less messages sent
+  console.log("first time? " + isFirstTimePlayer);
 
   // ── Evidence / clue state ──────────────────────────────
   const allClues = useNotificationStore(s => s.clues);
   const discoveredClues = allClues.filter(c => c.discovered);
+  const ACCUSATION_MIN_CLUES = 2;
+  const cluesRemainingForAccusation = Math.max(0, ACCUSATION_MIN_CLUES - discoveredClues.length);
+  const accusationLockTooltip = cluesRemainingForAccusation === 1
+    ? 'Unlock 1 more clue to use this feature.'
+    : `Unlock ${cluesRemainingForAccusation} more clues to use this feature.`;
   const [attachedClues, setAttachedClues] = useState<AttachedClue[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -254,6 +335,12 @@ function Interrogate() {
     localStorage.removeItem("lastCaseId");
   };
 
+  const handleOpenTutorial = () => {
+    localStorage.removeItem('tutorialSeen');
+    localStorage.removeItem('tutorialStep');
+    setTutorialOpenOnce(prev => prev + 1);
+  };
+
   useEffect(() => {
     const handlePotentialSignOutClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
@@ -269,6 +356,22 @@ function Interrogate() {
     document.addEventListener('click', handlePotentialSignOutClick, true);
     return () => document.removeEventListener('click', handlePotentialSignOutClick, true);
   }, []);
+
+  // Source - https://stackoverflow.com/a/68933242
+  // Posted by Drew Reese, modified by community. See post 'Timeline' for change history
+  // Retrieved 2026-04-01, License - CC BY-SA 4.0
+
+  useEffect(() => {
+    const unloadCallback = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+      return "";
+    };
+
+    window.addEventListener("beforeunload", unloadCallback);
+    return () => window.removeEventListener("beforeunload", unloadCallback);
+  }, []);
+
 
   if (!player) {
     return (
@@ -302,7 +405,7 @@ function Interrogate() {
                 title={p.name}
               >
                 {p.portraitFeatures
-                  ? <SuspectPortrait features={p.portraitFeatures} size={80} />
+                  ? <SuspectPortrait className="suspect-picker-portrait" features={p.portraitFeatures} size={108} />
                   : <div style={{ width: 80, height: 80, background: '#111' }} />
                 }
                 <span className="suspect-avatar-name">{p.name}</span>
@@ -310,12 +413,18 @@ function Interrogate() {
             );
           })}
         </div>
+            
 
-        <button onClick={() => navigate("/desk")}>Desk</button>
+        <button
+          className={isFirstClueDiscovery ? 'desk-guide-button' : ''}
+          onClick={() => navigate("/desk")}
+        >Desk</button>
 
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
         }>Settings</button>
+        
+        
 
         <dialog className="nes-dialog" id="settings">
           <form method="dialog">
@@ -331,24 +440,51 @@ function Interrogate() {
           </form>
         </dialog>
 
-        <button onClick={() =>
-          (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
-        }>Accuse</button>
-
-        <dialog className="nes-dialog" id="accuse">
-          <form method="dialog">
-            <h3>Make Your Accusation</h3>
-            <p>Who do you think did it?</p>
-            {profiles.map(p => (
-              <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
-                {p.name}
+        {!accusationUnlocked ? (
+          <Tooltip<HTMLButtonElement>
+            content={accusationLockTooltip}
+            className="item-tooltip"
+            placement="right"
+            offsetPx={8}
+          >
+            {({ ref, getReferenceProps }) => (
+              <button
+                ref={ref}
+                type="button"
+                className="disabled-button"
+                aria-label="Accuse locked"
+                {...getReferenceProps()}
+              >
+                Accuse
               </button>
-            ))}
-            <menu className="dialog-menu">
-              <button>Cancel</button>
-            </menu>
-          </form>
-        </dialog>
+            )}
+          </Tooltip>
+        ) : (
+          <button
+            onClick={() =>
+              (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
+            }
+          >
+            Accuse
+          </button>
+        )}
+        {accusationUnlocked && (
+          <dialog className="nes-dialog" id="accuse">
+            <form method="dialog">
+              <h3>Make Your Accusation</h3>
+              <p>Who do you think did it?</p>
+              {profiles.map(p => (
+                <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
+                  {p.name}
+                </button>
+              ))}
+              <menu className="dialog-menu">
+                <button>Cancel</button>
+              </menu>
+            </form>
+          </dialog>
+        )}
+        
 
         <dialog className="nes-dialog" id="signout-warning">
           <form method="dialog">
@@ -361,25 +497,61 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
+
+        {/* Auth */}
+        {/* <div className="nav-auth">
+          <Show when="signed-out">
+            <SignInButton mode="modal">
+              <button className="user-button">Sign In</button>
+            </SignInButton>
+          </Show>
+          <Show when="signed-in">
+            <div className="auth-actions auth-actions-signed-in">
+              <UserButton userProfileMode="modal" showName appearance={{ options: { shimmer: false } }} />
+            </div>
+          </Show>
+        </div> */}
+        {isFirstTimePlayer && (
+          <>
+            <button className='tutorial-button' onClick={handleOpenTutorial}>Open tutorial?</button>
+            <TutorialModal key={tutorialOpenOnce} />
+          </>
+          
+          )}
+        
+        <div className='notification-board'>
+          {isFirstClueDiscovery && (
+            <div className="first-clue-guide" role="status" aria-live="polite">
+              <p className="first-clue-guide-title">First Clue Discovered</p>
+              <p className="first-clue-guide-body">
+                <strong>Step 1:</strong> Click the highlighted Desk button above. <br /> <br />
+                <strong>Step 2:</strong> Open the Clues page from the Desk to review your newly acquired evidence.
+              </p>
+            </div>
+          )}  
+        </div>
       </div>
+      
 
       {/* ── Main interrogation area ── */}
       <div className="interrogate-container" style={{ position: 'relative' }}>
 
-        {/* ── Clickable case-details image ── */}
-        <img
+        {/* ── Clickable case-details image (replaces bg layer) ── */}
+        <InterrogateImagePropWithToolTip
           src="src/assets/updatedcasedetails.png"
           alt="Case Details"
           className="bg-img-casedetails"
-          onClick={() => setShowNotes(v => !v)}
-          title="Field Notes"
+          tooltip={showNotebook ? 'Close suspect profile' : 'Open suspect profile'}
+          onClick={() => setShowNotebook(v => !v)}
+          title="Suspect Profile"
         />
 
-        {/* ── Clickable locker image ── */}
-        <img
+        {/* ── Clickable locker image (replaces bg layer) ── */}
+        <InterrogateImagePropWithToolTip
           src="src/assets/locker.png"
           alt="Evidence Locker"
           className="bg-img-locker"
+          tooltip={cluesModalOpen ? 'Close Evidence Locker' : 'Open Evidence Locker' + ' to add Clues to the Conversation'}
           onClick={() => setCluesModalOpen(v => !v)}
           title="Evidence Locker"
         />
@@ -404,7 +576,7 @@ function Interrogate() {
               <div className='character-container'>
                 <div className='character-avatar'>
                   {activeProfile.portraitFeatures
-                    ? <SuspectPortrait features={activeProfile.portraitFeatures} size={384} />
+                    ? <SuspectPortrait className="interrogate-main-portrait" features={activeProfile.portraitFeatures} size={560} />
                     : <div style={{ width: 384, height: 384, background: '#111' }} />
                   }
                   <div className="avatar-overlay" />
@@ -412,6 +584,8 @@ function Interrogate() {
                 </div>
               </div>
             )}
+
+           
 
             <div className='chatbot'>
               <form onSubmit={handleSendMessage} className="message-form">
@@ -500,10 +674,105 @@ function Interrogate() {
           </div>
 
           {/* Notepad image — opens notebook modal */}
-          <div className='notes-window' onClick={() => setShowNotebook(v => !v)} />
+          <InterrogatePanelWithToolTip
+            className='notes-window'
+            tooltip={showNotes ? 'Close Notepad for Suspect' : 'Open Notepad for Suspect'}
+            title='Field Notes'
+            onClick={() => setShowNotes(v => !v)}
+          />
         </div>
       </div>
+      
+      {/* ══════════════════════════════════════════════════
+          NOTES MODAL — fully independent
+      ══════════════════════════════════════════════════ */}
+      {showNotes && (
+        <div className="clue-modal" style={{ left: notesPos.x, top: notesPos.y }}>
+          <div className="clue-modal-handle" onMouseDown={notesMouseDown}>
+            <span className="clue-modal-title">FIELD NOTES</span>
+            <div className="clue-modal-handle-dots">
+              <span /><span /><span /><span /><span /><span />
+            </div>
+            <button
+              className="clue-modal-close"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => setShowNotes(false)}
+            >✕</button>
+          </div>
 
+          <div className="notes-suspect-bar">
+            <span className="notes-suspect-name">{activeSuspectName?.toUpperCase()}</span>
+            <button
+              className="notes-reload-btn"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={loadNotes}
+              title="Reload notes"
+            >↻</button>
+          </div>
+
+          <div className="clue-modal-body notes-modal-body">
+            {notesLoading && <p className="clue-modal-empty">Loading…</p>}
+            {!notesLoading && notesList.length === 0 && (
+              <p className="clue-modal-empty">No notes yet for this suspect.</p>
+            )}
+            {!notesLoading && notesList.map((n, i) => (
+              <div key={n.id ?? i} className="notes-entry">
+                <p className="notes-entry-text">{n.suspectNotes}</p>
+                {n.createdAt && (
+                  <span className="notes-entry-time">
+                    {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {noteInputOpen && (
+            <div className="notes-input-panel">
+              <textarea
+                ref={noteTextareaRef}
+                className="notes-textarea"
+                placeholder={`Observations on ${activeSuspectName}…`}
+                value={noteDraft}
+                rows={4}
+                onChange={e => setNoteDraft(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) saveNote();
+                  if (e.key === 'Escape') { setNoteInputOpen(false); setNoteDraft(''); }
+                }}
+              />
+              {notesError && <p className="notes-error">{notesError}</p>}
+              <div className="notes-input-actions">
+                <span className="notes-hint">Ctrl+↵ to save · Esc to cancel</span>
+                <button
+                  className="notes-cancel-btn"
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={() => { setNoteInputOpen(false); setNoteDraft(''); setNotesError(null); }}
+                >Cancel</button>
+                <button
+                  className="notes-save-btn"
+                  onMouseDown={e => e.stopPropagation()}
+                  onClick={saveNote}
+                  disabled={noteSaving || !noteDraft.trim()}
+                >
+                  {noteSaving ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="clue-modal-footer">
+            {notesError && !noteInputOpen && <span className="notes-error">{notesError}</span>}
+            <button
+              className="notes-add-btn"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => { setNoteInputOpen(v => !v); setNotesError(null); }}
+            >
+              {noteInputOpen ? '— Close' : '+ Add Note'}
+            </button>
+          </div>
+        </div>
+      )}
       {/* ══════════════════════════════════════════════════
           EVIDENCE LOCKER MODAL — draggable, independent
       ══════════════════════════════════════════════════ */}
@@ -604,7 +873,7 @@ function Interrogate() {
               <div className="notebook-suspect-card">
                 <div className="notebook-suspect-header">
                   {activeProfile.portraitFeatures
-                    ? <SuspectPortrait features={activeProfile.portraitFeatures} size={384} />
+                    ? <SuspectPortrait className="notebook-suspect-portrait" features={activeProfile.portraitFeatures} size={260} />
                     : <div style={{ width: 384, height: 384, background: '#111' }} />
                   }
                   <div>
@@ -626,9 +895,9 @@ function Interrogate() {
                   </div>
                 </div>
                 <div className="notebook-suspect-divider" />
-                <div className="notebook-suspect-field"><span>Relation:</span> {activeProfile.relationshipToVictim}</div>
-                <div className="notebook-suspect-field"><span>Alibi:</span> {activeProfile.claimedAlibi}</div>
-                <div className="notebook-suspect-field"><span>Notes:</span> {activeProfile.personalityBlurb}</div>
+                <div className="notebook-suspect-field"><strong>Relation: </strong>{activeProfile.relationshipToVictim}</div>
+                <div className="notebook-suspect-field"><strong>Alibi:</strong> {activeProfile.claimedAlibi}</div>
+                <div className="notebook-suspect-field"><strong>Notes:</strong> {activeProfile.personalityBlurb}</div>
               </div>
             )}
 

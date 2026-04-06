@@ -8,7 +8,7 @@ import './App.css';
 import CaseReportScreen from './CaseReportScreen.tsx';
 import Interrogate from "./Interrogate";
 import Accuse from './Accuse.tsx';
-import CaseResolvedErrorScreen from './components/CaseResolvedErrorScreen/CaseResolvedErrorScreen.tsx';
+import CaseResolvedErrorScreen from './components/caseResolvedScreen/CaseResolvedErrorScreen.tsx';
 import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
 
 

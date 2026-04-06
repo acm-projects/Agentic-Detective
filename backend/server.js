@@ -685,7 +685,9 @@ app.get('/cases/user/:userId', async (req, res) => {
       .toArray();
 
     if (!docs.length) {
-      return res.status(404).json({ error: "No cases found for this user" });
+      console.log("No cases found for this user");
+      return res.json([]);
+      // return res.status(404).json({ error: "No cases found for this user" });
     }
 
     res.json(docs);
