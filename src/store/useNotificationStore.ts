@@ -274,6 +274,10 @@ export const useNotificationStore = create<NotificationState>()(
           clueLost: Boolean(clue.clueLost),
           notificationId: undefined,
         }));
+        s.notifications = []; // these werent being reset before, causing the notification store bug
+        s.lastFiredAt = null;
+        s.nextFireAt = null;
+        s.timerPaused = false;
       });
     },
 

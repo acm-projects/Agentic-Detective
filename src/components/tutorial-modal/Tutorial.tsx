@@ -1,163 +1,334 @@
-// This page defines a Tutorial Modal that shows up on the Interrogation page upon first load
-// The tutorial is skippable and guides users with the UI for their first playthrough.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import './tutorial.css';
 
 interface Step {
-    title: string,
-    icon: string,
-    description: string[],
+    route: '/desk' | '/report' | '/clues' | '/interrogate';
+    routeLabel: string;
+    badge: string;
+    title: string;
+    icon: string;
+    description: string[];
+    highlightTarget?: string;
+    highlightTitle?: string;
 }
 
 const STEPS: Step[] = [
     {
-        title: "The Desk",
-        icon: "",
+        route: '/desk',
+        routeLabel: 'Desk',
+        badge: 'Desk Briefing',
+        title: 'Welcome to your detective desk',
+        icon: 'DESK',
         description: [
-            "You are a detective, and you have one job: find the culprit.",
-            "Read the case file, then begin interrogating."
+            'Review your file, inspect clue materials, and move between investigation tools from here.',
+            'This board is your control center for the whole case.'
         ],
     },
     {
-        title: "Interrogation",
-        icon: "",
+        route: '/report',
+        routeLabel: 'Case Report',
+        badge: 'Case File',
+        title: 'Read the case report first',
+        icon: 'REPORT',
         description: [
-            "Each suspect has their secrets. Ask questions to unravel them.",
-            "Find inconsistencies. Figure out their lying tells."
+            'Open the Case File on the desk to review your official briefing and known facts.',
+            'Start with the report before moving to deeper evidence review.'
         ]
     },
     {
-        title: "Evidence",
-        icon: "",
+        route: '/clues',
+        routeLabel: 'Clues',
+        badge: 'Evidence Review',
+        title: 'Use the clue board to connect evidence',
+        icon: 'CLUES',
         description: [
-            "New evidence arrives during the investigation as notifications. Complete the minigame to unlock it.",
-            "Drag clues from the Evidence Locker into the chat to confront suspects directly.",
+            'Examine discovered clues and track what each item can implicate.',
+            'You can then present those clues during interrogation.'
         ]
     },
     {
-        title: "Making your Accusation",
-        icon: "",
+        route: '/interrogate',
+        routeLabel: 'Interrogate',
+        badge: 'Interrogation Room',
+        title: 'Question suspects and watch for pressure points',
+        icon: 'CHAT',
         description: [
-            "When you're ready, accuse a suspect from the interrogation screen. You need to find evidence first.",
-            "Choose carefully — you only get one shot.",
+            'Interrogations are where contradictions and stress become useful.',
+            'Next, I will spotlight the key tools you need during questioning.'
         ]
+    },
+    {
+        route: '/interrogate',
+        routeLabel: 'Interrogate',
+        badge: 'Tool Highlight',
+        title: 'Evidence Locker',
+        icon: 'LOCKER',
+        description: [
+            'Open the locker to view discovered clues and drag them into chat as evidence.',
+            'Use evidence drops to corner suspects at the right moment.'
+        ],
+        highlightTarget: 'tutorial-evidence-locker',
+        highlightTitle: 'Evidence Locker trigger'
+    },
+    {
+        route: '/interrogate',
+        routeLabel: 'Interrogate',
+        badge: 'Tool Highlight',
+        title: 'Field Notes',
+        icon: 'NOTES',
+        description: [
+            'Open Notes to log observations for each suspect while details are fresh.',
+            'Good notes make your final accusation more reliable.'
+        ],
+        highlightTarget: 'tutorial-notes',
+        highlightTitle: 'Field Notes trigger'
+    },
+    {
+        route: '/interrogate',
+        routeLabel: 'Interrogate',
+        badge: 'Tool Highlight',
+        title: 'Suspect Details',
+        icon: 'PROFILE',
+        description: [
+            'Open this panel to review profile traits, alibi details, and suspicion tracking.',
+            'Cross-check what they say against this card before accusing.'
+        ],
+        highlightTarget: 'tutorial-suspect-details',
+        highlightTitle: 'Suspect Details trigger'
     }
 ];
 
 const TUTORIAL_KEY = 'tutorialSeen';
 const TUTORIAL_STEP_KEY = 'tutorialStep';
+const TUTORIAL_READY_KEY = 'tutorialReadyAfterReport';
+const TUTORIAL_DESK_ENTERED_KEY = 'tutorialDeskEntered';
+
+const clampStep = (stepValue: number) => {
+    if (!Number.isFinite(stepValue)) return 0;
+    return Math.min(Math.max(stepValue, 0), STEPS.length - 1);
+};
+
+const getCalloutStyle = (rect: DOMRect) => {
+    const maxWidth = Math.min(320, Math.max(220, window.innerWidth - 32));
+    const left = Math.min(
+        window.innerWidth - maxWidth - 12,
+        Math.max(12, rect.left + rect.width / 2 - maxWidth / 2)
+    );
+    const renderAbove = rect.top > window.innerHeight * 0.64;
+
+    if (renderAbove) {
+        return { left, top: Math.max(12, rect.top - 132) };
+    }
+
+    return {
+        left,
+        top: Math.min(window.innerHeight - 90, rect.bottom + 14),
+    };
+};
 
 function TutorialModal() {
     const navigate = useNavigate();
     const location = useLocation();
     const [visible, setVisible] = useState(false);
     const [step, setStep] = useState(0);
-    const isDeskRoute = useMemo(() => location.pathname === '/desk', [location.pathname]);
-    const isCluesRoute = useMemo(() => location.pathname === '/clues', [location.pathname]);
+    const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
+    const isSupportedRoute =
+        location.pathname === '/desk' ||
+        location.pathname === '/report' ||
+        location.pathname === '/clues' ||
+        location.pathname === '/interrogate';
 
     useEffect(() => {
         const hasSeenTutorial = localStorage.getItem(TUTORIAL_KEY) === 'true';
         if (hasSeenTutorial) return;
+        const readyAfterReport = localStorage.getItem(TUTORIAL_READY_KEY) === 'true';
+        if (!readyAfterReport) return;
+        const deskEntered = localStorage.getItem(TUTORIAL_DESK_ENTERED_KEY) === 'true';
+        if (!deskEntered) return;
 
-        const savedStep = Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? '0');
-        setStep(Number.isFinite(savedStep) ? savedStep : 0);
+        const savedStep = Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? 0);
+        setStep(clampStep(savedStep));
         setVisible(true);
     }, []);
 
     useEffect(() => {
         if (!visible) return;
-        localStorage.setItem(TUTORIAL_STEP_KEY, String(step));
+        localStorage.setItem(TUTORIAL_STEP_KEY, String(clampStep(step)));
     }, [step, visible]);
+
+    const current = STEPS[clampStep(step)];
+
+    useEffect(() => {
+        if (!visible || !current.highlightTarget || location.pathname !== current.route) {
+            setSpotlightRect(null);
+            return;
+        }
+
+        const findAndMeasure = () => {
+            const target = document.querySelector(
+                `[data-tutorial-id="${current.highlightTarget}"]`
+            ) as HTMLElement | null;
+
+            if (!target) {
+                setSpotlightRect(null);
+                return;
+            }
+
+            setSpotlightRect(target.getBoundingClientRect());
+        };
+
+        findAndMeasure();
+        const intervalId = window.setInterval(findAndMeasure, 180);
+        window.addEventListener('resize', findAndMeasure);
+        window.addEventListener('scroll', findAndMeasure, true);
+
+        return () => {
+            window.clearInterval(intervalId);
+            window.removeEventListener('resize', findAndMeasure);
+            window.removeEventListener('scroll', findAndMeasure, true);
+        };
+    }, [visible, current.highlightTarget, current.route, location.pathname]);
 
     const dismiss = () => {
         localStorage.setItem(TUTORIAL_KEY, 'true');
         localStorage.removeItem(TUTORIAL_STEP_KEY);
+        localStorage.removeItem(TUTORIAL_READY_KEY);
         setVisible(false);
-    }
-    const updateStep = (nextStep: number) => {
-        setStep(nextStep);
-        localStorage.setItem(TUTORIAL_STEP_KEY, String(nextStep));
+        setSpotlightRect(null);
     };
+
+    const updateStep = (nextStep: number) => {
+        const sanitized = clampStep(nextStep);
+        setStep(sanitized);
+        localStorage.setItem(TUTORIAL_STEP_KEY, String(sanitized));
+    };
+
     const next = () => updateStep(Math.min(step + 1, STEPS.length - 1));
     const prev = () => updateStep(Math.max(step - 1, 0));
     const isLast = step === STEPS.length - 1;
-    const current = STEPS[step];
+    const shouldNavigate = location.pathname !== current.route;
+    const isHighlightStep = Boolean(current.highlightTarget && spotlightRect);
 
     const primaryActionLabel = (() => {
-        if (step === 0) {
-            return isDeskRoute ? 'Return to Interrogate' : 'Visit the Desk';
-        }
+        if (shouldNavigate) return `Go to ${current.routeLabel}`;
 
-        if (step === 2) {
-            return isCluesRoute ? 'Return to Interrogate' : 'Visit the Clues Page';
-        }
+        if (isLast) return 'Start investigating';
 
-        if (isLast) {
-            return 'Got it — start investigating';
-        }
-
-        return 'Next →';
+        return 'Next';
     })();
 
     const handlePrimaryAction = () => {
-        if (step === 0 && !isDeskRoute) {
-            navigate('/desk');
-            return;
-        }
-        if (step === 0 && isDeskRoute) {
-            updateStep(1);
-            navigate('/interrogate');
-            return;
-        }
-        if (step === 2 && !isCluesRoute) {
-            navigate('/clues');
-            return;
-        }
-        if (step === 2 && isCluesRoute) {
-            updateStep(3);
-            navigate('/interrogate');
+        if (shouldNavigate) {
+            navigate(current.route);
             return;
         }
 
+        if ((current.route === '/report' && location.pathname === '/report') ||
+            (current.route === '/clues' && location.pathname === '/clues')) {
+            next();
+            navigate('/desk');
+            return;
+        }
 
         if (isLast) {
             dismiss();
             return;
         }
-
         next();
     };
 
-    if (!visible) return null;
+    if (!visible || !isSupportedRoute) return null;
+
+    const progressPercent = ((step + 1) / STEPS.length) * 100;
+    const calloutStyle = spotlightRect ? getCalloutStyle(spotlightRect) : null;
+    const activeSpotlight = spotlightRect;
+    const shouldDockLeftForNotes =
+        current.highlightTarget === 'tutorial-notes' &&
+        location.pathname === '/interrogate';
 
     return (
         <>
-            <div onClick={dismiss} className='tutorial-backdrop' />
+            {isHighlightStep && activeSpotlight && (
+                <div className='tutorial-spotlight-layer' aria-hidden='true'>
+                    <div
+                        className='tutorial-spotlight-hole'
+                        style={{
+                            left: activeSpotlight.left - 8,
+                            top: activeSpotlight.top - 8,
+                            width: activeSpotlight.width + 16,
+                            height: activeSpotlight.height + 16,
+                        }}
+                    />
+                    <div
+                        className='tutorial-spotlight-pulse'
+                        style={{
+                            left: activeSpotlight.left - 8,
+                            top: activeSpotlight.top - 8,
+                            width: activeSpotlight.width + 16,
+                            height: activeSpotlight.height + 16,
+                        }}
+                    />
+                    {calloutStyle && (
+                        <div
+                            className='tutorial-spotlight-callout'
+                            style={{
+                                left: calloutStyle.left,
+                                top: calloutStyle.top,
+                            }}
+                        >
+                            <div className='tutorial-spotlight-callout-label'>Highlighted</div>
+                            <p>{current.highlightTitle}</p>
+                        </div>
+                    )}
+                </div>
+            )}
 
-            <div role="dialog" aria-modal="true" className='tutorial-modal'>
-                <div key={step}>
-                    <span>{current.icon}</span>
+            <section
+                className={`tutorial-dock ${shouldDockLeftForNotes ? 'tutorial-dock--left' : ''}`}
+                aria-live='polite'
+            >
+                <div className='tutorial-dock-header'>
+                    <span className='tutorial-step-chip'>{current.badge}</span>
+                    <button className='tutorial-skip-link' onClick={dismiss}>Skip</button>
+                </div>
+
+                <div className='tutorial-dock-progress'>
+                    <span>Step {step + 1} / {STEPS.length}</span>
+                    <div className='tutorial-progress-track'>
+                        <span
+                            className='tutorial-progress-fill'
+                            style={{ width: `${progressPercent}%` }}
+                        />
+                    </div>
+                </div>
+
+                <div className='tutorial-card' key={step}>
+                    <div className='tutorial-card-icon'>{current.icon}</div>
                     <h2>{current.title}</h2>
                     {current.description.map((line, i) => (
                         <p key={i}>{line}</p>
                     ))}
                 </div>
 
-                <div>
+                <div className='tutorial-step-dots'>
                     {STEPS.map((_, i) => (
-                        <button key={i} onClick={() => updateStep(i)}>
-                            {i === step ? '●' : '○'}
+                        <button
+                            key={i}
+                            className={i === step ? 'active' : ''}
+                            onClick={() => updateStep(i)}
+                            aria-label={`Jump to step ${i + 1}`}
+                        >
+                            {i + 1}
                         </button>
                     ))}
                 </div>
 
-                <div>
-                    {step > 0 && <button onClick={prev}>← Back</button>}
-                    <button onClick={dismiss}>Skip tutorial</button>
-                    <button onClick={handlePrimaryAction}>{primaryActionLabel}</button>
+                <div className='tutorial-actions'>
+                    <button onClick={prev} disabled={step === 0}>Back</button>
+                    <button className='tutorial-primary-btn' onClick={handlePrimaryAction}>{primaryActionLabel}</button>
                 </div>
-            </div>
+            </section>
         </>
     );
 }

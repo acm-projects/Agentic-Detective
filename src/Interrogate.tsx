@@ -39,6 +39,7 @@ interface InterrogateImageProp {
   title?: string;
   style?: React.CSSProperties;
   onClick?: () => void;
+  tutorialId?: string;
 }
 
 interface InterrogatePanelProp {
@@ -47,6 +48,7 @@ interface InterrogatePanelProp {
   title?: string;
   style?: React.CSSProperties;
   onClick?: () => void;
+  tutorialId?: string;
 }
 
 // ── Draggable hook ─────────────────────────────────────
@@ -82,7 +84,7 @@ function useDraggableModal(initialPos: { x: number; y: number }) {
 }
 
 // Tooltip
-function InterrogateImagePropWithToolTip( { src, alt, tooltip, className, style, title, onClick}: InterrogateImageProp) {
+function InterrogateImagePropWithToolTip( { src, alt, tooltip, className, style, title, onClick, tutorialId}: InterrogateImageProp) {
   return (
     <Tooltip<HTMLImageElement> 
       content={tooltip} 
@@ -98,6 +100,7 @@ function InterrogateImagePropWithToolTip( { src, alt, tooltip, className, style,
           ref={ref}
           aria-label={title ?? tooltip}
           style={style}
+          data-tutorial-id={tutorialId}
           {...getReferenceProps()}
           onClick={onClick}
         />
@@ -106,7 +109,7 @@ function InterrogateImagePropWithToolTip( { src, alt, tooltip, className, style,
   )
 }
 
-function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick }: InterrogatePanelProp) {
+function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick, tutorialId }: InterrogatePanelProp) {
   return (
     <Tooltip<HTMLDivElement>
       content={tooltip}
@@ -120,6 +123,7 @@ function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick
           ref={ref}
           aria-label={title ?? tooltip}
           style={style}
+          data-tutorial-id={tutorialId}
           {...getReferenceProps()}
           onClick={onClick}
         />
@@ -129,6 +133,10 @@ function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick
 }
 
 function Interrogate() {
+  const TUTORIAL_KEY = 'tutorialSeen';
+  const TUTORIAL_STEP_KEY = 'tutorialStep';
+  const TUTORIAL_READY_KEY = 'tutorialReadyAfterReport';
+  const TUTORIAL_DESK_ENTERED_KEY = 'tutorialDeskEntered';
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const {
@@ -153,8 +161,8 @@ function Interrogate() {
   const [showNotebook, setShowNotebook] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
+  const [tutorialVersion, setTutorialVersion] = useState(0);
   const [selectedSuspicionLevel, setSelectedSuspicionLevel] = useState<SuspicionLevel | null>(null);
-  const [tutorialOpenOnce, setTutorialOpenOnce] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
@@ -335,10 +343,12 @@ function Interrogate() {
     localStorage.removeItem("lastCaseId");
   };
 
-  const handleOpenTutorial = () => {
-    localStorage.removeItem('tutorialSeen');
-    localStorage.removeItem('tutorialStep');
-    setTutorialOpenOnce(prev => prev + 1);
+  const handleReopenTutorial = () => {
+    localStorage.removeItem(TUTORIAL_KEY);
+    localStorage.removeItem(TUTORIAL_STEP_KEY);
+    localStorage.setItem(TUTORIAL_READY_KEY, 'true');
+    localStorage.setItem(TUTORIAL_DESK_ENTERED_KEY, 'true');
+    setTutorialVersion(prev => prev + 1);
   };
 
   useEffect(() => {
@@ -382,11 +392,9 @@ function Interrogate() {
   }
 
   // Avatar index map for vertical suspect picker (1-based)
-  const avatarIndexMap: Record<string, number> = {};
-  profiles.forEach((p, i) => { avatarIndexMap[p.name] = i + 1; });
-
   return (
     <div className='game-container'>
+      <TutorialModal key={tutorialVersion} />
 
       {/* ── Sidebar nav ── */}
       <div className='navigate'>
@@ -395,7 +403,6 @@ function Interrogate() {
         <div className="suspect-avatar-picker">
           <div className="suspect-picker-label">SUSPECTS</div>
           {profiles.map((p) => {
-            const avatarIdx = avatarIndexMap[p.name] ?? 1;
             const isActive = activeSuspectName === p.name;
             return (
               <button
@@ -423,6 +430,8 @@ function Interrogate() {
         <button onClick={() =>
           (document.getElementById('settings') as HTMLDialogElement)?.showModal()
         }>Settings</button>
+
+        
         
         
 
@@ -484,6 +493,10 @@ function Interrogate() {
             </form>
           </dialog>
         )}
+
+        {isFirstTimePlayer && (
+          <button onClick={handleReopenTutorial}>Reopen Tutorial?</button>
+        )}
         
 
         <dialog className="nes-dialog" id="signout-warning">
@@ -511,14 +524,6 @@ function Interrogate() {
             </div>
           </Show>
         </div> */}
-        {isFirstTimePlayer && (
-          <>
-            <button className='tutorial-button' onClick={handleOpenTutorial}>Open tutorial?</button>
-            <TutorialModal key={tutorialOpenOnce} />
-          </>
-          
-          )}
-        
         <div className='notification-board'>
           {isFirstClueDiscovery && (
             <div className="first-clue-guide" role="status" aria-live="polite">
@@ -544,6 +549,7 @@ function Interrogate() {
           tooltip={showNotebook ? 'Close suspect profile' : 'Open suspect profile'}
           onClick={() => setShowNotebook(v => !v)}
           title="Suspect Profile"
+          tutorialId="tutorial-suspect-details"
         />
 
         {/* ── Clickable locker image (replaces bg layer) ── */}
@@ -554,6 +560,7 @@ function Interrogate() {
           tooltip={cluesModalOpen ? 'Close Evidence Locker' : 'Open Evidence Locker' + ' to add Clues to the Conversation'}
           onClick={() => setCluesModalOpen(v => !v)}
           title="Evidence Locker"
+          tutorialId="tutorial-evidence-locker"
         />
 
         <div className='header-row'>
@@ -679,6 +686,7 @@ function Interrogate() {
             tooltip={showNotes ? 'Close Notepad for Suspect' : 'Open Notepad for Suspect'}
             title='Field Notes'
             onClick={() => setShowNotes(v => !v)}
+            tutorialId='tutorial-notes'
           />
         </div>
       </div>

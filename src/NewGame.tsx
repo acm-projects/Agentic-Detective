@@ -275,6 +275,8 @@ function NewGame() {
                 // Fresh case should always re-run tutorial onboarding.
                 localStorage.removeItem('tutorialSeen');
                 localStorage.removeItem('tutorialStep');
+                localStorage.removeItem('tutorialReadyAfterReport');
+                localStorage.removeItem('tutorialDeskEntered');
 
                 setSeed({
                   freeText: personalization,
@@ -292,10 +294,9 @@ function NewGame() {
                   return;
                 }
 
-                const isReloadFlow = await startCase(navigate);
-                if (!isReloadFlow) {
-                  navigate('/desk');
-                }
+                const startCasePromise = startCase(navigate);
+                navigate('/desk');
+                await startCasePromise;
               }}
             >
               SOLVE!
