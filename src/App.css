@@ -356,11 +356,12 @@ body {
   margin-bottom: 18px;
   flex: 1;
   box-sizing: border-box;
+  min-height: 160px;
 }
 
 .chat-photo-placeholder {
   width: 150px;
-  min-height: 70px;
+  min-height: 160px;
   height: 100%;
   border: 2px solid #000;
   background-color: #d3cbb8;
@@ -383,6 +384,7 @@ body {
   color: #000;
   box-sizing: border-box;
   height: 100%;
+  min-height: 140px;
   resize: none;
 }
 
@@ -445,6 +447,103 @@ body {
   display: block;
   transform: rotate(-25deg);
 }
+.duration-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.duration-option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  padding: 6px 8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.62rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.duration-option:hover {
+  transform: translateY(-1px);
+}
+
+.duration-option:focus {
+  outline: none;
+}
+
+.duration-option:focus-visible {
+  outline: 2px solid #101010;
+  outline-offset: 1px;
+  box-shadow: 0 0 0 2px #e7dcc4;
+}
+
+
+.duration-option.active.short {
+  background-color: #1f5c3a;
+}
+
+.duration-option.active.medium {
+  background-color: #c4952a;
+}
+
+.duration-option.active.long {
+  background-color: #7a1f1f;
+}
+
+
+.intensity-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.intensity-option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #000000;
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  padding: 6px 8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.62rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.intensity-option:hover {
+  border-color: #000000;
+  transform: translateY(-1px);
+}
+
+.intensity-option:focus {
+  outline: none;
+}
+
+.intensity-option:focus-visible {
+  outline: 2px solid #101010;
+  outline-offset: 1px;
+  box-shadow: 0 0 0 2px #e7dcc4;
+}
+
+
+.intensity-option.active.g {
+  background-color: #1f5c3a;
+
+}
+
+.intensity-option.active.pg13 {
+  background-color: #c4952a;
+
+}
+
+.intensity-option.active.r {
+  background-color: #7a1f1f;
+}
 
 .difficulty-toggle {
   width: 100%;
@@ -456,8 +555,10 @@ body {
 .difficulty-option {
   background-color: #1a1a1a;
   color: #ffffff;
-  border: 1px solid #6a6a6a;
-  padding: 10px 8px;
+  border: 1px solid #000000;
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+  padding: 6px 8px;
   font-family: 'Press Start 2P', cursive;
   font-size: 0.62rem;
   cursor: pointer;
@@ -465,14 +566,34 @@ body {
 }
 
 .difficulty-option:hover {
-  border-color: #f84a4a;
   transform: translateY(-1px);
+}
+
+.difficulty-option:focus {
+  outline: none;
+}
+
+.difficulty-option:focus-visible {
+  outline: 2px solid #101010;
+  outline-offset: 1px;
+  box-shadow: 0 0 0 2px #e7dcc4;
 }
 
 .difficulty-option.active {
   background-color: #f84a4a;
-  color: #101010;
-  border-color: #a10303;
+  color: #fff;
+}
+
+.difficulty-option.active.easy {
+  background-color: #1f5c3a;
+}
+
+.difficulty-option.active.medium {
+  background-color: #c4952a;
+}
+
+.difficulty-option.active.hard {
+  background-color: #7a1f1f;
 }
 
 .detective-button {

@@ -103,7 +103,7 @@ interface GameState {
 const DEFAULT_SEED: PlayerSeed = {
   freeText: "",
   difficulty: 5,
-  duration: 20,
+  duration: 15,
   intensity: 5,
   userId: "",
   isSignedIn: false,
