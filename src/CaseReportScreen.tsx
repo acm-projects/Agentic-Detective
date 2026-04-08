@@ -166,10 +166,7 @@ export default function CaseReportScreen() {
         </div>
 
           <button className="begin-button" onClick={handleGoToDesk}>
-            <span>Go to Desk</span>
-          </button>
-          <button className="begin-button" onClick={() => navigate("/interrogate")}>
-            <span>Interrogate</span>
+            <span>Go to Your Desk</span>
           </button>
         </div>
       </div>

@@ -174,6 +174,8 @@ function Interrogate() {
   // ── Evidence / clue state ──────────────────────────────
   const allClues = useNotificationStore(s => s.clues);
   const discoveredClues = allClues.filter(c => c.discovered);
+  const lostClueCount = useNotificationStore(s => s.clues.reduce((count, clue) => count + (clue.clueLost ? 1 : 0), 0));
+  const hasLostClues = lostClueCount > 0;
   const ACCUSATION_MIN_CLUES = 2;
   const cluesRemainingForAccusation = Math.max(0, ACCUSATION_MIN_CLUES - discoveredClues.length);
   const accusationLockTooltip = cluesRemainingForAccusation === 1
@@ -181,6 +183,9 @@ function Interrogate() {
     : `Unlock ${cluesRemainingForAccusation} more clues to use this feature.`;
   const [attachedClues, setAttachedClues] = useState<AttachedClue[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
+  // const [recentlyLostClueName, setRecentlyLostClueName] = useState<string | null>(null);
+  const previousLostCountRef = useRef(lostClueCount);
+  const [newClueLost, setNewClueLost] = useState(false)
 
   // ── Three fully independent drag positions ─────────────
   const { pos: cluePos,     onMouseDown: clueMouseDown     } = useDraggableModal({ x: window.innerWidth - 340, y: 120 });
@@ -229,6 +234,24 @@ function Interrogate() {
   useEffect(() => {
     if (noteInputOpen) noteTextareaRef.current?.focus();
   }, [noteInputOpen]);
+
+  useEffect(() => {
+    if (lostClueCount > previousLostCountRef.current) {
+      setNewClueLost(true);
+    }
+
+    previousLostCountRef.current = lostClueCount;
+  }, [lostClueCount]);
+
+  useEffect(() => {
+    if (!newClueLost) return;
+
+    const id = window.setTimeout(() => {
+      setNewClueLost(false);
+    }, 10000);
+
+    return () => window.clearTimeout(id);
+  }, [newClueLost]);
 
   // ── Save note ──────────────────────────────────────────
   const saveNote = useCallback(async () => {
@@ -525,6 +548,14 @@ function Interrogate() {
           </Show>
         </div> */}
         <div className='notification-board'>
+          {hasLostClues && newClueLost && (
+            <div className="first-clue-guide" role="status" aria-live="polite">
+              <p className="first-clue-guide-title">Clue Lost</p>
+              <p className="first-clue-guide-body">
+                You failed the minigame, and have lost a key clue for your investigation.
+              </p>
+            </div>
+          )}
           {isFirstClueDiscovery && (
             <div className="first-clue-guide" role="status" aria-live="polite">
               <p className="first-clue-guide-title">First Clue Discovered</p>
