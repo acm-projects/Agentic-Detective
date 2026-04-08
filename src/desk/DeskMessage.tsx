@@ -5,7 +5,7 @@ import cluebookImg from './assets/themedcluebook.png';
 import cigaretteImg from './assets/newthemedcigarette.png';
 import caseFileImg from './assets/themedcasefile.png';
 import gunImg from './assets/themedgun.png';
-import notebookImg from './assets/themednotebook.png';
+import handcuffs from '../../assets/handcuffs.png';
 import pencilImg from './assets/themedpencil.png';
 import plantImg from './assets/muchbetterthemedplant.png';
 import deskBgImg from './assets/extranewdesk.png';
@@ -60,7 +60,7 @@ function Message() {
         />
 
         {/* 2. CIGARETTE */}
-        <img 
+        <img
           src={cigaretteImg} 
           alt="Cigarette" 
           style={{ ...itemStyle, width: '320px', top: '5px', left: '5%', transform: 'rotate(-50deg)' }} 
@@ -95,9 +95,9 @@ function Message() {
         {/* 5. NOTEBOOK */}
         <img 
           className='evidence-item'
-          src={notebookImg} 
+          src={handcuffs} 
           alt="Notebook" 
-          style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
+          style={{ ...itemStyle, width: '370px', top: '230px', left: '33%', transform: 'rotate(-50deg)' }} 
           onClick={handleSuspectClick}
         />
 
