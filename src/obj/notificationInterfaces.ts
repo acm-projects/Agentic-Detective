@@ -1,40 +1,43 @@
 // This file contains all the required interfaces for the dynamic clue system
 export type NotificationType = "mail"; // add more types to this later
-export type MinigameType = "wordle" | "image-unshuffle";
+export type MinigameType = "wordle" | "image-unshuffle" | "cipher"; // added cipher
 import type { Clue } from '../caseFile';
 
-// This carries info regarding the minigame it contains, the clue it links to, and an expiry timestamp (called a Payload in web dev)
 export interface NotificationPayload {
     id: string;
     type: NotificationType;
     headline: string;
-    flavorText: string;         // flavor text is just some additional text to give the item more "personality"
+    flavorText: string;
     clueId: string;
     minigameType: MinigameType;
     minigameData: MinigameData;
     createdAt: number;
     expiresAt: number;
     opened: boolean;
-    dismissed: boolean;         // keeps track of whether minigame solved or not
+    dismissed: boolean;
 };
 
-export type MinigameData = WordleData | ImageUnshuffleData; // add more minigames here
+export type MinigameData = WordleData | ImageUnshuffleData | CaesarCipherData; // added CaesarCipherData
 
 export interface WordleData {
     kind: 'wordle';
     answer: string;
-    maxNumGuesses: number;      // can adjust this based on difficulty?
-    hint: string;               // a brief phrase/sentence related to the chosen word
+    maxNumGuesses: number;
+    hint: string;
 }
 
 export interface ImageUnshuffleData {
     kind: 'image-unshuffle';
-    imagePath: string;          // path to the image being reconstructed, e.g. 'assets/meme.png'
-    solution: number[];         // canonical solved order [0,1,2,...,8] — the UI owns the scrambled state
-    hint: string;               // a brief phrase hinting at what the image reveals
+    imagePath: string;
+    solution: number[];
+    hint: string;
 }
 
-/*
-  This is the interface for discovered clues, not just all clues in general
-*/
+export interface CaesarCipherData {
+    kind: 'cipher';
+    plain: string;
+    shift: number;
+    clues: string[];
+}
+
 export type { Clue };

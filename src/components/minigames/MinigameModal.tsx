@@ -1,49 +1,56 @@
-import { useNotificationStore, selectOpenMinigame } from '../../store/useNotificationStore'
-import { WordleMinigame } from './wordle/Wordle'
-import { ImageUnshuffleMinigame } from './unshuffle/ImageUnshuffleMinigame'  // ← new
-import type { MinigameData } from '../../obj/notificationInterfaces'
-import styles from './MinigameModal.module.css'
+import { useNotificationStore, selectOpenMinigame } from '../../store/useNotificationStore';
+import { WordleMinigame } from './wordle/Wordle';
+import { ImageUnshuffleMinigame } from './unshuffle/ImageUnshuffleMinigame';
+import { CipherMinigame } from './cipher/CipherMinigame'; // added
+import type { MinigameData } from '../../obj/notificationInterfaces';
+import styles from './MinigameModal.module.css';
 
 const TYPE_TITLES: Record<string, string> = {
   mail: 'Mail Recovered',
-}
+};
 
 const MINIGAME_TITLES: Record<string, string> = {
-  wordle:           'Identify the Keyword',
-  'image-unshuffle': 'Reconstruct the Evidence',  // ← new
-}
+  wordle: 'Identify the Keyword',
+  'image-unshuffle': 'Reconstruct the Evidence',
+  cipher: 'Decipher the Message', // added
+};
 
 function MinigameRenderer({
   data,
   onSuccess,
   onFailure,
 }: {
-  data: MinigameData
-  onSuccess: () => void
-  onFailure: () => void
+  data: MinigameData;
+  onSuccess: () => void;
+  onFailure: () => void;
 }) {
   switch (data.kind) {
     case 'wordle':
-      return <WordleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />
-    case 'image-unshuffle':                        // ← new
-      return <ImageUnshuffleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />
+      return <WordleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
+
+    case 'image-unshuffle':
+      return <ImageUnshuffleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
+
+    case 'cipher': // added
+      return <CipherMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
+
     default:
-      return null
+      return null;
   }
 }
 
 export function MinigameModal() {
-  const active = useNotificationStore(selectOpenMinigame)
-  const resolveMinigame = useNotificationStore(s => s.resolveMinigame)
-  const dismissNotification = useNotificationStore(s => s.dismissNotification)
-  const abandonNotification = useNotificationStore(s => s.abandonMinigame)
+  const active = useNotificationStore(selectOpenMinigame);
+  const resolveMinigame = useNotificationStore(s => s.resolveMinigame);
+  const dismissNotification = useNotificationStore(s => s.dismissNotification);
+  const abandonNotification = useNotificationStore(s => s.abandonMinigame);
 
-  if (!active) return null
+  if (!active) return null;
 
-  const handleSuccess = () => resolveMinigame(active.id, true)
-  const handleAbandon = () => abandonNotification(active.id)
-  const handleFailure = () => resolveMinigame(active.id, false)
-  const handleClose   = () => dismissNotification(active.id)
+  const handleSuccess = () => resolveMinigame(active.id, true);
+  const handleAbandon = () => abandonNotification(active.id);
+  const handleFailure = () => resolveMinigame(active.id, false);
+  const handleClose = () => dismissNotification(active.id);
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
@@ -85,5 +92,5 @@ export function MinigameModal() {
         </div>
       </div>
     </div>
-  )
+  );
 }

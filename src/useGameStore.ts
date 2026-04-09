@@ -62,6 +62,9 @@ interface GameState {
   totalConversationCount: number;
   currentSessionId: string;
   selectedCase: any | null;
+  isFirstClueDiscovery: boolean;
+  numDiscoveredClues: number;
+  accusationUnlocked: boolean;
 
   accusationResult: {
     accusedName: string;
@@ -77,22 +80,25 @@ interface GameState {
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
-  startCase: (navigate: (path: string) => void) => Promise<void>;
+  startCase: (navigate: (path: string) => void) => Promise<boolean>;
   proceedToInvestigation: (navigate: (path: string) => void) => void;
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
- sendMessage: (
-  text: string,
-  displayText: string,
-  displayClues?: { id: string; name: string }[]
-) => Promise<void>;
+  sendMessage: (
+    text: string,
+    displayText: string,
+    displayClues?: { id: string; name: string }[]
+  ) => Promise<void>;
   makeAccusation: (suspectName: string, navigate: (path: string) => void) => void;
   resetGame: () => void;
   markClueDiscovered: (clueId: string) => void;
+  clearFirstClueDiscovery: () => void;
+  clearLoadedCase: () => void;
   tickElapsed: () => void;
   setCurrentSessionId: (sessionId: string) => void; // This function can only be called when the user is signed in
   setSelectedCase: (caseDoc: any) => void;
   setSessions: (sessions: Record<string, SuspectSession>) => void;
+  loadSharedCaseTemplate: (template: any, navigate: (path: string) => void) => Promise<void>;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -116,6 +122,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   totalConversationCount: 0,
   currentSessionId: "",
   selectedCase: null,
+  isFirstClueDiscovery: false,
+  numDiscoveredClues: 0,
+  accusationUnlocked: false,
   accusationResult: null,
   error: null,
   isResponding: false,
@@ -129,7 +138,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     })),
 
   // ── Generate the full case from player seed ──
-  startCase: async (navigate: (path: string) => void) => {
+  startCase: async (navigate: (path: string) => void): Promise<boolean> => {
     const { seed, phase, currentSessionId, selectedCase } = get() as {
       seed: PlayerSeed;
       phase: GamePhase;
@@ -137,14 +146,14 @@ export const useGameStore = create<GameState>((set, get) => ({
       selectedCase: any;
     };
 
-    if (phase === "generating") return;
+    if (phase === "generating") return false;
 
     const isReloadFlow = Boolean(currentSessionId && selectedCase);
 
     if (!isReloadFlow && (!seed || !seed.freeText.trim())) {
       set({ error: "Please enter a case theme before starting." });
       alert("Please enter a case theme before starting.");
-      return;
+      return false;
     }
     set({ phase: "generating", error: null });
 
@@ -153,18 +162,29 @@ export const useGameStore = create<GameState>((set, get) => ({
         const { backend, player } = await generateCaseFile(seed);
         // Select voices server-side (non-blocking — falls back to defaults on failure)
         const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
-        set({ backend, player, phase: "briefing", elapsed: 0, voiceIds});
+        set({
+          backend,
+          player,
+          phase: "briefing",
+          elapsed: 0,
+          numDiscoveredClues: 0,
+          isFirstClueDiscovery: false,
+          voiceIds,
+        });
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues)
         navigate("/report");           // ← instead of set({ phase: "briefing" })
+        return false;
       } catch (err) {
         set({ error: "Failed to generate case.", phase: "setup" });
         console.error(err);
+        return false;
       }
     } else {
         // Reloading existing case from selected save.
         try {
           const { backend, player, restoredSessions, isResolved } = await feedCaseFile(selectedCase);
+          const discoveredCluesCount = player.clues.filter(c => c.discovered).length;
 
           const gameState = selectedCase?.game ?? {};
           const restoredPhase = (gameState.phase as GamePhase) ?? "briefing";
@@ -192,6 +212,8 @@ export const useGameStore = create<GameState>((set, get) => ({
             totalConversationCount: Number(gameState.totalConversationCount ?? 0),
             elapsed: Number(gameState.elapsedSeconds ?? 0),
             phase: isResolved ? "resolved" : restoredPhase,
+            numDiscoveredClues: discoveredCluesCount,
+            isFirstClueDiscovery: discoveredCluesCount === 1,
             accusationResult: restoredAccusationResult,
           });
 
@@ -202,16 +224,20 @@ export const useGameStore = create<GameState>((set, get) => ({
           if (isResolved) {
             console.log(selectedCase?.status)
             navigate("/case-already-resolved-error");
-            return;
+            return true;
           }
 
           navigate("/report");
+          return true;
         } catch (err) {
           set({ error: "Failed to feed case details from MongoDB.", phase: "setup" });
           console.error(err);
+          return false;
         }
         
     }
+
+      return false;
 
 
     
@@ -242,7 +268,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const suspect = backend.suspects.find(s => s.name === suspectName);
     if (!suspect) return;
 
-    const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport);
+    const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport, player.clues);
 
     const model = genAI.getGenerativeModel({
       model: "gemini-3.1-flash-lite-preview",
@@ -546,7 +572,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       )?.gender ?? "female";
 
         
-      //tts streamed better\
+      //tts streamed better
       const voiceId = get().voiceIds[activeSuspectName];
 
       if (voiceId) {
@@ -576,61 +602,88 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Player makes their final accusation ──
   makeAccusation: (accusedName, navigate) => {
-  const { backend, player } = get();
-  const { seed } = get() as { seed: PlayerSeed};
-  if (!backend) return;
+    const ACCUSATION_MIN_CLUES = 2; // <---- adjust based on game difficulty, eg. '2' for easy, '4' for medium, '6' for hard, ...
+    const { backend, player, numDiscoveredClues } = get();
+    const { seed } = get() as { seed: PlayerSeed};
+    if (!backend) return;
+    if (numDiscoveredClues >= ACCUSATION_MIN_CLUES) {
+      set({
+        accusationUnlocked: true,
+      })
+    }
 
-  const trueKiller = backend.suspects.find(s => s.isGuilty);
-  const isCorrect  = accusedName === trueKiller?.name;
+    const trueKiller = backend.suspects.find(s => s.isGuilty);
+    const isCorrect  = accusedName === trueKiller?.name;
 
-    set({
-    phase: "resolved",
-    accusationResult: {
-      accusedName,
-      isCorrect,
-      trueKiller:  trueKiller?.name ?? "Unknown",
-      explanation: backend.storyline.trueSequenceOfEvents,
-    },
-  });
-  console.log("accusation function called");
-  // Save outcome to MongoDB if signed in
-  if (seed.isSignedIn && seed.userId != "") {
-    const sessionId =
-      get().currentSessionId ||
-      get().player?.caseReport?.caseId ||
-      localStorage.getItem("lastSessionId") ||
-      localStorage.getItem("lastCaseId") ||
-      "";
-    console.log("right before mongo fetch");
-    if (sessionId) {
-        fetch(`http://localhost:3000/cases/${sessionId}/outcome`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sessionId,
-            caseId: player?.caseReport?.caseId ?? sessionId,
-            accusedName,
-            isCorrect,
-            trueKiller: trueKiller?.name ?? "Unknown",
-            explanation: backend.storyline.trueSequenceOfEvents,
-          }),
-        }).catch(() => {});
-  }}
-  navigate("/accuse");   // ← navigate AFTER state is set
+      set({
+      phase: "resolved",
+      accusationResult: {
+        accusedName,
+        isCorrect,
+        trueKiller:  trueKiller?.name ?? "Unknown",
+        explanation: backend.storyline.trueSequenceOfEvents,
+      },
+    });
+    console.log("accusation function called");
+    // Save outcome to MongoDB if signed in
+    if (seed.isSignedIn && seed.userId != "") {
+      const sessionId =
+        get().currentSessionId ||
+        get().player?.caseReport?.caseId ||
+        localStorage.getItem("lastSessionId") ||
+        localStorage.getItem("lastCaseId") ||
+        "";
+      console.log("right before mongo fetch");
+      if (sessionId) {
+          fetch(`http://localhost:3000/cases/${sessionId}/outcome`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              sessionId,
+              caseId: player?.caseReport?.caseId ?? sessionId,
+              accusedName,
+              isCorrect,
+              trueKiller: trueKiller?.name ?? "Unknown",
+              explanation: backend.storyline.trueSequenceOfEvents,
+            }),
+          }).catch(() => {});
+    }}
+    navigate("/accuse");   // ← navigate AFTER state is set
 },
 
   markClueDiscovered: (clueId) => {
     set(state => {
-    if (!state.player) return state
-    return {
-      player: {
-        ...state.player,
-        clues: state.player.clues.map(c =>
-          c.id === clueId ? { ...c, discovered: true } : c
-        )
-      }
-    };
+      if (!state.player) return state;
+
+      const targetClue = state.player.clues.find(c => c.id === clueId);
+      if (!targetClue || targetClue.discovered) return state;
+
+      const nextNumDiscovered = state.numDiscoveredClues + 1;
+      return {
+        numDiscoveredClues: nextNumDiscovered,
+        isFirstClueDiscovery: nextNumDiscovered === 1,
+        player: {
+          ...state.player,
+          clues: state.player.clues.map(c =>
+            c.id === clueId ? { ...c, discovered: true } : c
+          )
+        }
+      };
     });
+
+    if (useGameStore.getState().isFirstClueDiscovery) {
+      console.log("YEEHAW FIRST CLAWUE");
+    }
+
+    console.log("num disc cluee: " +useGameStore.getState().numDiscoveredClues)
+  },
+
+  clearFirstClueDiscovery: () => {
+    set({ isFirstClueDiscovery: false });
+  },
+
+  clearLoadedCase: () => {
+    set({ currentSessionId: "", selectedCase: null });
   },
 
   
@@ -645,6 +698,10 @@ export const useGameStore = create<GameState>((set, get) => ({
       activeSuspectName: null,
       sessions: {},
       totalConversationCount: 0,
+      isFirstClueDiscovery: false,
+      numDiscoveredClues: 0,
+      currentSessionId: "",
+      selectedCase: null,
       accusationResult: null,
       error: null,
       isResponding: false,
@@ -665,6 +722,90 @@ export const useGameStore = create<GameState>((set, get) => ({
   setSelectedCase: (caseDoc) => set({ selectedCase: caseDoc }), // stores caseDoc from mongo in zustand
 
   setSessions: (sessions) => set({ sessions }),
+
+  loadSharedCaseTemplate: async (template, navigate) => {
+    try {
+      const currentSeed = get().seed ?? DEFAULT_SEED;
+      const templateSeed = template?.seed ?? {};
+      const mergedSeed: PlayerSeed = {
+        ...DEFAULT_SEED,
+        ...templateSeed,
+        userId: currentSeed.userId ?? "",
+        isSignedIn: currentSeed.isSignedIn ?? false,
+      };
+
+      const initialClues = (template?.caseData?.initialClues ?? []).map((clue: any) => ({
+        ...clue,
+        discovered: Boolean(clue?.discovered ?? false),
+        clueLost: Boolean(clue?.clueLost ?? false),
+      }));
+
+      const backend: CaseFileBackend = {
+        storyline: template.caseData.storyline,
+        suspects: template.caseData.suspects,
+        clues: initialClues,
+      };
+
+      const player: CaseFilePlayer = {
+        characterProfiles: template.caseData.characterProfiles,
+        caseReport: template.caseData.caseReport,
+        clues: initialClues,
+      };
+
+      const voiceIds = await selectVoicesForCase(backend.suspects, mergedSeed.freeText);
+      const sharedSessionId = `SHARE-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+
+      set({
+        phase: "briefing",
+        seed: mergedSeed,
+        backend,
+        player,
+        activeSuspectName: null,
+        sessions: {},
+        totalConversationCount: 0,
+        elapsed: 0,
+        selectedCase: null,
+        accusationResult: null,
+        error: null,
+        isResponding: false,
+        voiceIds,
+        currentSessionId: sharedSessionId,
+      });
+
+      const { useNotificationStore } = await import("./store/useNotificationStore");
+      useNotificationStore.getState().initClues(player.clues);
+
+      if (mergedSeed.isSignedIn && mergedSeed.userId) {
+        fetch('http://localhost:3000/cases/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: sharedSessionId,
+            userId: mergedSeed.userId,
+            seed: mergedSeed,
+            game: {
+              phase: 'briefing',
+              elapsedSeconds: 0,
+              activeSuspectName: null,
+              totalConversationCount: 0,
+            },
+            caseData: {
+              storyline: template.caseData.storyline,
+              suspects: template.caseData.suspects,
+              caseReport: template.caseData.caseReport,
+              characterProfiles: template.caseData.characterProfiles,
+              initialClues,
+            },
+          }),
+        }).catch(() => {});
+      }
+
+      navigate('/report');
+    } catch (err) {
+      console.error('Could not load shared case template:', err);
+      set({ error: 'Could not load shared case template.' });
+    }
+  },
 }));
 
 // ─────────────────────────────────────────────

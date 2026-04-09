@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+.community-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 30px;
+  background-color: #151515;
+  color: #ffffff;
+  font-family: 'Press Start 2P', cursive;
+  border: 2.5px solid #151515;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+}
+
+.community-container h2 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1.5rem;
+  color: #ffffff;
+  margin-bottom: 15px;
+  border-bottom: 3px dashed #f84a4a;
+  padding-bottom: 15px;
+  letter-spacing: 2px;
+}
+
+.community-section {
+  margin: 35px 0;
+  padding: 20px;
+  background-color: #1a1a1a;
+  border-left: 4px solid #f84a4a;
+  border-top: 2px solid #8b2222;
+  border-bottom: 2px solid #8b2222;
+}
+
+.community-section h3 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.85rem;
+  color: #f84a4a;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.community-case-card {
+  background-color: #0f0f0f;
+  border: 2px solid #8b2222;
+  padding: 15px;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  box-shadow: 3px 3px 0 rgba(248, 74, 74, 0.3);
+}
+
+.community-case-card:hover {
+  border-color: #f84a4a;
+  box-shadow: 5px 5px 0 rgba(248, 74, 74, 0.5);
+  transform: translateY(-3px);
+  background-color: #1a1a1a;
+}
+
+.community-case-card h4 {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.80rem;
+  margin: 0 0 10px 0;
+  color: #f84a4a;
+  letter-spacing: 1px;
+}
+
+.case-author {
+  font-size: 0.8rem;
+  color: #aaa;
+  margin: 5px 0;
+  font-style: italic;
+  font-family: 'Courier Prime', monospace;
+}
+
+.community-case-code {
+  font-size: 0.72rem;
+  color: #f5c2c2;
+  margin: 4px 0 8px;
+  font-family: 'Courier Prime', monospace;
+}
+
+.community-case-rating {
+  font-size: 0.72rem;
+  color: #ffd27d;
+  margin: 0 0 10px;
+  font-family: 'Courier Prime', monospace;
+}
+
+.case-description {
+  font-size: 0.8rem;
+  color: #ccc;
+  margin: 12px 0 15px 0;
+  line-height: 1.5;
+  font-family: 'Courier Prime', monospace;
+}
+
+.community-case-card .detective-button {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.6rem;
+  margin-top: 8px;
+}
+
+.community-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.community-list li {
+  padding: 12px;
+  border-bottom: 1px solid #333;
+  font-size: 1rem;
+  color: #ccc;
+  font-family: 'Courier Prime', monospace;
+  letter-spacing: 1px;
+}
+
+.community-list li:last-child {
+  border-bottom: none;
+}
+
+.community-container > .detective-button {
+  width: 100%;
+  padding: 12px;
+  font-size: 0.65rem;
+  margin-top: 15px;
+}
+
+.community-share-help {
+  margin: 0 0 0.8rem;
+  color: #ccc;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+}
+
+.community-share-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.community-share-input {
+  flex: 1;
+  min-width: 0;
+  background: #101010;
+  color: #fff;
+  border: 1px solid #8b2222;
+  padding: 10px;
+  font-family: 'Courier Prime', monospace;
+}
+
+.community-share-input:focus {
+  outline: none;
+  border-color: #f84a4a;
+  box-shadow: 0 0 0 2px rgba(248, 74, 74, 0.2);
+}
+
+.community-share-error {
+  color: #ff7777;
+  margin-top: 0.65rem;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .community-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .community-container {
+    padding: 20px;
+  }
+
+  .community-container h2 {
+    font-size: 1.2rem;
+  }
+
+  .community-section h3 {
+    font-size: 0.75rem;
+  }
+
+  .community-case-card {
+    box-shadow: 2px 2px 0 rgba(248, 74, 74, 0.2);
+  }
+
+  .community-case-card:hover {
+    box-shadow: 3px 3px 0 rgba(248, 74, 74, 0.4);
+  }
+}
+
+
+/* ════════════════════════════════════════════
+   COMMUNITY BUTTON & MODAL
+════════════════════════════════════════════ */
+.community-button {
+  /* position: fixed;
+  bottom: 20px;
+  left: 20px; */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #872828;
+  color: #ecf0f1;
+  border: 2px solid #4b0000;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-family: 'Press Start 2P', cursive;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 100;
+}
+
+.community-button:hover {
+  background-color: #4b0000;
+  border-color: #320707;
+  transform: scale(1.05);
+}
+
+.community-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+}
+
+.community-modal[open] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.community-modal-content {
+  position: relative;
+  background-color: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.community-modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.community-modal-close:hover {
+  color: #000;
+}
