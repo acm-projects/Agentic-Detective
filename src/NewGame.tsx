@@ -9,6 +9,21 @@ import detectivePhoto from './assets/detective.png';
 import loadingImage from './assets/loadingimage.png';
 import Community from './Community';
 
+const TIP_EXAMPLES = [
+  "You can find your saved games through your \"Manage Account\" page!",
+  "Remember to collect as many clues as you can in order to make an informed decision!",
+  "Remember, you can only accuse once. If you get it wrong, it's game over.",
+  "If you wish to save your game, remember to sign in to pick-up where you left off!",
+  "Pay close attention during interrogations — suspects don't always tell the whole truth.",
+  "Contradictions between suspect statements are often your biggest breakthroughs.",
+  "Don't rush to accuse. Gather every clue before you point the finger.",
+  "Revisit earlier clues after each interrogation — new context can change everything.",
+  "Some clues only become relevant once you've spoken to the right suspect.",
+  "A solid alibi isn't always airtight. Look for the cracks.",
+  "Take note of who knew whom before the crime — motive is just as important as opportunity.",
+  "When in doubt, interrogate again. Suspects may reveal more as pressure builds.",
+] as const;
+
 const PROMPT_EXAMPLES = [
   "a chicken farmer",
   "an evil scientist from Danville",
@@ -121,7 +136,8 @@ function NewGame() {
   };
 
   return (
-    <div className="container">
+    <div className="newgame-screen">
+    <div className="container newgame-container">
       <audio
         ref={audioRef}
         src="/assets/mondamusic-spy-detective-robbery-music-491671.mp3"
@@ -168,6 +184,10 @@ function NewGame() {
                   <button className="detective-button small-btn">Sign Up</button>
                 </SignUpButton>
               </div>
+
+              <p className="saved-games-hint">
+                Sign in, open Manage Account, then select Your Saved Games to continue a case.
+              </p>
             </Show>
 
             <Show when="signed-in">
@@ -193,6 +213,10 @@ function NewGame() {
                   </UserButton>
                 </div>
               </div>
+
+              <p className="saved-games-hint">
+                Need to load a previous case? Open Manage Account and choose Your Saved Games.
+              </p>
             </Show>
              {/* Community Button - Bottom Left */}
               <button
@@ -359,7 +383,6 @@ function NewGame() {
       
 
       
-
             <button
               onClick={toggleMute}
               className="detective-button mute-button"
@@ -369,10 +392,21 @@ function NewGame() {
           </div>
         </div>
       </div>
+      <br />
+
+      <div className='tip-section'>
+        <div className='tip-title'>
+          Gameplay Tip:
+        </div>
+        <div className='tip-content'>
+          <h6> {TIP_EXAMPLES[Math.floor(Math.random() * TIP_EXAMPLES.length)]}</h6>
+        </div>
+      </div>
 
       <div className="footer-strip">
         <p className="footer-text">Published Since 1887 · All Rights Reserved · Printed Daily Except Sundays & Public Holidays</p>
       </div>
+    </div>
     </div>
     
     );
