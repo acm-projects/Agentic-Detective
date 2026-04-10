@@ -186,7 +186,7 @@ function NewGame() {
               </div>
 
               <p className="saved-games-hint">
-                Sign in, open Manage Account, then select Your Saved Games to continue a case.
+                Sign in, open "Manage Account", then select Your Saved Games to continue a case.
               </p>
             </Show>
 
