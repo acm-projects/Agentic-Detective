@@ -9,7 +9,7 @@ import detectivePhoto from './assets/detective.png';
 import loadingImage from './assets/loadingimage.png';
 import Community from './Community';
 
-const TIP_EXAMPLES = [
+export const TIP_EXAMPLES = [
   "You can find your saved games through your \"Manage Account\" page!",
   "Remember to collect as many clues as you can in order to make an informed decision!",
   "Remember, you can only accuse once. If you get it wrong, it's game over.",
@@ -71,6 +71,7 @@ function NewGame() {
   const [showCommunity, setShowCommunity] = useState(false);
   const [promptExampleShown, setPromptExampleShown] = useState(false);
   const [promptExample, setPromptExample] = useState("");
+  const [tipExample, setTipExample] = useState("");
 
   const { userId, isSignedIn, isLoaded } = useAuth();
 
@@ -79,6 +80,11 @@ function NewGame() {
     }, [clearLoadedCase]);
 
     // Add code to assign prompt example to a variable
+        useEffect(() => {
+          const randomTipIndex = Math.floor(Math.random() * TIP_EXAMPLES.length);
+          setTipExample(TIP_EXAMPLES[randomTipIndex]);
+        }, []);
+
     useEffect(() => {
       if (promptExampleShown) return;
 
@@ -399,7 +405,7 @@ function NewGame() {
           Gameplay Tip:
         </div>
         <div className='tip-content'>
-          <h6> {TIP_EXAMPLES[Math.floor(Math.random() * TIP_EXAMPLES.length)]}</h6>
+          <h6>{tipExample}</h6>
         </div>
       </div>
 
