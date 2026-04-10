@@ -13,6 +13,7 @@ import letterImg from './assets/lettersclue.png';
 import jewelImg from './assets/jewel.png';
 import yellowstickyImg from './assets/yellowsticky.png';
 import { useNotificationStore } from './store/useNotificationStore';
+import TutorialModal from './components/tutorial-modal/Tutorial';
 
 const CLUE_PROPS = [
   { src: jewelImg,      width: '220px', bottom: '8%',  left: '55%',  transform: 'translateX(-50%) rotate(15deg)' },
@@ -59,18 +60,20 @@ export default function ClueBook() {
   const selectedIndex = selected ? clues.findIndex(c => c.id === selected.id) : -1;
 
   return (
-    <div className="main-container" style={{
-      width: '100%',
-      height: '100dvh',
-      minHeight: '100vh',
-      position: 'fixed',
-      inset: 0,
-      backgroundImage: `url(${deskBgImg})`,
-      backgroundSize: '112% 112%',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      overflow: 'hidden',
-    }}>
+    <>
+      <TutorialModal />
+      <div className="main-container" style={{
+        width: '100%',
+        height: '100dvh',
+        minHeight: '100vh',
+        position: 'fixed',
+        inset: 0,
+        backgroundImage: `url(${deskBgImg})`,
+        backgroundSize: '112% 112%',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        overflow: 'hidden',
+      }}>
 
       <div className="clue-board-title">CLUE BOARD</div>
       <div className="pixel-title-underline" />
@@ -184,10 +187,11 @@ export default function ClueBook() {
         )}
       </div>
 
-      <button className="back-btn" onClick={() => navigate('/desk')}>
-        Back to desk
-      </button>
+        <button className="back-btn" onClick={() => navigate('/desk')}>
+          Back to desk
+        </button>
 
-    </div>
+      </div>
+    </>
   );
 }

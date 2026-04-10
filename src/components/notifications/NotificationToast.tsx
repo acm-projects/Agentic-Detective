@@ -79,6 +79,7 @@ function Toast({ notification }: ToastProps) {
  
   const handleOpen = () => {
     openNotification(notification.id)
+    console.log("Opening notification, testing notification id: " + notification.id); // remove this later, just for testing
   }
   const handleDismiss = (e: React.MouseEvent) => {
     e.stopPropagation()

@@ -12,8 +12,9 @@ import Community from './Community';
 function NewGame() {
   const setSeed = useGameStore((s) => s.setSeed);
   const startCase = useGameStore((s) => s.startCase);
-  const navigate = useNavigate();
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const clearLoadedCase = useGameStore((s) => s.clearLoadedCase);
+    const navigate = useNavigate();
+    const audioRef = useRef<HTMLAudioElement>(null);
 
   const [personalization, setPersonalization] = useState('');
   const [timePeriod, setTimePeriod] = useState(10);
@@ -24,9 +25,15 @@ function NewGame() {
 
   const { userId, isSignedIn, isLoaded } = useAuth();
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    useEffect(() => {
+      clearLoadedCase();
+    }, [clearLoadedCase]);
+
+
+    // Setup background music on mount
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
 
     audio.volume = 0.3;
 
@@ -262,8 +269,12 @@ function NewGame() {
           <div className="solve-row">
             <button
               className="detective-button solve-button"
-              onClick={() => {
+              onClick={async () => {
                 playClickSound();
+
+                // Fresh case should always re-run tutorial onboarding.
+                localStorage.removeItem('tutorialSeen');
+                localStorage.removeItem('tutorialStep');
 
                 setSeed({
                   freeText: personalization,
@@ -281,8 +292,10 @@ function NewGame() {
                   return;
                 }
 
-                startCase(navigate);
-                navigate('/desk');
+                const isReloadFlow = await startCase(navigate);
+                if (!isReloadFlow) {
+                  navigate('/desk');
+                }
               }}
             >
               SOLVE!

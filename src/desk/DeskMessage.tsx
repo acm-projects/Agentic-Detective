@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react'
 import { useGameStore } from '../useGameStore';
+import { Tooltip } from '../components/tooltip/Tooltip';
 import cluebookImg from './assets/themedcluebook.png';
 import cigaretteImg from './assets/newthemedcigarette.png';
 import caseFileImg from './assets/themedcasefile.png';
@@ -11,14 +12,43 @@ import plantImg from './assets/muchbetterthemedplant.png';
 import deskBgImg from './assets/extranewdesk.png';
 import LoadingScreen from '../LoadingScreen';
 import phoneImg from './assets/2themedcellphone.png';
+import TutorialModal from '../components/tutorial-modal/Tutorial';
 import './desk.css';
-import ScrabbleImg from './assets/newscrabble.png';
+import ScrabbleImg from './assets/newscrabble.png'; 
 
+interface DeskItemProps {
+  src: string;
+  alt: string;
+  tooltip: string;
+  className?: string;
+  style: React.CSSProperties;
+  onClick?: () => void;
+}
 
+function DeskItemWithTooltip({ src, alt, tooltip, className, style, onClick }: DeskItemProps) {
+  return (
+    <Tooltip<HTMLImageElement> content={tooltip} className="desk-tooltip" placement="bottom" offsetPx={3}>
+      {({ ref, getReferenceProps }) => (
+        <img
+          className={className}
+          src={src}
+          alt={alt}
+          style={style}
+          ref={ref}
+          {...getReferenceProps()}
+          onClick={onClick}
+        />
+      )}
+    </Tooltip>
+  );
+}
 
 function Message() {
   const { phase, goToBriefing, makeAccusation, player } = useGameStore();
   const navigate = useNavigate();
+  const { isFirstClueDiscovery, clearFirstClueDiscovery } = useGameStore();
+
+
   const profiles = player?.characterProfiles ?? [];
 
   const [suspectsOpen, setSuspectsOpen] = useState(false);
@@ -40,6 +70,7 @@ function Message() {
   };
 
   const handleClueBookClick = () => {
+    clearFirstClueDiscovery();
     navigate('/clues');
   };
 
@@ -49,6 +80,7 @@ function Message() {
 
   return (
     <>
+      <TutorialModal />
       <div style={{ width: '100vw', height: '100vh', position: 'relative', backgroundImage: `url(${deskBgImg})`, backgroundSize: 'cover' }}>
         {caseCode && (
           <div style={{
@@ -69,82 +101,102 @@ function Message() {
         )}
         
         {/* 1. CLUE BOOK */}
-        <img
-          className="evidence-item"
-          src={cluebookImg}
-          alt="Clue Book"
-          style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }}
-          onClick={handleClueBookClick}
-        />
+        <div className='icons'>
+          {/* 1. CLUE BOOK */}
+          <DeskItemWithTooltip
+            className={isFirstClueDiscovery ? 'evidence-item-first-discovery' : 'evidence-item'}
+            src={cluebookImg} 
+            alt="Clue Book" 
+            tooltip="Clue Book: review discovered evidence."
+            style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }}
+            onClick={handleClueBookClick}
+          />
 
-        {/* 2. CIGARETTE */}
-        <img
-          src={cigaretteImg}
-          alt="Cigarette"
-          style={{ ...itemStyle, width: '320px', top: '5px', left: '5%', transform: 'rotate(-50deg)' }}
-        />
+          {/* 2. CIGARETTE */}
+          <img 
+            src={cigaretteImg} 
+            alt="Cigarette" 
+            style={{ ...itemStyle, width: '320px', top: '5px', left: '5%', transform: 'rotate(-50deg)' }} 
 
-        {/* 3. SCRABBLE */}
-        <img
-          src={ScrabbleImg}
-          alt="Scrabble"
-          style={{ ...itemStyle, width: '340px', top: '1px', left: '67%' }}
-        />
+          />
 
-        {/* 4. CASE FILE */}
-        <img
+          
+          {/* 2. SCRABBLE */}
+          <img 
+            src={ScrabbleImg} 
+            alt="Scrabble" 
+            style={{ ...itemStyle, width: '340px', top: '1px', left: '67%'}} 
+
+          />
+
+          {/* 3. CASE FILE */}
+          <DeskItemWithTooltip
+            className='evidence-item'
+            src={caseFileImg} 
+            alt="Case File" 
+            tooltip="Case File: open your report and briefing."
+            style={{ ...itemStyle, width: '490px', top: '270px', left: '5%', transform: 'rotate(-25deg)', zIndex: 10 }} 
+            onClick={handleCaseFileClick}
+          />
+
+          {/* 4. GUN */}
+          <img 
+            src={gunImg} 
+            alt="Gun" 
+            style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 
+          />
+
+          {/* 5. NOTEBOOK */}
+          <DeskItemWithTooltip
+            className='evidence-item'
+            src={notebookImg} 
+            alt="Notebook" 
+            tooltip="Notebook: inspect all suspect profiles."
+            style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
+            onClick={() => setSuspectsOpen(true)}
+          />
+
+          {/* 6. PENCIL */}
+          <img 
+            src={pencilImg} 
+            alt="Pencil" 
+            style={{ ...itemStyle, width: '200px', top: '315px', left: '48%', transform: 'rotate(-3deg)' }} 
+          />
+
+          {/* 11. PLANT */}
+          <img 
+            src={plantImg} 
+            alt="Office Plant" 
+            style={{ ...itemStyle, width: '330px', top: '-12px', left: '30%', transform: 'rotate(360deg)' }}
+          />
+
+          {/* 12. PHONE */}
+        <DeskItemWithTooltip
           className='evidence-item'
-          src={caseFileImg}
-          alt="Case File"
-          style={{ ...itemStyle, width: '490px', top: '270px', left: '5%', transform: 'rotate(-25deg)', zIndex: 10 }}
-          onClick={handleCaseFileClick}
+            src={phoneImg} 
+            alt="Cellphone" 
+            tooltip="Cellphone: answer and continue interrogation."
+            style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
+            onClick={() => {
+              const audio = new Audio("http://localhost:5555/api/voice");
+              audio.play();
+              handlePhoneClick();
+            }}
         />
-
-        {/* 5. GUN */}
-        <img
-          src={gunImg}
-          alt="Gun"
-          style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }}
-        />
-
-        {/* 6. NOTEBOOK — opens suspects modal */}
-        <img
-          className='evidence-item'
-          src={notebookImg}
-          alt="Notebook"
-          style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)', zIndex: 1 }}
-          onClick={() => setSuspectsOpen(true)}
-        />
-
-        {/* 7. PENCIL */}
-        <img
-          src={pencilImg}
-          alt="Pencil"
-          style={{ ...itemStyle, width: '200px', top: '315px', left: '48%', transform: 'rotate(-3deg)' }}
-        />
-
-        {/* 8. PLANT */}
-        <img
-          src={plantImg}
-          alt="Office Plant"
-          style={{ ...itemStyle, width: '330px', top: '-12px', left: '30%', transform: 'rotate(360deg)' }}
-        />
-
-        {/* 9. PHONE */}
-        <img
-          className='evidence-item'
-          src={phoneImg}
-          alt="Cellphone"
-          style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
-          onClick={() => {
-            const audio = new Audio("http://localhost:5555/api/voice");
-            audio.play();
-            handlePhoneClick();
-          }}
-        />
+        </div>
+      <div className='custom-message'>
+        {isFirstClueDiscovery && (
+          <div role="status" aria-live="polite">
+            <p>First Clue Discovered</p>
+            <p>
+              <strong>Step 1:</strong> Click the highlighted Clue Book button above. <br /> <br />
+              <strong>Step 2:</strong> Open the Clues page from the Clue Book to review your newly acquired evidence.
+            </p>
+          </div>
+        )}
       </div>
-
-      {/* ── Suspects Modal Overlay ── */}
+    </div>
+    {/* ── Suspects Modal Overlay ── */}
       {suspectsOpen && (
         <>
           {/* Dimmed backdrop — click to close */}
@@ -197,7 +249,7 @@ function Message() {
             </button>
 
             {/* Suspects component rendered inside modal */}
-            <Suspects />
+            {/*<Suspects />*/}
           </div>
         </>
       )}
