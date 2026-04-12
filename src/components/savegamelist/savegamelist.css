@@ -1,46 +1,161 @@
-.user-stats {
-    padding-left: 2px;
-    margin-left: 2px
+.saved-games-panel {
+    width: min(860px, 92vw);
+        max-width: 960px;
+    margin: 0 auto;
+    padding: 24px;
+        background-color: #e7dcc4;
+        background-image:
+            url("https://www.transparenttextures.com/patterns/paper-fibers.png"),
+            url("https://www.transparenttextures.com/patterns/noise.png");
+        background-repeat: repeat, repeat;
+        border: 3px solid #101010;
+        box-shadow:
+            inset 0 0 80px rgba(0, 0, 0, 0.07),
+            0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.saved-games-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    border-bottom: 3px double #101010;
+    padding-bottom: 12px;
+}
+
+.title-text {
+    margin: 0;
+    color: #101010;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.saved-games-refresh {
+    border: 2px solid #000000;
+    background: #c93b35;
+    color: #f1eadb;
+    padding: 8px 12px;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.56rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 2px 2px 0 #000000;
+}
+
+.saved-games-refresh:hover:not(:disabled) {
+    background: #a52d29;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #000000;
+}
+
+.saved-games-refresh:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.saved-games-refresh:focus-visible,
+.saved-game-card:focus-visible {
+    outline: 3px solid #fcd34d;
+    outline-offset: 2px;
+}
+
+.saved-games-count,
+.saved-games-message,
+.saved-games-error {
+    margin: 8px 0 10px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.82rem;
+}
+
+.saved-games-count,
+.saved-games-message {
+    color: #101010;
+}
+
+.saved-games-error {
+    color: #a52828;
 }
 
 .saved-games-list {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    align-items: stretch;
+    list-style: none;
+    padding: 10px 0 0;
+    margin: 0;
+}
+
+.saved-games-list li {
+    display: flex;
 }
 
 .saved-game-card {
-    cursor: 'pointer';
-    background-color: #1a1a1a;
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    cursor: pointer;
+    background-color: #f1eadb;
     border: 2px solid #000000;
-    box-shadow: 0px 2px 0px #ff6666;
-    border-radius: 0px;
-    padding: 16px 20px;
-    margin-top: 12px;
-    transition: 0.1s;
-    max-width: 300px;
+    box-shadow: 2px 2px 0 #101010;
+    border-radius: 0;
+    padding: 20px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 10px;
 }
 
 .saved-game-card:hover {
-    transform: scale(1.025);
-    box-shadow: 0px 2px 0px #ffffff;
+    background-color: #e8dec8;
+    box-shadow: 3px 3px 0 #000000;
+    transform: translate(-1px, -1px);
 }
 
 .saved-game-card.selected {
-    background-color: #2f902f;
-    border-color: #145214;
-    box-shadow: 0px 2px 0px #9cff9c;
-
+    background-color: #d8e4cf;
+    border-color: #1f5c3a;
+    box-shadow: 2px 2px 0 #1f5c3a;
 }
 
 .card-title-text {
-    color: #ff6666
+    margin: 0 0 8px;
+    color: #101010;
+    font-size: 0.8rem;
+    line-height: 1.5;
 }
 
 .card-title-text.selected {
-    color: #fbff00
+    color: #1f5c3a;
 }
 
-.title-text {
-    font-weight: bold;
+.saved-game-meta,
+.saved-game-submeta {
+    margin: 0;
+    font-family: 'Courier Prime', monospace;
+}
+
+.saved-game-meta {
+    color: #101010;
+    font-size: 0.82rem;
+}
+
+.saved-game-submeta {
+    color: #3c3c3c;
+    font-size: 0.74rem;
+    margin-top: 3px;
+}
+
+@media (max-width: 760px) {
+    .saved-games-list {
+        grid-template-columns: 1fr;
+    }
+
+    .title-text {
+        font-size: 0.75rem;
+    }
 }

@@ -68,6 +68,7 @@ function NewGame() {
   const [intensity, setIntensity] = useState<2 | 5 | 9>(5);
   const [difficulty, setDifficulty] = useState<1 | 2 | 3>(2);
   const [isMuted, setIsMuted] = useState(false);
+  const [showSavedGames, setShowSavedGames] = useState(false);
   const [showCommunity, setShowCommunity] = useState(false);
   const [promptExampleShown, setPromptExampleShown] = useState(false);
   const [promptExample, setPromptExample] = useState("");
@@ -142,7 +143,8 @@ function NewGame() {
   };
 
   return (
-    <div className="newgame-screen">
+    <>
+    <div className={`newgame-screen ${showSavedGames ? 'saved-games-open' : ''}`}>
     <div className="container newgame-container">
       <audio
         ref={audioRef}
@@ -192,7 +194,7 @@ function NewGame() {
               </div>
 
               <p className="saved-games-hint">
-                Sign in, open "Manage Account", then select Your Saved Games to continue a case.
+                You can save your games after you sign in!
               </p>
             </Show>
 
@@ -201,28 +203,10 @@ function NewGame() {
                 <div className="user-greeting">
                   Hello,&nbsp;
                   <UserButton userProfileMode="modal" showName>
-                    <UserButton.UserProfilePage
-                      label="Your Saved Games"
-                      url="testpage"
-                      labelIcon={
-                        <FaSave
-                          style={{
-                            fontSize: '1rem',
-                            marginBottom: '0.25rem',
-                            verticalAlign: 'middle'
-                          }}
-                        />
-                      }
-                    >
-                      <SavedGamesList />
-                    </UserButton.UserProfilePage>
+                    
                   </UserButton>
                 </div>
               </div>
-
-              <p className="saved-games-hint">
-                Need to load a previous case? Open Manage Account and choose Your Saved Games.
-              </p>
             </Show>
              {/* Community Button - Bottom Left */}
               <button
@@ -232,6 +216,24 @@ function NewGame() {
               >
                 <FaUsers /> Community
               </button>
+
+              <button 
+                onClick={() => {
+                  if (!isSignedIn) {
+                    alert('Please sign in to view your saved games.');
+                    return;
+                  }
+                  setShowSavedGames(true);
+                }}
+                className="saved-games-button"
+                title="View Saved Games"
+                aria-haspopup="dialog"
+                aria-controls="saved-games-dialog"
+              >
+                <FaSave /> Saved Games
+              </button>
+
+
 
               {/* Community Modal */}
               <dialog 
@@ -254,7 +256,8 @@ function NewGame() {
                   <Community onCloseModal={() => setShowCommunity(false)} />
                 </div>
               </dialog>
-          </div>
+
+            </div>
         </div>
 
        
@@ -400,7 +403,8 @@ function NewGame() {
       </div>
       <br />
 
-      <div className='tip-section'>
+      {!showSavedGames && (
+        <div className='tip-section'>
         <div className='tip-title'>
           Gameplay Tip:
         </div>
@@ -408,14 +412,42 @@ function NewGame() {
           <h6>{tipExample}</h6>
         </div>
       </div>
+      )}
+      
 
       <div className="footer-strip">
         <p className="footer-text">Published Since 1887 · All Rights Reserved · Printed Daily Except Sundays & Public Holidays</p>
       </div>
     </div>
     </div>
+
+    {/* Saved Games Modal — must be outside .container to avoid stacking context issues */}
+    {showSavedGames && (
+      <dialog
+        id="saved-games-dialog"
+        className="saved-games-modal"
+        open={showSavedGames}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowSavedGames(false);
+          }
+        }}
+      >
+        <div className="saved-games-modal-content">
+          <button
+            className="saved-games-modal-close"
+            onClick={() => setShowSavedGames(false)}
+            aria-label="Close saved games modal"
+          >
+            ✕
+          </button>
+          <SavedGamesList onCaseSelected={() => setShowSavedGames(false)} />
+        </div>
+      </dialog>
+    )}
     
-    );
+    </>
+  );
 
 
 
