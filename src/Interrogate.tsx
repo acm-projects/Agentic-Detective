@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useContext, useCallback } from 'react';
+import { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from './useGameStore';
 import { StressBar } from './StressBar';
@@ -149,7 +149,7 @@ function Interrogate() {
 
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
-  const profiles = player?.characterProfiles ?? [];
+  const profiles = useMemo(() => player?.characterProfiles ?? [], [player?.characterProfiles]);
   const [input, setInput] = useState('');
   const [showNotebook, setShowNotebook] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
@@ -191,6 +191,12 @@ function Interrogate() {
 
   const timerPaused = useNotificationStore(s => s.timerPaused);
   const sessionId = player?.caseReport?.caseId ?? '';
+  const closeNotesModal = () => {
+    setShowNotes(false);
+    setNoteInputOpen(false);
+    setNoteDraft('');
+    setNotesError(null);
+  };
 
   // ── Load notes ─────────────────────────────────────────
   const loadNotes = useCallback(async () => {
@@ -259,7 +265,7 @@ function Interrogate() {
     if (timerPaused) return;
     const id = setInterval(tickElapsed, 1000);
     return () => clearInterval(id);
-  }, [timerPaused, player]);
+  }, [timerPaused, tickElapsed]);
 
   useNotificationScheduler(elapsed, 600_000, !!player);
 
@@ -387,10 +393,6 @@ function Interrogate() {
     );
   }
 
-  // Avatar index map for vertical suspect picker (1-based)
-  const avatarIndexMap: Record<string, number> = {};
-  profiles.forEach((p, i) => { avatarIndexMap[p.name] = i + 1; });
-
   return (
     <div className='game-container'>
 
@@ -401,7 +403,6 @@ function Interrogate() {
         <div className="suspect-avatar-picker">
           <div className="suspect-picker-label">SUSPECTS</div>
           {profiles.map((p) => {
-            const avatarIdx = avatarIndexMap[p.name] ?? 1;
             const isActive = activeSuspectName === p.name;
             return (
               <button
@@ -867,6 +868,91 @@ function Interrogate() {
       )}
 
       {/* ══════════════════════════════════════════════════
+          NOTES MODAL — draggable, independent
+      ══════════════════════════════════════════════════ */}
+      {showNotes && (
+        <div className="clue-modal notes-drag-modal notes-modal" style={{ left: notesPos.x, top: notesPos.y }}>
+          <div className="clue-modal-handle" onMouseDown={notesMouseDown}>
+            <span className="clue-modal-title">FIELD NOTES</span>
+            <div className="clue-modal-handle-dots">
+              <span /><span /><span /><span /><span /><span />
+            </div>
+            <button
+              className="clue-modal-close"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={closeNotesModal}
+            >✕</button>
+          </div>
+
+          <div className="notes-suspect-bar">
+            <div className="notes-suspect-name">
+              {activeProfile?.name ?? activeSuspectName ?? 'UNKNOWN SUSPECT'}
+            </div>
+            <button type="button" className="notes-reload-btn" onClick={() => loadNotes()}>
+              ↻
+            </button>
+          </div>
+
+          <div className="clue-modal-body notes-modal-body">
+            {notesLoading && <p className="notes-error">Loading notes…</p>}
+            {!notesLoading && notesList.length === 0 && !notesError && (
+              <p className="notes-hint">No notes saved for this suspect yet.</p>
+            )}
+            {!notesLoading && notesList.map((note, i) => (
+              <div key={note.id ?? i} className="notes-entry">
+                <p className="notes-entry-text">{note.suspectNotes}</p>
+                {note.createdAt && (
+                  <span className="notes-entry-time">{new Date(note.createdAt).toLocaleString()}</span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {noteInputOpen && (
+            <div className="notes-input-panel" onMouseDown={e => e.stopPropagation()}>
+              <textarea
+                ref={noteTextareaRef}
+                className="notes-textarea"
+                value={noteDraft}
+                onChange={e => setNoteDraft(e.target.value)}
+                placeholder="Write your note here…"
+                rows={4}
+              />
+              <div className="notes-input-actions">
+                <span className="notes-hint">Add a new note for this suspect</span>
+                <button
+                  type="button"
+                  className="notes-cancel-btn"
+                  onClick={() => { setNoteInputOpen(false); setNoteDraft(''); setNotesError(null); }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="notes-save-btn"
+                  onClick={saveNote}
+                  disabled={noteSaving || !noteDraft.trim()}
+                >
+                  {noteSaving ? 'Saving…' : 'Save Note'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="clue-modal-footer">
+            {notesError && <span className="notes-error">{notesError}</span>}
+            <button
+              className="notes-add-btn"
+              onMouseDown={e => e.stopPropagation()}
+              onClick={() => { setNoteInputOpen(v => !v); setNotesError(null); }}
+            >
+              {noteInputOpen ? '— Close' : '+ Add Note'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════
           NOTEBOOK / SUSPECT PROFILE — draggable, independent
       ══════════════════════════════════════════════════ */}
       {showNotebook && (
@@ -915,65 +1001,6 @@ function Interrogate() {
                 <div className="notebook-suspect-field"><strong>Notes:</strong> {activeProfile.personalityBlurb}</div>
               </div>
             )}
-
-            {/* ── Saved notes list ── */}
-            {notesLoading && <p className="notes-loading">Loading notes…</p>}
-            {!notesLoading && notesList.length > 0 && (
-              <div className="notes-list">
-                {notesList.map((note, i) => (
-                  <div key={note.id ?? i} className="notes-list-item">
-                    <p>{note.suspectNotes}</p>
-                    {note.createdAt && (
-                      <span className="notes-list-date">
-                        {new Date(note.createdAt).toLocaleString()}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* ── Add note input ── */}
-            {noteInputOpen && (
-              <div className="note-input-area" onMouseDown={e => e.stopPropagation()}>
-                <textarea
-                  ref={noteTextareaRef}
-                  className="note-draft-textarea"
-                  value={noteDraft}
-                  onChange={e => setNoteDraft(e.target.value)}
-                  placeholder="Write your note here…"
-                  rows={4}
-                />
-                <div className="note-input-actions">
-                  <button
-                    type="button"
-                    className="note-save-btn"
-                    onClick={saveNote}
-                    disabled={noteSaving || !noteDraft.trim()}
-                  >
-                    {noteSaving ? 'Saving…' : 'Save Note'}
-                  </button>
-                  <button
-                    type="button"
-                    className="note-cancel-btn"
-                    onClick={() => { setNoteInputOpen(false); setNoteDraft(''); setNotesError(null); }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="clue-modal-footer">
-            {notesError && <span className="notes-error">{notesError}</span>}
-            <button
-              className="notes-add-btn"
-              onMouseDown={e => e.stopPropagation()}
-              onClick={() => { setNoteInputOpen(v => !v); setNotesError(null); }}
-            >
-              {noteInputOpen ? '— Close' : '+ Add Note'}
-            </button>
           </div>
         </div>
       )}

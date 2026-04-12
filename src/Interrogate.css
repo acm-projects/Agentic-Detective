@@ -684,6 +684,14 @@ a { color: inherit; text-decoration: none; }
 /* Notebook modal is a bit wider */
 .notebook-drag-modal { width: 420px; }
 
+.notes-drag-modal { width: 380px; }
+
+.notes-modal .clue-modal-title::before {
+  content: 'NOTES';
+  background: #355f8c;
+  color: #e7f1ff;
+}
+
 .clue-modal-handle {
   background: #14161e;
   border-bottom: 1px solid #23262f;
@@ -841,6 +849,11 @@ a { color: inherit; text-decoration: none; }
 .notes-modal-body {
   display: flex; flex-direction: column; gap: 5px;
   background: #13151c;
+}
+
+.notes-modal .clue-modal-footer {
+  align-items: center;
+  gap: 8px;
 }
 
 .notes-entry {
