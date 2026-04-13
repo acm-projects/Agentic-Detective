@@ -49,6 +49,7 @@ interface InterrogatePanelProp {
   style?: React.CSSProperties;
   onClick?: () => void;
   tutorialId?: string;
+  children?: React.ReactNode;
 }
 
 // ── Draggable hook ─────────────────────────────────────
@@ -109,7 +110,7 @@ function InterrogateImagePropWithToolTip( { src, alt, tooltip, className, style,
   )
 }
 
-function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick, tutorialId }: InterrogatePanelProp) {
+function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick, tutorialId, children }: InterrogatePanelProp) {
   return (
     <Tooltip<HTMLDivElement>
       content={tooltip}
@@ -126,7 +127,9 @@ function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick
           data-tutorial-id={tutorialId}
           {...getReferenceProps()}
           onClick={onClick}
-        />
+        >
+          {children}
+        </div>
       )}
     </Tooltip>
   )
@@ -385,9 +388,12 @@ function Interrogate() {
       event.preventDefault();
       event.stopPropagation();
       (document.getElementById('signout-warning') as HTMLDialogElement)?.showModal();
-    };
+    }
     document.addEventListener('click', handlePotentialSignOutClick, true);
+    console.log('stress: ' + stressLevel)
     return () => document.removeEventListener('click', handlePotentialSignOutClick, true);
+
+    
   }, []);
 
   // Source - https://stackoverflow.com/a/68933242
@@ -423,26 +429,32 @@ function Interrogate() {
       <div className='navigate'>
 
         {/* ── Vertical suspect avatar picker ── */}
-        <div className="suspect-avatar-picker">
-          <div className="suspect-picker-label">SUSPECTS</div>
-          {profiles.map((p) => {
-            const isActive = activeSuspectName === p.name;
-            return (
-              <button
-                key={p.name}
-                className={`suspect-avatar-btn ${isActive ? 'active' : ''}`}
-                onClick={() => { startInterrogation(p.name); setInput(''); setAttachedClues([]); }}
-                title={p.name}
-              >
-                {p.portraitFeatures
-                  ? <SuspectPortrait className="suspect-picker-portrait" features={p.portraitFeatures} size={108} />
-                  : <div style={{ width: 80, height: 80, background: '#111' }} />
-                }
-                <span className="suspect-avatar-name">{p.name}</span>
-              </button>
-            );
-          })}
-        </div>
+
+          <InterrogatePanelWithToolTip
+            tooltip='Switch Between Suspects'
+            className='suspect-avatar-picker'
+            title='SUSPECTS'
+            tutorialId='tutorial-suspect-picker'
+          >
+            <div className="suspect-picker-label">SUSPECTS</div>
+            {profiles.map((p) => {
+              const isActive = activeSuspectName === p.name;
+              return (
+                <button
+                  key={p.name}
+                  className={`suspect-avatar-btn ${isActive ? 'active' : ''}`}
+                  onClick={() => { startInterrogation(p.name); setInput(''); setAttachedClues([]); }}
+                  title={p.name}
+                >
+                  {p.portraitFeatures
+                    ? <SuspectPortrait className="suspect-picker-portrait" features={p.portraitFeatures} size={108} />
+                    : <div style={{ width: 80, height: 80, background: '#111' }} />
+                  }
+                  <span className="suspect-avatar-name">{p.name}</span>
+                </button>
+              );
+            })}
+          </InterrogatePanelWithToolTip>
             
 
         <button
@@ -594,6 +606,8 @@ function Interrogate() {
           tutorialId="tutorial-evidence-locker"
         />
 
+        
+
         <div className='header-row'>
           <div className='currently-interrogating-container'>
             <h1>INTERROGATING: {activeProfile?.name.toUpperCase()}</h1>
@@ -612,11 +626,28 @@ function Interrogate() {
 
             {activeProfile && (
               <div className='character-container'>
+                
                 <div className='character-avatar'>
                   {activeProfile.portraitFeatures
                     ? <SuspectPortrait className="interrogate-main-portrait" features={activeProfile.portraitFeatures} size={560} />
                     : <div style={{ width: 384, height: 384, background: '#111' }} />
                   }
+                  {/* --- Stress Droplet --- */}
+                  <div className='droplet-container'
+                    style={{
+                      opacity: Math.min(1, stressLevel / 100 + 0.2),
+                    }}>
+                    {stressLevel > 0 && (
+                      <InterrogateImagePropWithToolTip
+                        src="src/assets/stress_sweat_drop1.png"
+                        alt="Stress Droplet"
+                        className='stress-droplet-img' // transparency updated based on current stress level
+                        tooltip={ stressLevel > 70 ? 'The suspect appears to be breaking' : 'The suspect is starting to appear stressed!'} // update this to edit based on suspect stress level
+                        title="Stress Droplet"
+                      />
+                    )}
+                    
+                  </div>
                   <div className="avatar-overlay" />
                   <StressBar level={stressLevel} />
                 </div>
@@ -630,7 +661,7 @@ function Interrogate() {
                 <div className='chat-history'>
                   {history.length === 0 && (
                     <p style={{ opacity: 0.5, fontStyle: 'italic' }}>
-                      Begin questioning {activeProfile?.name}…
+                      BEGIN QUESTIONING {activeProfile?.name.toUpperCase()} ...
                     </p>
                   )}
                   {history.map((msg, index) => (

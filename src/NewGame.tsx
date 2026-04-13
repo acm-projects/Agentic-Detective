@@ -60,6 +60,8 @@ function NewGame() {
   const setSeed = useGameStore((s) => s.setSeed);
   const startCase = useGameStore((s) => s.startCase);
   const clearLoadedCase = useGameStore((s) => s.clearLoadedCase);
+  const setCurrentSessionId = useGameStore((s) => s.setCurrentSessionId);
+  const setSelectedCase = useGameStore((s) => s.setSelectedCase);
     const navigate = useNavigate();
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -140,6 +142,42 @@ function NewGame() {
   const playClickSound = () => {
     const audio = new Audio('../assets/Graphic_Pulse.mp3');
     audio.play();
+  };
+
+  const launchCase = async () => {
+    playClickSound();
+
+    // Fresh case should always re-run tutorial onboarding.
+    localStorage.removeItem('tutorialSeen');
+    localStorage.removeItem('tutorialStep');
+    localStorage.removeItem('tutorialReadyAfterReport');
+    localStorage.removeItem('tutorialDeskEntered');
+
+    setSeed({
+      freeText: personalization,
+      difficulty: difficulty,
+      duration: timePeriod,
+      intensity: intensity,
+      userId: userId ?? undefined,
+      isSignedIn: isSignedIn ? true : false,
+    });
+
+    if (!isSignedIn) {
+      localStorage.removeItem("lastSessionId");
+      localStorage.removeItem("lastCaseId");
+      alert("Please enter a case theme before starting.");
+      return;
+    }
+
+    const startCasePromise = startCase(navigate);
+    navigate('/desk');
+    await startCasePromise;
+  };
+
+  const handleSavedCaseSolve = async (game: { sessionId: string }) => {
+    setCurrentSessionId(game.sessionId);
+    setSelectedCase(game);
+    await launchCase();
   };
 
   return (
@@ -356,35 +394,7 @@ function NewGame() {
           <div className="solve-row">
             <button
               className="detective-button solve-button"
-              onClick={async () => {
-                playClickSound();
-
-                // Fresh case should always re-run tutorial onboarding.
-                localStorage.removeItem('tutorialSeen');
-                localStorage.removeItem('tutorialStep');
-                localStorage.removeItem('tutorialReadyAfterReport');
-                localStorage.removeItem('tutorialDeskEntered');
-
-                setSeed({
-                  freeText: personalization,
-                  difficulty: difficulty,
-                  duration: timePeriod,
-                  intensity: intensity,
-                  userId: userId ?? undefined,
-                  isSignedIn: isSignedIn ? true : false,
-                });
-
-                if (!isSignedIn) {
-                  localStorage.removeItem("lastSessionId");
-                  localStorage.removeItem("lastCaseId");
-                  alert("Please enter a case theme before starting.");
-                  return;
-                }
-
-                const startCasePromise = startCase(navigate);
-                navigate('/desk');
-                await startCasePromise;
-              }}
+              onClick={launchCase}
             >
               SOLVE!
             </button>
@@ -441,7 +451,10 @@ function NewGame() {
           >
             ✕
           </button>
-          <SavedGamesList onCaseSelected={() => setShowSavedGames(false)} />
+          <SavedGamesList
+            onCaseSelected={() => setShowSavedGames(false)}
+            onSolveCase={handleSavedCaseSolve}
+          />
         </div>
       </dialog>
     )}

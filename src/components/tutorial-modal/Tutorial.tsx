@@ -62,6 +62,19 @@ const STEPS: Step[] = [
         route: '/interrogate',
         routeLabel: 'Interrogate',
         badge: 'Tool Highlight',
+        title: 'The Suspects',
+        icon: 'SUSPECTS',
+        description: [
+            'Switch between suspects through the Suspect Switcher.',
+            'Interrogate everyone to extract as much information as you can.',
+        ],
+        highlightTarget: 'tutorial-suspect-picker',
+        highlightTitle: 'The Suspect Switcher'
+    },
+    {
+        route: '/interrogate',
+        routeLabel: 'Interrogate',
+        badge: 'Tool Highlight',
         title: 'Evidence Locker',
         icon: 'LOCKER',
         description: [
@@ -69,7 +82,7 @@ const STEPS: Step[] = [
             'Use evidence drops to corner suspects at the right moment.'
         ],
         highlightTarget: 'tutorial-evidence-locker',
-        highlightTitle: 'Evidence Locker trigger'
+        highlightTitle: 'Your Evidence Locker'
     },
     {
         route: '/interrogate',
@@ -82,7 +95,7 @@ const STEPS: Step[] = [
             'Good notes make your final accusation more reliable.'
         ],
         highlightTarget: 'tutorial-notes',
-        highlightTitle: 'Field Notes trigger'
+        highlightTitle: 'Your Field Notes'
     },
     {
         route: '/interrogate',
@@ -95,7 +108,7 @@ const STEPS: Step[] = [
             'Cross-check what they say against this card before accusing.'
         ],
         highlightTarget: 'tutorial-suspect-details',
-        highlightTitle: 'Suspect Details trigger'
+        highlightTitle: 'The Suspect Details'
     }
 ];
 

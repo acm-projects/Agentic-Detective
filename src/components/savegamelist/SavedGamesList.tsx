@@ -19,6 +19,7 @@ type SavedCase = {
 
 type SavedGamesListProps = {
   onCaseSelected?: () => void;
+  onSolveCase?: (game: SavedCase) => void | Promise<void>;
 };
 
 async function fetchCasesFromUserId(userId: string): Promise<SavedCase[]> {
@@ -39,7 +40,7 @@ function SavedGameCard({
 }: {
   game: SavedCase;
   onSelect: (game: SavedCase) => void;
-  onSolve: () => void;
+  onSolve: (game: SavedCase) => void | Promise<void>;
 }) {
   const currentSessionId = useGameStore((s) => s.currentSessionId);
   const isSelected = currentSessionId === game.sessionId;
@@ -72,11 +73,11 @@ function SavedGameCard({
           <button 
             type="button" 
             className="card-solve-button"
-            onClick={(e) => {
+            onClick={async (e) => {
               e.stopPropagation();
               onSelect(game);
-              onSolve();
-            }}
+              await onSolve(game);
+              }}
             >Solve </button>
         )}
       </div>
@@ -85,7 +86,7 @@ function SavedGameCard({
   );
 }
 
-function SavedGamesList({ onCaseSelected }: SavedGamesListProps) {
+function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
   const { userId, isSignedIn, isLoaded } = useAuth();
   const setCurrentSessionId = useGameStore((s) => s.setCurrentSessionId);
   const setCurrentCaseDoc = useGameStore((s) => s.setSelectedCase);
@@ -130,6 +131,12 @@ function SavedGamesList({ onCaseSelected }: SavedGamesListProps) {
   const handleSelectCase = (game: SavedCase) => {
     setCurrentSessionId(game.sessionId);
     setCurrentCaseDoc(game);
+  };
+
+  const handleSolveCase = async (game: SavedCase) => {
+    handleSelectCase(game);
+    await onSolveCase?.(game);
+    onCaseSelected?.();
   };
 
   return (
@@ -178,7 +185,7 @@ function SavedGamesList({ onCaseSelected }: SavedGamesListProps) {
               key={game.sessionId}
               game={game}
               onSelect={handleSelectCase}
-              onSolve={() => onCaseSelected?.()}
+              onSolve={handleSolveCase}
             />
           ))}
         </ul>
