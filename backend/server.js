@@ -8,8 +8,14 @@ import { MongoClient } from 'mongodb';
 import 'dotenv/config';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+
+// ── ESM __dirname equivalent ──
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = dirname(__filename);
 
 const app = express();
 const port = 3000;
@@ -24,7 +30,6 @@ app.use(cors({
   credentials: true,
 }));
 
-// app.options('*', cors());
 app.use(express.json());
 
 // ── MongoDB setup ──
@@ -36,14 +41,9 @@ async function connectDB() {
   db = client.db("AgenticDetective");
   console.log("MongoDB connected");
 
-  // Creating indexes for faster data retrieval
-
   await db.collection("cases").createIndex({ sessionId: 1 }, { unique: true });
   await db.collection("cases").createIndex({ userId: 1, status: 1, updatedAt: 1 });
-
 }
-
-
 
 // ─────────────────────────────────────────────
 //  MCP CLIENT — singleton, spawned once on first use
@@ -52,21 +52,42 @@ async function connectDB() {
 let mcpClient = null;
 
 async function getMcpClient() {
-  if (mcpClient) return mcpClient;
+  if (mcpClient) {
+    try {
+      // ping to verify the connection is still alive
+      await mcpClient.listTools();
+      return mcpClient;
+    } catch {
+      console.warn('[MCP] Cached client is stale, reconnecting...');
+      mcpClient = null;
+    }
+  }
+
+  // Use an absolute path so it works regardless of where the server process is started from
+  const mcpPath = resolve(__dirname, '../mcp/mcpServer.ts');
+  console.log(`[MCP] Spawning MCP server at: ${mcpPath}`);
 
   const transport = new StdioClientTransport({
     command: 'npx',
-    args: ['tsx', '../mcp/mcpServer.ts'],   // path relative to backend/
+    args: ['tsx', mcpPath],
     env: {
       ...process.env,
-      ELEVENLABS_API_KEY: process.env.ELEVEN_LABS_API_KEY ?? '',
+      // ELEVEN_LABS_API_KEY is already in process.env via dotenv — no override needed.
+      // Previously this was incorrectly set as ELEVENLABS_API_KEY (wrong name),
+      // causing the child process to read an empty string.
     },
   });
 
-  mcpClient = new Client({ name: 'agentic-detective', version: '1.0.0' });
-  await mcpClient.connect(transport);
-  console.log('[MCP] Voice selector connected');
-  return mcpClient;
+  try {
+    mcpClient = new Client({ name: 'agentic-detective', version: '1.0.0' });
+    await mcpClient.connect(transport);
+    console.log('[MCP] Voice selector connected');
+    return mcpClient;
+  } catch (err) {
+    mcpClient = null; // Don't cache a broken client — allow retry on next request
+    console.error('[MCP] Failed to connect to MCP server:', err);
+    throw err;
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -83,18 +104,17 @@ app.post('/select-voices', async (req, res) => {
   }
 
   try {
-    const client = await getMcpClient();
+    const mcp = await getMcpClient();
     const voiceIds = {};
 
     for (const suspect of suspects) {
-      const result = await client.callTool({
+      const result = await mcp.callTool({
         name: 'select_v3_voice_for_suspect',
         arguments: {
           name:                suspect.name,
           gender:              suspect.gender,
           age:                 suspect.age,
-          personality:         suspect.personality,
-          occupation:          suspect.occupation,
+          personality: suspect.personality ?? suspect.description ?? suspect.traits?.join(', ') ?? 'unknown',          occupation:          suspect.occupation,
           physicalDescription: suspect.physicalDescription,
           accentHint:          settingHint,
         },
@@ -102,6 +122,7 @@ app.post('/select-voices', async (req, res) => {
 
       const raw = result.content?.[0]?.text ?? '{}';
       console.log(`[voices] Raw response for ${suspect.name}:`, raw);
+
       try {
         const parsed = JSON.parse(raw);
         voiceIds[suspect.name] = parsed.selected_voice_id ?? '';
@@ -139,7 +160,7 @@ app.get('/debug-voices', async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-//  POST /save-case  (your existing endpoint — unchanged)
+//  POST /save-case
 // ─────────────────────────────────────────────
 
 app.post('/save-case', (req, res) => {
@@ -172,19 +193,17 @@ app.post('/save-case', (req, res) => {
 app.get('/health', (_req, res) => {
   res.json({ ok: true, service: 'agentic-detective-backend' });
 });
-// -- Helpers --
+
+// ── Helpers ──
 const STATUS = new Set(["in_progress", "paused", "resolved", "abandoned"]);
 
 function nowIso() {
   return new Date().toISOString();
 }
 
-
 function buildInitialClueState(initialClues = []) {
   const out = {};
   for (const clue of initialClues) {
-    // This is only for maintaining the Clue State (i.e. whether it has been discovered, or its been lost)
-    // The clue metadata is in caseData.initialClues
     out[clue.id] = {
       discovered: Boolean(clue.discovered),
       clueLost: Boolean(clue.clueLost)
@@ -205,10 +224,8 @@ function buildInitialSuspectSessions(suspects = []) {
     firstInterrogatedAt: null,
     lastInterrogatedAt: null,
     messages: [],
-    
   }));
-
-};
+}
 
 function buildInitialNotesState() {
   return {
@@ -230,30 +247,13 @@ app.post('/cases/create', async (req, res) => {
       seed
     } = req.body;
 
-    if (!sessionId) {
-      return res.status(400).json({ error: "sessionId is required" });
-    }
-
-    if (!userId) {
-      return res.status(400).json({ error: "User must be signed in to save progress" });
-    }
-
-    if (!game) {
-      return res.status(400).json({ error: "game data is required" });
-    }
-
-    if (!caseData?.caseReport) {
-      return res.status(400).json({ error: "caseData.caseReport is required" });
-    }
-    if (!Array.isArray(caseData?.suspects)) {
-      return res.status(400).json({ error: "caseData.suspects is required" });
-    }
-    if (!Array.isArray(caseData?.initialClues)) {
-      return res.status(400).json({ error: "caseData.initialClues is required" });
-    }
-    if (!seed) {
-      return res.status(400).json({ error: "seed is required" });
-    }
+    if (!sessionId) return res.status(400).json({ error: "sessionId is required" });
+    if (!userId) return res.status(400).json({ error: "User must be signed in to save progress" });
+    if (!game) return res.status(400).json({ error: "game data is required" });
+    if (!caseData?.caseReport) return res.status(400).json({ error: "caseData.caseReport is required" });
+    if (!Array.isArray(caseData?.suspects)) return res.status(400).json({ error: "caseData.suspects is required" });
+    if (!Array.isArray(caseData?.initialClues)) return res.status(400).json({ error: "caseData.initialClues is required" });
+    if (!seed) return res.status(400).json({ error: "seed is required" });
 
     const doc = {
       schemaVersion: 1,
@@ -310,7 +310,6 @@ app.post('/cases/create', async (req, res) => {
       }
     };
 
-    // Avoid clobbering an existing session on duplicate create requests.
     await db.collection("cases").updateOne(
       { sessionId },
       { $setOnInsert: doc },
@@ -323,8 +322,6 @@ app.post('/cases/create', async (req, res) => {
   }
 });
 
-// Case records are now based on sessionId instead of caseId
-// This is a general POST route that updates every update in the player's gameplay (if any)
 app.post('/cases/:sessionId/progress', async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -368,6 +365,7 @@ app.post('/cases/:sessionId/progress', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 app.post('/case/:sessionId/suspectNotes', async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -376,7 +374,6 @@ app.post('/case/:sessionId/suspectNotes', async (req, res) => {
     if (!suspectName || !String(suspectName).trim()) {
       return res.status(400).json({ error: 'suspectName is required' });
     }
-
     if (!suspectNotes || !String(suspectNotes).trim()) {
       return res.status(400).json({ error: 'suspectNotes is required' });
     }
@@ -450,15 +447,13 @@ app.get('/case/:sessionId/notes', async (req, res) => {
   }
 });
 
-
-// Endpoint dedicated to the outcome decision after accusastion
 app.post('/cases/:sessionId/outcome', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const { 
-      accusedName, 
-      isCorrect, 
-      trueKiller, 
+    const {
+      accusedName,
+      isCorrect,
+      trueKiller,
       explanation,
     } = req.body;
 
@@ -466,23 +461,25 @@ app.post('/cases/:sessionId/outcome', async (req, res) => {
 
     const result = await db.collection("cases").updateOne(
       { $or: [{ sessionId }, { caseId: sessionId }] },
-      { $set: {
-        outcome: {
-          accusedName,
-          isCorrect,
-          trueKiller,
-          explanation,
-          decidedAt: nowIso(),
-          gameplayRating: null,
-          featured: false,
-          feedbackAt: null,
+      {
+        $set: {
+          outcome: {
+            accusedName,
+            isCorrect,
+            trueKiller,
+            explanation,
+            decidedAt: nowIso(),
+            gameplayRating: null,
+            featured: false,
+            feedbackAt: null,
+          },
+          status: "resolved",
+          updatedAt: nowIso(),
+          lastAutosavedAt: nowIso(),
         },
-        status: "resolved",
-        updatedAt: nowIso(),
-        lastAutosavedAt: nowIso(),
-      },
-      $inc: { revision: 1 } 
-    });
+        $inc: { revision: 1 }
+      }
+    );
 
     if (result.matchedCount === 0) {
       return res.status(404).json({ error: "Case not found" });
@@ -502,7 +499,6 @@ app.post('/cases/:sessionId/feedback', async (req, res) => {
     if (![1, 2, 3, 4, 5].includes(Number(gameplayRating))) {
       return res.status(400).json({ error: 'gameplayRating must be 1-5' });
     }
-
     if (typeof featured !== 'boolean') {
       return res.status(400).json({ error: 'featured must be boolean' });
     }
@@ -540,18 +536,10 @@ app.get('/community/cases/:caseCode/template', async (req, res) => {
 
     const caseCodeRegex = new RegExp(`^${caseCode}$`, 'i');
     const doc = await db.collection('cases').findOne(
-      {
-        $or: [
-          { sessionId: caseCodeRegex },
-        ],
-      },
+      { $or: [{ sessionId: caseCodeRegex }] },
       {
         sort: { updatedAt: -1 },
-        projection: {
-          _id: 0,
-          caseData: 1,
-          game: 1,
-        },
+        projection: { _id: 0, caseData: 1, game: 1 },
       }
     );
 
@@ -654,12 +642,33 @@ app.get('/community/feed', async (req, res) => {
   }
 });
 
-// GET Method to get case data from session id
+app.get('/cases/user/:userId', async (req, res) => {
+  console.log("User ID case fetching endpoint reached!!!");
+  console.log("userId:", req.params.userId);
+  try {
+    const { userId } = req.params;
+
+    const docs = await db.collection("cases")
+      .find({ userId }, { projection: { _id: 0 } })
+      .sort({ updatedAt: -1 })
+      .toArray();
+
+    if (!docs.length) {
+      console.log("No cases found for this user");
+      return res.json([]);
+    }
+
+    res.json(docs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/cases/:sessionId', async (req, res) => {
   try {
     const doc = await db.collection("cases").findOne(
       { sessionId: req.params.sessionId },
-      { projection: { _id: 0 } } // tells mongo to exclude the _id field
+      { projection: { _id: 0 } }
     );
 
     if (!doc) {
@@ -671,95 +680,6 @@ app.get('/cases/:sessionId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-
-// Endpoint to fetch all cases for a particular user
-app.get('/cases/user/:userId', async (req, res) => {
-  console.log("User ID case fetching endpoint reached!!!");
-  console.log("userId:", req.params.userId);
-  try {
-    const { userId } = req.params;
-
-    const docs = await db.collection("cases")
-      .find({ userId }, { projection: { _id: 0 } })
-      .sort({ updatedAt: -1 }) // most recent first
-      .toArray();
-
-    if (!docs.length) {
-      console.log("No cases found for this user");
-      return res.json([]);
-      // return res.status(404).json({ error: "No cases found for this user" });
-    }
-
-    res.json(docs);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-})
-/*
-app.post('/case/create', async (req, res) => {
-  console.log('[/case/create] received:', req.body.caseId);
-  const { caseId, caseReport, clues, characterProfiles } = req.body;
-  try {
-    await db.collection('cases').insertOne({
-      caseId,
-      createdAt: new Date(),
-      status: 'in_progress',
-      caseReport,
-      clues,
-      characterProfiles,
-      chatHistory: {},
-      outcome: null,
-    });
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-
-app.post('/case/:caseId/chat', async (req, res) => {
-  const { suspectName, messages } = req.body;
-  try {
-    await db.collection('cases').updateOne(
-      { caseId: req.params.caseId },
-      { $set: { [`chatHistory.${suspectName}`]: messages } }
-    );
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.post('/case/:caseId/outcome', async (req, res) => {
-  const { accusedName, isCorrect, trueKiller, explanation } = req.body;
-  try {
-    await db.collection('cases').updateOne(
-      { caseId: req.params.caseId },
-      { $set: { outcome: { accusedName, isCorrect, trueKiller, explanation }, status: 'resolved' } }
-    );
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-app.get('/case/:caseId', async (req, res) => {
-  console.log('!!!!!')
-  console.log('[GET /case/:caseId] looking for:', req.params.caseId);
-  try {
-    const doc = await db.collection('cases').findOne(
-      { caseId: req.params.caseId },
-      { projection: { _id: 0 } }
-    );
-    console.log('[GET /case/:caseId] found:', doc ? 'yes' : 'null');
-    if (!doc) return res.status(404).json({ error: "Case not found" });
-    res.json(doc);
-  } catch (err) {
-    console.error('[GET /case/:caseId] error:', err.message);
-    res.status(500).json({ error: err.message });
-  }
-});
-*/
 
 // ── Start server only after DB connects ──
 connectDB()

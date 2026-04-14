@@ -161,8 +161,13 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!isReloadFlow) {
       try {
         const { backend, player } = await generateCaseFile(seed);
-        // Select voices server-side (non-blocking — falls back to defaults on failure)
-        const voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
+
+        let voiceIds: Record<string, string> = {};
+        try {
+          voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
+        } catch (err) {
+          console.warn("[VoiceSelector] Failed, continuing without voices:", err);
+        }
         set({
           backend,
           player,
@@ -181,7 +186,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         console.error(err);
         return false;
       }
-    } else {
+    } 
+    else {
         // Reloading existing case from selected save.
         try {
           const { backend, player, restoredSessions, isResolved } = await feedCaseFile(selectedCase);
@@ -325,8 +331,10 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   // ── Send a player message to the active suspect ──
   sendMessage: async (text, displayText, displayClues) => {
+      
     const { activeSuspectName, sessions } = get();
     const { seed } = get() as { seed: PlayerSeed};
+
     if (!activeSuspectName || !sessions[activeSuspectName] || get().isResponding) return;
 
     // Restored saves can have chatSession = null until interrogation is re-opened.
@@ -578,10 +586,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       // Generate and play speech asynchronously (don't block UI)
       //tts streamed better
       const voiceId = get().voiceIds[activeSuspectName];
+      console.log(get())
 
-      if (voiceId) {
-        streamSpeech(responseText, voiceId).catch(err =>
-          console.error("TTS playback failed:", err)
+      console.log("[tts] about to speak, voiceId:", voiceId, "text length:", responseText.length);
+      if (responseText) {
+        streamSpeech(responseText, voiceId ?? null).catch(err =>
+          console.error("[tts] playback failed:", err)
         );
       }
 
@@ -755,7 +765,12 @@ export const useGameStore = create<GameState>((set, get) => ({
         clues: initialClues,
       };
 
-      const voiceIds = await selectVoicesForCase(backend.suspects, mergedSeed.freeText);
+      let voiceIds: Record<string, string> = {};
+      try {
+        voiceIds = await selectVoicesForCase(backend.suspects, mergedSeed.freeText);
+      } catch (err) {
+        console.warn("[VoiceSelector] Failed, continuing without voices:", err);
+      }
       const sharedSessionId = `SHARE-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
 
       set({
