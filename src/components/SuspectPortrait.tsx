@@ -30,15 +30,31 @@ function getFrames1(): Frame[] {
   return [{ x: 0, y: 0 }]
 }
 
+// 5 columns × 2 rows = 10 frames
+function getFrames10(): Frame[] {
+  return Array.from({ length: 10 }, (_, i) => ({
+    x: (i % 5) * FRAME_W,
+    y: Math.floor(i / 5) * FRAME_H,
+  }))
+}
+
+// 6 columns × 2 rows = 12 frames
+function getFrames12(): Frame[] {
+  return Array.from({ length: 12 }, (_, i) => ({
+    x: (i % 6) * FRAME_W,
+    y: Math.floor(i / 6) * FRAME_H,
+  }))
+}
+
 const ASSETS: Record<string, Asset> = {
-  backHair:  { src: backHairSrc,  frames: getFrames6() },
+  backHair:  { src: backHairSrc,  frames: getFrames10() },
   head:      { src: headSrc,      frames: getFrames1() },
   neck:      { src: neckSrc,      frames: getFrames1() },
   shirt:     { src: shirtSrc,     frames: getFrames1() },
   eyes:      { src: eyesSrc,      frames: getFrames6() },
   nose:      { src: nosesSrc,     frames: getFrames6() },
   mouth:     { src: mouthsSrc,    frames: getFrames6() },
-  frontHair: { src: frontHairSrc, frames: getFrames6() },
+  frontHair: { src: frontHairSrc, frames: getFrames12() },
 }
 
 const LAYER_ORDER = ['backHair', 'shirt', 'neck', 'head', 'eyes', 'nose', 'mouth', 'frontHair']
