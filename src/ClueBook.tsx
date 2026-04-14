@@ -32,6 +32,8 @@ export default function ClueBook() {
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const difficulty = useGameStore.getState().seed?.difficulty;
+  const totalConversationCount = useGameStore.getState().totalConversationCount;
+  const isFirstTimePlayer = totalConversationCount <= 2;
 
   useEffect(() => {
     const clueIds = new Set(clues.map(clue => clue.id));
@@ -197,10 +199,18 @@ export default function ClueBook() {
           </div>
         )}
       </div>
-
+      
+      <div className="back-btn-row">
         <button className="back-btn" onClick={() => navigate('/desk')}>
           Back to desk
         </button>
+        {!isFirstTimePlayer && (
+          <button className="back-btn" onClick={() => navigate('/interrogate')}>
+            Back to Interrogation
+          </button>
+        )}
+        
+      </div>
 
       </div>
     </>

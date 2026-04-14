@@ -147,6 +147,7 @@ function Interrogate() {
     player,
     seed,
     activeSuspectName,
+    numDiscoveredClues,
     isFirstClueDiscovery,
     isResponding,
     elapsed,
@@ -170,8 +171,7 @@ function Interrogate() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
-  const numConversations = totalConversationCount;
-  const isFirstTimePlayer = numConversations <= 2;
+  const isFirstTimePlayer = totalConversationCount <= 2;
   console.log("first time? " + isFirstTimePlayer);
 
   // ── Evidence / clue state ──────────────────────────────
@@ -191,7 +191,7 @@ function Interrogate() {
   const [newClueLost, setNewClueLost] = useState(false)
 
   // ── Three fully independent drag positions ─────────────
-  const { pos: cluePos,     onMouseDown: clueMouseDown     } = useDraggableModal({ x: window.innerWidth - 340, y: 120 });
+  const { pos: cluePos,     onMouseDown: clueMouseDown     } = useDraggableModal({ x: window.innerWidth - 380, y: 120 });
   const { pos: notesPos,    onMouseDown: notesMouseDown    } = useDraggableModal({ x: window.innerWidth - 700, y: 120 });
   const { pos: notebookPos, onMouseDown: notebookMouseDown } = useDraggableModal({ x: Math.max(0, window.innerWidth / 2 - 220), y: 80 });
 
@@ -937,6 +937,20 @@ function Interrogate() {
           <div className="clue-modal-footer">
             <span>FOUND <b>{discoveredClues.length}</b> / {allClues.length}</span>
             <span>ATTACHED <b>{attachedClues.length}</b></span>
+          </div>
+
+          <div className='clue-modal-navigator'>
+            
+              {numDiscoveredClues > 0 && (
+                <button 
+                  className='clue-modal-button'
+                  onClick={() => navigate('/clues')}
+                >
+                  Jump to the Clues Page <br />
+                  for more details
+                </button>
+              )}
+              
           </div>
         </div>
       )}

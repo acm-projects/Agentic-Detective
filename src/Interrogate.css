@@ -681,7 +681,7 @@ a { color: inherit; text-decoration: none; }
 ═══════════════════════════════════════════ */
 .clue-modal {
   position: fixed;
-  width: 310px;
+  width: 340px;
   background: #1a1d25;
   border: 1px solid #2a2e3a;
   border-top: 3px solid #3a3f52;
@@ -751,7 +751,8 @@ a { color: inherit; text-decoration: none; }
 .clue-modal-close:hover { background: #9b2020; color: #ffd0d0; }
 
 .clue-modal-hint {
-  font-size: 10px; color: #ffffff;
+  font-size: 10px; 
+  color: #ffffff;
   font-weight: bold;
   letter-spacing: 0.1em; text-transform: uppercase;
   padding: 6px 14px; border-bottom: 1px solid #1e2130;
@@ -833,6 +834,41 @@ a { color: inherit; text-decoration: none; }
   font-family: 'Courier New', monospace;
 }
 .clue-modal-footer b { color: #6a8aaa; font-weight: 700; }
+
+.clue-modal-navigator {
+  display: flex;
+  padding: 10px;
+  align-items: center; /* only works if display set to flex*/
+  justify-content: center;
+  gap: 8px;
+}
+
+.clue-modal-button {
+  min-width: 92px;
+  padding: 6px 12px;
+  border: 1px solid #2a2e3a;
+  border-top: 2px solid #3a3f52;
+  background: #14161e;
+  color: #cbd5ea;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.clue-modal-button:hover {
+  background: #9b2020;
+  border-color: #d14a4a;
+  color: #ffdede;
+}
+
+.clue-modal-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.65);
+}
 
 /* ═══════════════════════════════════════════
    NOTES MODAL additions
