@@ -13,6 +13,7 @@ import letterImg from './assets/lettersclue.png';
 import jewelImg from './assets/jewel.png';
 import yellowstickyImg from './assets/yellowsticky.png';
 import { useNotificationStore } from './store/useNotificationStore';
+import { useGameStore } from "./useGameStore";
 import TutorialModal from './components/tutorial-modal/Tutorial';
 
 const CLUE_PROPS = [
@@ -30,6 +31,7 @@ export default function ClueBook() {
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
+  const difficulty = useGameStore.getState().seed?.difficulty;
 
   useEffect(() => {
     const clueIds = new Set(clues.map(clue => clue.id));
@@ -157,26 +159,35 @@ export default function ClueBook() {
               )}
               <div className="clue-detail-divider" />
               <p className="clue-detail-description">{selected.description}</p>
-              {(() => {
-                const suspects = Array.isArray(selected.couldImplicateSuspects)
-                  ? selected.couldImplicateSuspects
-                  : typeof selected.couldImplicateSuspects === "string"
-                  ? (selected.couldImplicateSuspects as string)
-                      .split(",")
-                      .map(s => s.trim())
-                      .filter(Boolean)
-                  : [];
-                return suspects.length > 0 ? (
-                  <div className="clue-detail-suspects">
-                    <div className="clue-suspects-label">COULD IMPLICATE:</div>
-                    <div className="clue-suspects-list">
-                      {suspects.map(name => (
-                        <span key={name} className="clue-suspect-tag">{name}</span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null;
-              })()}
+              
+              {/* COULD IMPLICATE ... ONLY SHOWS UP IF DIFFICULTY SET TO 1, I.E. EASY*/}
+              {difficulty === 1 && (
+                <>
+                  {(() => {
+                    const suspects = Array.isArray(selected.couldImplicateSuspects)
+                      ? selected.couldImplicateSuspects
+                      : typeof selected.couldImplicateSuspects === "string"
+                      ? (selected.couldImplicateSuspects as string)
+                          .split(",")
+                          .map(s => s.trim())
+                          .filter(Boolean)
+                      : [];
+                    return suspects.length > 0 ? (
+                      <div className="clue-detail-suspects">
+                        <div className="clue-suspects-label">COULD IMPLICATE:</div>
+                        <div className="clue-suspects-list">
+                          {suspects.map(name => (
+                            <span key={name} className="clue-suspect-tag">{name}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null;
+                  })()}
+                </>
+
+              )}
+                
+
             </div>
           </div>
         ) : (

@@ -665,12 +665,38 @@ export async function feedCaseFile(game: any): Promise<{
   // Merge initialClues metadata with discovered/clueLost from clueState
   const mergedClues = game.caseData.initialClues.map((clue: any) => {
     const state = game.clueState[clue.id]; // look up by clue id in clueState
+    const suspects = game.caseData.suspects;
+    // Ensure that couldImplicateSuspects property of clues object is always the suspect name
+
+    // Normalize numeric suspect references (e.g. "0", 0, ["1", 2]) into suspect names.
+    const rawCouldImplicate = clue.couldImplicateSuspects;
+    const normalizedCouldImplicate = (Array.isArray(rawCouldImplicate)
+      ? rawCouldImplicate
+      : rawCouldImplicate != null
+        ? [rawCouldImplicate]
+        : []
+    ).map((entry: unknown) => {
+      if (typeof entry === "number" && Number.isInteger(entry)) {
+        return suspects[entry]?.name ?? null;
+      }
+
+      if (typeof entry === "string") {
+        const trimmed = entry.trim();
+        if (/^\d+$/.test(trimmed)) {
+          return suspects[Number(trimmed)]?.name ?? null;
+        }
+        return trimmed;
+      }
+
+      return null;
+    }).filter((name: string | null): name is string => Boolean(name));
+
     return {
       id: clue.id,
       name: clue.name,
       description: clue.description,
       location: clue.location,
-      couldImplicateSuspects: clue.couldImplicateSuspects,
+      couldImplicateSuspects: normalizedCouldImplicate,
       severity: clue.severity,
       isDecisive: clue.isDecisive,
       // these two come from clueState, not initialClues

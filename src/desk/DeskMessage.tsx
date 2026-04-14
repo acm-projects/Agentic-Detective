@@ -7,7 +7,7 @@ import cigaretteImg from './assets/newthemedcigarette.png';
 import caseFileImg from './assets/themedcasefile.png';
 import gunImg from './assets/themedgun.png';
 import handcuffs from '../../assets/handcuffs.png';
-import notebookImg from './assets/notebook.png'
+// import notebookImg from './assets/notebook.png'
 import pencilImg from './assets/themedpencil.png';
 import plantImg from './assets/muchbetterthemedplant.png';
 import deskBgImg from './assets/extranewdesk.png';
@@ -50,8 +50,9 @@ function Message() {
   const TUTORIAL_KEY = 'tutorialSeen';
   const TUTORIAL_STEP_KEY = 'tutorialStep';
   const CASE_REPORT_STEP = 1;
-  const EVIDENCE_REVIEW_STEP = 2;
-  const INTERROGATION_STEP = 3;
+  const ACCUSATION_STEP = 2;
+  const EVIDENCE_REVIEW_STEP = 3;
+  const INTERROGATION_STEP = 4;
 
   const { phase, player } = useGameStore();
   const navigate = useNavigate();
@@ -78,7 +79,10 @@ function Message() {
   const tutorialActiveOnDesk = !tutorialSeen;
   const highlightClueBookForTutorial = tutorialActiveOnDesk && tutorialStep === EVIDENCE_REVIEW_STEP;
   const highlightCaseFileForTutorial = tutorialActiveOnDesk && tutorialStep === CASE_REPORT_STEP;
+  const highlightAccusationForTutorial = tutorialActiveOnDesk && tutorialStep === ACCUSATION_STEP;
   const highlightPhoneForTutorial = tutorialActiveOnDesk && tutorialStep === INTERROGATION_STEP;
+  const tutorialHighlightClass = 'evidence-item-first-discovery';
+  const baseItemClass = 'evidence-item';
 
   const caseCode = player?.caseReport?.caseId;
   if (phase === 'generating') {
@@ -131,7 +135,7 @@ function Message() {
         <div className='icons'>
           {/* 1. CLUE BOOK */}
           <DeskItemWithTooltip
-            className={(isFirstClueDiscovery || highlightClueBookForTutorial) ? 'evidence-item-first-discovery' : 'evidence-item'}
+            className={(isFirstClueDiscovery || highlightClueBookForTutorial) ? tutorialHighlightClass : baseItemClass}
             src={cluebookImg} 
             alt="Clue Book" 
             tooltip="Clue Book: review discovered evidence."
@@ -158,7 +162,7 @@ function Message() {
 
           {/* 3. CASE FILE */}
           <DeskItemWithTooltip
-            className={highlightCaseFileForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
+            className={highlightCaseFileForTutorial ? tutorialHighlightClass : baseItemClass}
             src={caseFileImg} 
             alt="Case File" 
             tooltip="Case File: open your report and briefing."
@@ -174,14 +178,15 @@ function Message() {
             style={{ ...itemStyle, width: '280px', top: '110px', left: '78%', transform: 'rotate(15deg)' }} 
           />
 
-          {/* 5. NOTEBOOK */}
+          {/* 5. HANDCUFFS */}
           <DeskItemWithTooltip
-            className='evidence-item'
-            src={notebookImg} 
-            alt="Notebook" 
-            tooltip="Notebook: inspect all suspect profiles."
-            style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(20deg)' }} 
+            className={highlightAccusationForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
+            src={handcuffs} 
+            alt="Accusation" 
+            tooltip="Make your accusation here."
+            style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(220deg)', zIndex: 10 }} 
             onClick={() => setSuspectsOpen(true)}
+            tutorialId='tutorial-accusation'
           />
 
           {/* 6. PENCIL */}
@@ -200,7 +205,7 @@ function Message() {
 
           {/* 12. PHONE */}
         <DeskItemWithTooltip
-          className={highlightPhoneForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
+          className={highlightPhoneForTutorial ? tutorialHighlightClass : baseItemClass}
             src={phoneImg} 
             alt="Cellphone" 
             tooltip="Cellphone: answer and continue interrogation."

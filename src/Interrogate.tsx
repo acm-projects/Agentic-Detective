@@ -170,9 +170,8 @@ function Interrogate() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
-  const numConversations = totalConversationCount; // totalConversationCount is used to keep track of 
-                                                   // whether the user is a first time player or not
-  const isFirstTimePlayer = numConversations === 0 || numConversations === 1; // classified as first time player if 1 or less messages sent
+  const numConversations = totalConversationCount;
+  const isFirstTimePlayer = numConversations <= 2;
   console.log("first time? " + isFirstTimePlayer);
 
   // ── Evidence / clue state ──────────────────────────────

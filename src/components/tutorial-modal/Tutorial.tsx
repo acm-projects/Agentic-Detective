@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useGameStore } from '../../useGameStore';
 import './tutorial.css';
 
 interface Step {
-    route: '/desk' | '/report' | '/clues' | '/interrogate';
+    route: '/desk' | '/report' | '/clues' | '/interrogate' | '/accuse';
     routeLabel: string;
     badge: string;
     title: string;
@@ -35,6 +36,17 @@ const STEPS: Step[] = [
             'Open the Case File on the desk to review your official briefing and known facts.',
             'Start with the report before moving to deeper evidence review.'
         ]
+    },
+    {
+        route: '/desk',
+        routeLabel: 'Desk',
+        badge: 'Accusation',
+        title: 'Make your final accusation here',
+        icon: 'ACCUSE',
+        description: [
+            'Once you have enough information to make a decision, open the accusation page to arrest a suspect.',
+            'Remember, you can only accuse once. Be careful.'
+        ],
     },
     {
         route: '/clues',
@@ -143,6 +155,8 @@ const getCalloutStyle = (rect: DOMRect) => {
 function TutorialModal() {
     const navigate = useNavigate();
     const location = useLocation();
+    const totalConversationCount = useGameStore(state => state.totalConversationCount);
+    const isFirstTimePlayer = totalConversationCount <= 2;
     const [visible, setVisible] = useState(false);
     const [step, setStep] = useState(0);
     const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
@@ -153,6 +167,8 @@ function TutorialModal() {
         location.pathname === '/interrogate';
 
     useEffect(() => {
+        if (!isFirstTimePlayer) return;
+
         const hasSeenTutorial = localStorage.getItem(TUTORIAL_KEY) === 'true';
         if (hasSeenTutorial) return;
         const readyAfterReport = localStorage.getItem(TUTORIAL_READY_KEY) === 'true';
@@ -163,7 +179,7 @@ function TutorialModal() {
         const savedStep = Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? 0);
         setStep(clampStep(savedStep));
         setVisible(true);
-    }, []);
+    }, [isFirstTimePlayer]);
 
     useEffect(() => {
         if (!visible) return;
