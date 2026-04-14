@@ -185,6 +185,7 @@ function Interrogate() {
     ? 'Unlock 1 more clue to use this feature.'
     : `Unlock ${cluesRemainingForAccusation} more clues to use this feature.`;
   const [attachedClues, setAttachedClues] = useState<AttachedClue[]>([]);
+  const [isDraggingClue, setIsDraggingClue] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   // const [recentlyLostClueName, setRecentlyLostClueName] = useState<string | null>(null);
   const previousLostCountRef = useRef(lostClueCount);
@@ -328,6 +329,7 @@ function Interrogate() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    setIsDraggingClue(false);
     const raw = e.dataTransfer.getData('application/clue');
     if (!raw) return;
     try {
@@ -706,7 +708,7 @@ function Interrogate() {
                 </div>
 
                 <div
-                  className={`question-submit-box ${isDragOver ? 'drag-over' : ''}`}
+                  className={`question-submit-box ${(isDragOver || isDraggingClue) ? 'drag-over' : ''}`}
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
@@ -732,7 +734,7 @@ function Interrogate() {
                       })}
                     </div>
                   )}
-                  {isDragOver && <div className="drop-hint">Drop clue to present as evidence</div>}
+                  {isDraggingClue && <div className="drop-hint">Drop clue to present evidence</div>}
                   <div className='question-box'>
                     <input
                       type="text"
@@ -901,11 +903,16 @@ function Interrogate() {
                     key={clue.id}
                     draggable={!alreadyAttached}
                     onDragStart={e => {
+                      setIsDraggingClue(true);
                       e.dataTransfer.setData('application/clue', JSON.stringify({
                         id: clue.id, name: clue.name, description: clue.description,
                         location: clue.location, couldImplicateSuspects: clue.couldImplicateSuspects,
                       }));
                       e.dataTransfer.effectAllowed = 'copy';
+                    }}
+                    onDragEnd={() => {
+                      setIsDraggingClue(false);
+                      setIsDragOver(false);
                     }}
                     className={[
                       'clue-modal-card',
