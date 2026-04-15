@@ -147,6 +147,7 @@ function Interrogate() {
     tickElapsed,
   } = useGameStore();
 
+  const isSpeaking = useGameStore(s => s.isSpeaking);
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
   const profiles = useMemo(() => player?.characterProfiles ?? [], [player?.characterProfiles]);
@@ -583,7 +584,12 @@ function Interrogate() {
               <div className='character-container'>
                 <div className='character-avatar'>
                   {activeProfile.portraitFeatures
-                    ? <SuspectPortrait className="interrogate-main-portrait" features={activeProfile.portraitFeatures} size={560} />
+                    ? <SuspectPortrait
+                        className="interrogate-main-portrait"
+                        features={activeProfile.portraitFeatures}
+                        size={560}
+                        isSpeaking={isSpeaking}
+                      />
                     : <div style={{ width: 384, height: 384, background: '#111' }} />
                   }
                   <div className="avatar-overlay" />

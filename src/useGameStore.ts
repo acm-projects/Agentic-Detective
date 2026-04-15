@@ -77,6 +77,7 @@ interface GameState {
   isResponding: boolean;
   elapsed: number;
   voiceIds: Record<string, string>;
+  isSpeaking: boolean;
 
   // Actions
   setSeed: (seed: Partial<PlayerSeed>) => void;
@@ -130,6 +131,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   isResponding: false,
   elapsed: 0,
   voiceIds: {},
+  isSpeaking: false,
 
   // ── Merge partial seed updates ──
   setSeed: (partial) =>
@@ -586,13 +588,14 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       console.log("[tts] about to speak, voiceId:", voiceId, "text length:", responseText.length);
       if (responseText) {
-        streamSpeech(responseText, voiceId ?? null).catch(err =>
-          console.error("[tts] playback failed:", err)
-        );
-      }
+  set({ isSpeaking: true });
+  streamSpeech(responseText, voiceId ?? null)
+    .catch(err => console.error("[tts] playback failed:", err))
+    .finally(() => set({ isSpeaking: false }));
+}
 
-      // Mark as no longer responding after message is added
-      set({ isResponding: false });
+// Mark as no longer responding after message is added
+set({ isResponding: false });
     } catch (err) {
       console.error("Message failed:", err);
       // Revert optimistic message on failure

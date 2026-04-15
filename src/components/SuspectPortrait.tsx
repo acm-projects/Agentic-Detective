@@ -12,6 +12,7 @@ import eyesSrc      from './portraits/custom/Eyes.png'
 import nosesSrc     from './portraits/custom/Noses.png'
 import mouthsSrc    from './portraits/custom/Mouths.png'
 import frontHairSrc from './portraits/custom/Front-hair.png'
+import talkingMouth from './portraits/custom/TalkingMouth.gif'
 
 const FRAME_W = 128
 const FRAME_H = 128
@@ -125,9 +126,9 @@ function drawCharacter(
   images: Record<string, HTMLImageElement>,
   character: CharacterState,
   features: FeatureSelection,
+  isSpeaking = false,
 ) {
   ctx.clearRect(0, 0, FRAME_W, FRAME_H)
-
   const off = document.createElement('canvas')
   off.width = FRAME_W
   off.height = FRAME_H
@@ -135,6 +136,8 @@ function drawCharacter(
   offCtx.imageSmoothingEnabled = false
 
   for (const layer of LAYER_ORDER) {
+    if (isSpeaking && layer === 'mouth') continue  // skip — GIF covers it
+
     const img = images[layer]
     const frame = character[layer]
     if (!img || !frame) continue
@@ -178,9 +181,9 @@ async function loadImages(): Promise<Record<string, HTMLImageElement>> {
 
 interface SuspectPortraitProps {
   features: FeatureSelection
-  /** Rendered size in CSS pixels. Defaults to 384 (128 * 3) */
   size?: number
   className?: string
+  isSpeaking?: boolean
 }
 
 // Shared image cache so sprites are only loaded once across all portrait instances
@@ -204,10 +207,11 @@ function getImages(): Promise<Record<string, HTMLImageElement>> {
 //  COMPONENT
 // ─────────────────────────────────────────────
 
-export default function SuspectPortrait({ features, size = 384, className }: SuspectPortraitProps) {
-  const canvasRef   = useRef<HTMLCanvasElement>(null)
-  const loadedRef   = useRef(false)
-  const featuresRef = useRef(features)
+export default function SuspectPortrait({ features, size = 384, className, isSpeaking = false }: SuspectPortraitProps) {
+  const canvasRef     = useRef<HTMLCanvasElement>(null)
+  const loadedRef     = useRef(false)
+  const featuresRef   = useRef(features)
+  const isSpeakingRef = useRef(isSpeaking)
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current
@@ -216,10 +220,9 @@ export default function SuspectPortrait({ features, size = 384, className }: Sus
     if (!ctx) return
     ctx.imageSmoothingEnabled = false
     const character = buildCharacterState(featuresRef.current)
-    drawCharacter(ctx, imageCache, character, featuresRef.current)
+    drawCharacter(ctx, imageCache, character, featuresRef.current, isSpeakingRef.current)
   }, [])
 
-  // Load sprites once
   useEffect(() => {
     getImages().then(() => {
       loadedRef.current = true
@@ -227,23 +230,44 @@ export default function SuspectPortrait({ features, size = 384, className }: Sus
     }).catch(err => console.error('Portrait sprite load error:', err))
   }, [redraw])
 
-  // Redraw whenever features change
   useEffect(() => {
     featuresRef.current = features
     redraw()
   }, [features, redraw])
 
+  // Redraw when speaking state changes (removes/restores mouth layer)
+  useEffect(() => {
+    isSpeakingRef.current = isSpeaking
+    redraw()
+  }, [isSpeaking, redraw])
+
+  const renderedSize = size / 1.75
+
   return (
+  <div 
+    className={className}   // ← move className here
+    style={{ position: 'relative', display: 'inline-block', width: renderedSize, height: renderedSize }}
+  >
     <canvas
       ref={canvasRef}
       width={FRAME_W}
       height={FRAME_H}
-      className={className}
-      style={{
-        width: size / 1.75,
-        height: size / 1.75,
-        imageRendering: 'pixelated',
-      }}
+      style={{ width: '100%', height: '100%', imageRendering: 'pixelated', display: 'block' }}
     />
-  )
+    {isSpeaking && (
+      <img
+        src={talkingMouth}
+        alt=""
+        style={{
+          position: 'absolute',
+          top: 0, left: 0,
+          width: '100%', height: '100%',
+          imageRendering: 'pixelated',
+          pointerEvents: 'none',
+          display: 'block',
+        }}
+      />
+    )}
+  </div>
+)
 }
