@@ -9,6 +9,7 @@ const FALLBACK_VOICES = {
 export async function streamSpeech(
   text: string,
   voiceId: string | null | undefined,
+  onSpeakingChange?: (speaking: boolean) => void,
 ): Promise<void> {
   const resolvedId = voiceId?.trim() || FALLBACK_VOICES.female;
   if (!ELEVENLABS_API_KEY) return;
@@ -45,8 +46,10 @@ export async function streamSpeech(
 
   return new Promise((resolve, reject) => {
     const audio = new Audio(url);
-    audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-    audio.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
-    audio.play().catch(reject);
+    audio.onended = () => { URL.revokeObjectURL(url); onSpeakingChange?.(false); resolve(); };
+    audio.onerror = (e) => { URL.revokeObjectURL(url); onSpeakingChange?.(false); reject(e); };
+    audio.play()
+      .then(() => onSpeakingChange?.(true))
+      .catch(reject);
   });
 }

@@ -632,7 +632,7 @@ function Interrogate() {
                   ))}
                   {isResponding && (
                     <p className='bot-message' style={{ opacity: 0.5, fontStyle: 'italic' }}>
-                      <strong>{activeProfile?.name}:</strong> …
+                      <strong>{activeProfile?.name}:</strong> Thinking…
                     </p>
                   )}
                   <div ref={chatEndRef} />

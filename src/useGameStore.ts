@@ -588,10 +588,8 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       console.log("[tts] about to speak, voiceId:", voiceId, "text length:", responseText.length);
       if (responseText) {
-  set({ isSpeaking: true });
-  streamSpeech(responseText, voiceId ?? null)
-    .catch(err => console.error("[tts] playback failed:", err))
-    .finally(() => set({ isSpeaking: false }));
+  streamSpeech(responseText, voiceId ?? null, (speaking) => set({ isSpeaking: speaking }))
+    .catch(err => console.error("[tts] playback failed:", err));
 }
 
 // Mark as no longer responding after message is added
