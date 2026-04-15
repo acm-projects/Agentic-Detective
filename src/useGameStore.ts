@@ -501,7 +501,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       const suspectMessage: ChatMessage = {
         role: "suspect",
         text: responseText,
-        displayText: responseText,  // suspects have no separate display text
+        displayText: "",  // suspects have no separate display text
         timestamp: Date.now(),
       };
 
@@ -511,7 +511,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         sessions: {
           ...state.sessions,
           [activeSuspectName]: {
-            ...state.sessions[activeSuspectName],                   
+            ...state.sessions[activeSuspectName],
             history: [...state.sessions[activeSuspectName].history, suspectMessage],
             conversationCount: state.sessions[activeSuspectName].conversationCount + 1,
             stressLevel: newStress,
@@ -588,8 +588,29 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       console.log("[tts] about to speak, voiceId:", voiceId, "text length:", responseText.length);
       if (responseText) {
-  streamSpeech(responseText, voiceId ?? null, (speaking) => set({ isSpeaking: speaking }))
-    .catch(err => console.error("[tts] playback failed:", err));
+  streamSpeech(
+    responseText,
+    voiceId ?? null,
+    (speaking) => set({ isSpeaking: speaking }),
+    (revealedText) => {
+      // Update the last message's displayText in place
+      set(state => {
+        const session = state.sessions[activeSuspectName];
+        if (!session) return state;
+        const history = [...session.history];
+        const lastIdx = history.length - 1;
+        if (history[lastIdx]?.role === 'suspect') {
+          history[lastIdx] = { ...history[lastIdx], displayText: revealedText };
+        }
+        return {
+          sessions: {
+            ...state.sessions,
+            [activeSuspectName]: { ...session, history },
+          },
+        };
+      });
+    }
+  ).catch(err => console.error("[tts] playback failed:", err));
 }
 
 // Mark as no longer responding after message is added

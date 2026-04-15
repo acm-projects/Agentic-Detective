@@ -625,7 +625,7 @@ function Interrogate() {
                         </div>
                       ) : (
                         <p className='bot-message'>
-                          <strong>{activeProfile?.name}:</strong> {msg.text}
+                          <strong>{activeProfile?.name}:</strong> {msg.displayText}
                         </p>
                       )}
                     </div>
