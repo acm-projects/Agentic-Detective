@@ -69,6 +69,32 @@ body {
   z-index: 2;
 }
 
+/* --- TOP BUTTONS --- */
+.top-buttons {
+  position: absolute;
+  top: 28px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-sizing: border-box;
+  z-index: 50;
+}
+
+.top-left-btn,
+.top-right-btn {
+  font-size: 0.55rem;
+  padding: 6px 10px;
+  box-shadow: 1px 1px 0px #000000;
+}
+
+.top-left-btn:hover,
+.top-right-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0px #000000;
+}
+
 /* --- TOP RULE --- */
 .top-rule {
   width: 100%;
@@ -235,8 +261,10 @@ body {
 }
 
 .chat-layered-photo {
-  top: 10%;
-  filter: grayscale(100%) contrast(1.6);
+  width: 140%;
+  top: -25%;
+  left: 60%; 
+  filter: grayscale(80%) contrast(.8);
 }
 
 .photo-placeholder {
@@ -296,10 +324,6 @@ body {
   color: #101010;
 }
 
-.mute-button {
-  margin-top: 0;
-}
-
 /* --- CONTROLS & BUTTONS --- */
 .controls-panel {
   flex: 1;
@@ -344,7 +368,7 @@ body {
 
 .small-btn {
   font-size: 0.62rem;
-  padding: 8px 12px;
+  padding: 3px 5px;
 }
 
 /* --- CHAT ROW --- */
@@ -448,16 +472,25 @@ body {
   filter: grayscale(90%) contrast(1.1);
 }
 
+.solve-button {
+  width: 100%;
+}
+
 .solve-row {
+  width: 100%;
   display: flex;
-  gap: 10px;
-  align-items: center;
   margin-top: 6px;
-  justify-content: center;
 }
 
 .solve-button {
+  width: 100%;
   margin-top: 0;
+  padding: 12px 0;
+  font-size: 0.8rem;
+  background-color: #7a1f1f;
+  color: #f1eadb;
+  border: 2px solid #000000;
+  filter: none;
 }
 
 /* --- RESPONSIVE --- */
@@ -469,6 +502,17 @@ body {
   .container {
     padding: 0 20px 26px;
     width: min(96vw, 760px);
+  }
+
+  .top-buttons {
+    top: 10px;
+    padding: 0 10px;
+  }
+
+  .top-left-btn,
+  .top-right-btn {
+    font-size: 0.42rem;
+    padding: 5px 7px;
   }
 
   .newsletter-strip {

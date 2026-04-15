@@ -3,13 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from './useGameStore';
 import './Accuse.css';
 
-// ─── Audio helpers ────────────────────────────────────────────────────────────
-
 function playWithFadeIn(src: string, fadeDuration = 1500): HTMLAudioElement {
   const audio = new Audio(src);
   audio.volume = 0;
   audio.play().catch(err => console.warn('Audio play failed:', err));
-
   const steps = 45;
   const interval = fadeDuration / steps;
   let step = 0;
@@ -18,25 +15,17 @@ function playWithFadeIn(src: string, fadeDuration = 1500): HTMLAudioElement {
     audio.volume = Math.min(step / steps, 1);
     if (step >= steps) clearInterval(timer);
   }, interval);
-
   return audio;
 }
-
-// ─── Fireworks ────────────────────────────────────────────────────────────────
 
 interface Particle {
   x: number; y: number;
   vx: number; vy: number;
-  alpha: number;
-  decay: number;
-  radius: number;
-  color: string;
+  alpha: number; decay: number;
+  radius: number; color: string;
 }
 
-const COLORS = [
-  '#ff4e50','#fc913a','#f9ca24','#6ab04c',
-  '#22a6b3','#be2edd','#e056fd','#fff',
-];
+const COLORS = ['#ff4e50','#fc913a','#f9ca24','#6ab04c','#22a6b3','#be2edd','#e056fd','#fff'];
 
 function burst(cx: number, cy: number): Particle[] {
   const count = 60 + Math.floor(Math.random() * 40);
@@ -57,30 +46,22 @@ function burst(cx: number, cy: number): Particle[] {
 
 function FireworksCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     const canvas = canvasRef.current!;
-    const ctx = canvas.getContext('2d')!;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     let particles: Particle[] = [];
     let raf: number;
-
-    const resize = () => {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
     resize();
     window.addEventListener('resize', resize);
-
-    // Schedule random bursts
     const launchInterval = setInterval(() => {
       const cx = 0.15 * canvas.width + Math.random() * 0.7 * canvas.width;
       const cy = 0.1  * canvas.height + Math.random() * 0.5 * canvas.height;
       particles.push(...burst(cx, cy));
     }, 400);
-
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       particles.forEach(p => {
         ctx.globalAlpha = p.alpha;
         ctx.beginPath();
@@ -88,73 +69,37 @@ function FireworksCanvas() {
         ctx.fillStyle = p.color;
         ctx.fill();
       });
-
       ctx.globalAlpha = 1;
-
-      // Update
-      particles.forEach(p => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vy += 0.08;          // gravity
-        p.vx *= 0.98;          // drag
-        p.alpha -= p.decay;
-      });
+      particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.vx *= 0.98; p.alpha -= p.decay; });
       particles = particles.filter(p => p.alpha > 0.02);
-
       raf = requestAnimationFrame(draw);
     };
     draw();
-
-    return () => {
-      clearInterval(launchInterval);
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', resize);
-    };
+    return () => { clearInterval(launchInterval); cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
   }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        position: 'fixed', inset: 0,
-        pointerEvents: 'none',
-        zIndex: 10,
-      }}
-    />
-  );
+  return <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 10 }} />;
 }
-
-// ─── Police Siren ─────────────────────────────────────────────────────────────
 
 function PoliceSiren() {
   const [color, setColor] = useState<'red' | 'blue'>('red');
-
   useEffect(() => {
     const id = setInterval(() => setColor(c => c === 'red' ? 'blue' : 'red'), 360);
     return () => clearInterval(id);
   }, []);
-
-    return (
-    <div
-      style={{
-        position: 'fixed', inset: 0,
-        pointerEvents: 'none',
-        zIndex: 10,
-        boxShadow: color === 'red'
-          ? 'inset 0 0 120px 30px rgba(220,30,30,0.22)'
-          : 'inset 0 0 120px 30px rgba(30,80,220,0.22)',
-        transition: 'box-shadow 0.15s ease',
-      }}
-    />
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 10,
+      boxShadow: color === 'red'
+        ? 'inset 0 0 120px 30px rgba(220,30,30,0.22)'
+        : 'inset 0 0 120px 30px rgba(30,80,220,0.22)',
+      transition: 'box-shadow 0.15s ease',
+    }} />
   );
 }
-
-// ─── Main Component ───────────────────────────────────────────────────────────
 
 function Accuse() {
   const navigate = useNavigate();
   const { accusationResult, resetGame } = useGameStore();
-
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
   const audioRefs = useRef<HTMLAudioElement[]>([]);
 
@@ -166,53 +111,63 @@ function Accuse() {
 
   useEffect(() => {
     if (!accusationResult) return;
-
     const { isCorrect } = accusationResult;
-
     if (isCorrect) {
-      const cuffs = new Audio('../assets/freesound_community-handcuffs-94692.mp3');
-      cuffs.play().catch(err => console.warn('Audio play failed:', err));
-      const win = playWithFadeIn('assets/win.mp3');
+      const cuffs = new Audio('/assets/freesound_community-handcuffs-94692.mp3');
+      const win   = playWithFadeIn('/assets/win.mp3');
       audioRefs.current = [cuffs, win];
+      cuffs.play().catch(err => console.warn('Audio play failed:', err));
     } else {
-      const running = new Audio('../assets/km007-chase-running-9109.mp3');
-      running.play().catch(err => console.warn('Audio play failed:', err));
-      const lose = playWithFadeIn('assets/lose.mp3');
+      const running = new Audio('/assets/km007-chase-running-9109.mp3');
+      const lose    = playWithFadeIn('/assets/lose.mp3');
       audioRefs.current = [running, lose];
+      running.play().catch(err => console.warn('Audio play failed:', err));
     }
-
-    return () => {
-      audioRefs.current.forEach(a => { a.pause(); a.currentTime = 0; });
-    };
+    return () => { audioRefs.current.forEach(a => { a.pause(); a.currentTime = 0; }); };
   }, [accusationResult]);
 
   if (!accusationResult) {
-    return (
-      <div className="accuse-page accuse-dark">
+  return (
+    <div className="accuse-page-bg accuse-dark">
+      <div className="container accuse-fallback-content">
         <p className="accuse-redirect">
           No accusation made.{' '}
           <button onClick={() => navigate('/interrogate')}>Go Back</button>
         </p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   const { accusedName, isCorrect, trueKiller, explanation } = accusationResult;
 
-  return (
-    <div className={`accuse-page ${phase === 'flash' ? 'accuse-flash' : 'accuse-dark'}`}>
 
-      {/* Overlay effects — only shown after reveal */}
+  
+  return (
+    <div className={`accuse-page-bg ${phase === 'flash' ? 'accuse-flash' : 'accuse-dark'}`}>
+
       {phase === 'reveal' && isCorrect  && <FireworksCanvas />}
       {phase === 'reveal' && !isCorrect && <PoliceSiren />}
 
-      <div className={`accuse-content ${phase === 'reveal' ? 'accuse-visible' : ''}`}>
+      <div className={`container accuse-container-content ${phase === 'reveal' ? 'accuse-visible' : 'accuse-hidden'}`}>
+
+        <div className="newsletter-strip">
+          <span className="newsletter-text">The Daily Crimeletter</span>
+        </div>
 
         <h1 className={`accuse-verdict ${isCorrect ? 'accuse-guilty' : 'accuse-innocent'}`}>
           {isCorrect
-            ? `${accusedName} was guilty.`
-            : `${accusedName} is innocent.`}
+            ? `${accusedName} was guilty`
+            : `${accusedName} was innocent`}
         </h1>
+
+        <div className="title-divider" />
+
+        <div className="subtitle">
+          <span className="subtitle-side left">Case Closed</span>
+          <span className="subtitle-text">Verdict Edition</span>
+          <span className="subtitle-side right">Justice Served</span>
+        </div>
 
         <p className={`accuse-sub ${isCorrect ? 'accuse-guilty' : 'accuse-innocent'}`}>
           {isCorrect ? 'Case closed. Justice served.' : 'The killer is still out there…'}
@@ -224,13 +179,11 @@ function Accuse() {
           </p>
         )}
 
-        {explanation && (
-          <p className="accuse-explanation">{explanation}</p>
-        )}
+        {explanation && <p className="accuse-explanation">{explanation}</p>}
 
         <div className="accuse-buttons">
           <button
-            className="accuse-btn"
+            className="detective-button"
             onClick={() => {
               audioRefs.current.forEach(a => { a.pause(); a.currentTime = 0; });
               resetGame();
@@ -239,6 +192,12 @@ function Accuse() {
           >
             New Case
           </button>
+        </div>
+
+        <div className="footer-strip">
+          <p className="footer-text">
+            © The Daily Crimeletter — All Rights Reserved — Unauthorised Reproduction Prohibited — Est. 1887
+          </p>
         </div>
 
       </div>
