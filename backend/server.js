@@ -30,16 +30,42 @@ app.use(express.json());
 // ── MongoDB setup ──
 const client = new MongoClient(process.env.ATLAS_URI);
 let db;
+let usersCollection;
+let casesCollection;
+let gameCollection;
 
 async function connectDB() {
   await client.connect();
   db = client.db("AgenticDetective");
+  usersCollection = db.collection("users");
+  casesCollection = db.collection("cases");
+  gameCollection = db.collection("game");
   console.log("MongoDB connected");
+
+  // Create the collections explicitly so they exist even before the first insert.
+  const existingCollections = await db.listCollections().toArray();
+  const existingNames = new Set(existingCollections.map((collection) => collection.name));
+
+  if (!existingNames.has("users")) {
+    await db.createCollection("users");
+  }
+  if (!existingNames.has("cases")) {
+    await db.createCollection("cases");
+  }
+  if (!existingNames.has("game")) {
+    await db.createCollection("game");
+  }
 
   // Creating indexes for faster data retrieval
 
-  await db.collection("cases").createIndex({ sessionId: 1 }, { unique: true });
-  await db.collection("cases").createIndex({ userId: 1, status: 1, updatedAt: 1 });
+  await usersCollection.createIndex({ userId: 1 }, { unique: true });
+
+  await casesCollection.createIndex({ sessionId: 1 }, { unique: true });
+  await casesCollection.createIndex({ caseId: 1 });
+
+  await gameCollection.createIndex({ sessionId: 1, userId: 1 }, { unique: true });
+  await gameCollection.createIndex({ userId: 1, status: 1, updatedAt: 1 });
+  await gameCollection.createIndex({ 'outcome.featured': 1, updatedAt: -1 });
 
 }
 
@@ -255,7 +281,23 @@ app.post('/cases/create', async (req, res) => {
       return res.status(400).json({ error: "seed is required" });
     }
 
-    const doc = {
+    const caseDoc = {
+      schemaVersion: 1,
+      sessionId,
+      caseId: sessionId,
+      createdAt: now,
+      updatedAt: now,
+
+      caseData: {
+        storyline: caseData.storyline ?? null,
+        suspects: caseData.suspects,
+        caseReport: caseData.caseReport,
+        characterProfiles: caseData.characterProfiles,
+        initialClues: caseData.initialClues,
+      },
+    };
+
+    const gameDoc = {
       schemaVersion: 1,
       sessionId,
       caseId: sessionId,
@@ -265,22 +307,13 @@ app.post('/cases/create', async (req, res) => {
       lastAutosavedAt: now,
       revision: 1,
       status: "in_progress",
-
-      caseData: {
-        storyline: caseData.storyline ?? null,
-        suspects: caseData.suspects,
-        caseReport: caseData.caseReport,
-        characterProfiles: caseData.characterProfiles,
-        initialClues: caseData.initialClues,
-      },
-
       game: {
         phase: game?.phase ?? "briefing",
         elapsedSeconds: game?.elapsedSeconds ?? 0,
         activeSuspectName: game?.activeSuspectName ?? null,
         totalConversationCount: game?.totalConversationCount ?? 0,
-        seed: seed ?? null,
       },
+      seed: seed ?? null,
 
       interrogation: {
         suspectSessions: buildInitialSuspectSessions(caseData.suspects),
@@ -310,10 +343,28 @@ app.post('/cases/create', async (req, res) => {
       }
     };
 
-    // Avoid clobbering an existing session on duplicate create requests.
-    await db.collection("cases").updateOne(
+    // Case content is global and user-agnostic.
+    await casesCollection.updateOne(
       { sessionId },
-      { $setOnInsert: doc },
+      { $setOnInsert: caseDoc },
+      { upsert: true }
+    );
+
+    // User profile stores which cases this user has created.
+    await usersCollection.updateOne(
+      { userId },
+      {
+        $setOnInsert: { userId, createdAt: now },
+        $addToSet: { createdCaseIds: sessionId },
+        $set: { updatedAt: now },
+      },
+      { upsert: true }
+    );
+
+    // Game collection stores user-specific gameplay state.
+    await gameCollection.updateOne(
+      { sessionId, userId },
+      { $setOnInsert: gameDoc },
       { upsert: true }
     );
 
@@ -335,6 +386,7 @@ app.post('/cases/:sessionId/progress', async (req, res) => {
       clueState,
       schedulerState,
     } = req.body;
+    const userId = String(req.body.userId ?? '').trim();
 
     console.log("Progress updation endpoint reached!");
     console.log("sessionId:", sessionId);
@@ -354,8 +406,8 @@ app.post('/cases/:sessionId/progress', async (req, res) => {
       lastAutosavedAt: nowIso(),
     };
 
-    const result = await db.collection("cases").updateOne(
-      { $or: [{ sessionId }, { caseId: sessionId }] },
+    const result = await gameCollection.updateOne(
+      userId ? { sessionId, userId } : { sessionId },
       { $set: patch, $inc: { revision: 1 } }
     );
 
@@ -372,6 +424,7 @@ app.post('/case/:sessionId/suspectNotes', async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { suspectName, suspectNotes } = req.body;
+    const userId = String(req.body.userId ?? '').trim();
 
     if (!suspectName || !String(suspectName).trim()) {
       return res.status(400).json({ error: 'suspectName is required' });
@@ -388,8 +441,8 @@ app.post('/case/:sessionId/suspectNotes', async (req, res) => {
       createdAt: nowIso(),
     };
 
-    const result = await db.collection('cases').updateOne(
-      { $or: [{ sessionId }, { caseId: sessionId }] },
+    const result = await gameCollection.updateOne(
+      userId ? { sessionId, userId } : { sessionId },
       {
         $push: { 'notes.suspectNotes': noteEntry },
         $set: {
@@ -415,9 +468,10 @@ app.get('/case/:sessionId/suspectNotes', async (req, res) => {
   try {
     const { sessionId } = req.params;
     const suspectName = String(req.query.suspectName ?? '').trim();
+    const userId = String(req.query.userId ?? '').trim();
 
-    const doc = await db.collection('cases').findOne(
-      { $or: [{ sessionId }, { caseId: sessionId }] },
+    const doc = await gameCollection.findOne(
+      userId ? { sessionId, userId } : { sessionId },
       { projection: { _id: 0, notes: 1 } }
     );
 
@@ -437,8 +491,9 @@ app.get('/case/:sessionId/suspectNotes', async (req, res) => {
 app.get('/case/:sessionId/notes', async (req, res) => {
   try {
     const { sessionId } = req.params;
-    const doc = await db.collection('cases').findOne(
-      { $or: [{ sessionId }, { caseId: sessionId }] },
+    const userId = String(req.query.userId ?? '').trim();
+    const doc = await gameCollection.findOne(
+      userId ? { sessionId, userId } : { sessionId },
       { projection: { _id: 0, notes: 1 } }
     );
 
@@ -461,11 +516,12 @@ app.post('/cases/:sessionId/outcome', async (req, res) => {
       trueKiller, 
       explanation,
     } = req.body;
+    const userId = String(req.body.userId ?? '').trim();
 
     console.log("outcome updation endpoint reached!");
 
-    const result = await db.collection("cases").updateOne(
-      { $or: [{ sessionId }, { caseId: sessionId }] },
+    const result = await gameCollection.updateOne(
+      userId ? { sessionId, userId } : { sessionId },
       { $set: {
         outcome: {
           accusedName,
@@ -498,6 +554,7 @@ app.post('/cases/:sessionId/feedback', async (req, res) => {
   try {
     const { sessionId } = req.params;
     const { gameplayRating, featured } = req.body;
+    const userId = String(req.body.userId ?? '').trim();
 
     if (![1, 2, 3, 4, 5].includes(Number(gameplayRating))) {
       return res.status(400).json({ error: 'gameplayRating must be 1-5' });
@@ -507,8 +564,8 @@ app.post('/cases/:sessionId/feedback', async (req, res) => {
       return res.status(400).json({ error: 'featured must be boolean' });
     }
 
-    const result = await db.collection('cases').updateOne(
-      { $or: [{ sessionId }, { caseId: sessionId }] },
+    const result = await gameCollection.updateOne(
+      userId ? { sessionId, userId } : { sessionId },
       {
         $set: {
           'outcome.gameplayRating': Number(gameplayRating),
@@ -539,7 +596,7 @@ app.get('/community/cases/:caseCode/template', async (req, res) => {
     }
 
     const caseCodeRegex = new RegExp(`^${caseCode}$`, 'i');
-    const doc = await db.collection('cases').findOne(
+    const doc = await casesCollection.findOne(
       {
         $or: [
           { sessionId: caseCodeRegex },
@@ -549,8 +606,8 @@ app.get('/community/cases/:caseCode/template', async (req, res) => {
         sort: { updatedAt: -1 },
         projection: {
           _id: 0,
+          sessionId: 1,
           caseData: 1,
-          game: 1,
         },
       }
     );
@@ -559,9 +616,14 @@ app.get('/community/cases/:caseCode/template', async (req, res) => {
       return res.status(404).json({ error: 'Case code not found' });
     }
 
+    const gameDoc = await gameCollection.findOne(
+      { sessionId: doc.sessionId },
+      { projection: { _id: 0, seed: 1 } }
+    );
+
     res.json({
       caseData: doc.caseData,
-      seed: doc.game?.seed ?? null,
+      seed: gameDoc?.seed ?? null,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -575,22 +637,16 @@ app.get('/community/feed', async (req, res) => {
       ? Math.max(1, Math.min(30, requestedLimit))
       : 12;
 
-    const docs = await db.collection('cases')
+    const gameDocs = await gameCollection
       .find(
         { 'outcome.featured': true },
         {
           projection: {
             _id: 0,
             userId: 1,
-            caseId: 1,
             sessionId: 1,
             updatedAt: 1,
             'outcome.gameplayRating': 1,
-            'outcome.featured': 1,
-            'caseData.caseReport.caseId': 1,
-            'caseData.caseReport.caseTitle': 1,
-            'caseData.caseReport.officialBriefing': 1,
-            'caseData.caseReport.setting': 1,
           },
         }
       )
@@ -598,19 +654,40 @@ app.get('/community/feed', async (req, res) => {
       .limit(limit)
       .toArray();
 
-    const cases = docs.map((doc) => {
-      const report = doc.caseData?.caseReport ?? {};
+    const sessionIds = [...new Set(gameDocs.map((doc) => doc.sessionId).filter(Boolean))];
+    const caseDocs = await casesCollection
+      .find(
+        { sessionId: { $in: sessionIds } },
+        {
+          projection: {
+            _id: 0,
+            sessionId: 1,
+            caseId: 1,
+            'caseData.caseReport.caseId': 1,
+            'caseData.caseReport.caseTitle': 1,
+            'caseData.caseReport.officialBriefing': 1,
+            'caseData.caseReport.setting': 1,
+          },
+        }
+      )
+      .toArray();
+
+    const caseBySessionId = new Map(caseDocs.map((doc) => [doc.sessionId, doc]));
+
+    const cases = gameDocs.map((gameDoc) => {
+      const caseDoc = caseBySessionId.get(gameDoc.sessionId) ?? {};
+      const report = caseDoc.caseData?.caseReport ?? {};
       return {
-        caseCode: report.caseId ?? doc.caseId ?? doc.sessionId,
+        caseCode: report.caseId ?? caseDoc.caseId ?? gameDoc.sessionId,
         title: report.caseTitle ?? 'Untitled Case',
-        author: doc.userId ? `Detective ${doc.userId.slice(0, 8)}` : 'Anonymous Detective',
+        author: gameDoc.userId ? `Detective ${gameDoc.userId.slice(0, 8)}` : 'Anonymous Detective',
         description: report.officialBriefing ?? report.setting ?? 'No case description available.',
-        gameplayRating: Number(doc.outcome?.gameplayRating ?? 0),
-        updatedAt: doc.updatedAt ?? null,
+        gameplayRating: Number(gameDoc.outcome?.gameplayRating ?? 0),
+        updatedAt: gameDoc.updatedAt ?? null,
       };
     });
 
-    const contributors = await db.collection('cases')
+    const contributors = await gameCollection
       .aggregate([
         {
           $match: {
@@ -657,16 +734,34 @@ app.get('/community/feed', async (req, res) => {
 // GET Method to get case data from session id
 app.get('/cases/:sessionId', async (req, res) => {
   try {
-    const doc = await db.collection("cases").findOne(
+    const caseDoc = await casesCollection.findOne(
       { sessionId: req.params.sessionId },
       { projection: { _id: 0 } } // tells mongo to exclude the _id field
     );
 
-    if (!doc) {
+    if (!caseDoc) {
       return res.status(404).json({ error: "Case not found" });
     }
 
-    res.json(doc);
+    const userId = String(req.query.userId ?? '').trim();
+    const gameDoc = await gameCollection.findOne(
+      userId ? { sessionId: req.params.sessionId, userId } : { sessionId: req.params.sessionId },
+      { projection: { _id: 0 } }
+    );
+
+    if (!gameDoc) {
+      return res.json(caseDoc);
+    }
+
+    const merged = {
+      ...gameDoc,
+      schemaVersion: caseDoc.schemaVersion ?? gameDoc.schemaVersion,
+      sessionId: caseDoc.sessionId,
+      caseId: caseDoc.caseId ?? gameDoc.caseId,
+      caseData: caseDoc.caseData,
+    };
+
+    res.json(merged);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -679,16 +774,31 @@ app.get('/cases/user/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    const docs = await db.collection("cases")
+    const gameDocs = await gameCollection
       .find({ userId }, { projection: { _id: 0 } })
       .sort({ updatedAt: -1 }) // most recent first
       .toArray();
 
-    if (!docs.length) {
+    if (!gameDocs.length) {
       console.log("No cases found for this user");
       return res.json([]);
       // return res.status(404).json({ error: "No cases found for this user" });
     }
+
+    const sessionIds = [...new Set(gameDocs.map((doc) => doc.sessionId).filter(Boolean))];
+    const caseDocs = await casesCollection
+      .find({ sessionId: { $in: sessionIds } }, { projection: { _id: 0 } })
+      .toArray();
+
+    const caseBySessionId = new Map(caseDocs.map((doc) => [doc.sessionId, doc]));
+
+    const docs = gameDocs.map((gameDoc) => {
+      const caseDoc = caseBySessionId.get(gameDoc.sessionId) ?? null;
+      return {
+        ...gameDoc,
+        caseData: caseDoc?.caseData ?? null,
+      };
+    });
 
     res.json(docs);
   } catch (err) {
