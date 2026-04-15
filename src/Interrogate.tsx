@@ -13,6 +13,7 @@ import TutorialModal from './components/tutorial-modal/Tutorial';
 
 import './Interrogate.css';
 import SuspectPortrait from './components/SuspectPortrait'
+import { useSpeechToText } from './services/speechToText.ts';
 
 interface AttachedClue {
   id: string;
@@ -146,6 +147,7 @@ function Interrogate() {
     tickElapsed,
   } = useGameStore();
 
+  const isSpeaking = useGameStore(s => s.isSpeaking);
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
   const profiles = useMemo(() => player?.characterProfiles ?? [], [player?.characterProfiles]);
@@ -280,6 +282,11 @@ function Interrogate() {
     }
     setSelectedSuspicionLevel(null);
   }, [activeProfile, seed?.difficulty]);
+
+  const { isListening, toggle: toggleSpeech } = useSpeechToText(
+    (transcript) => setInput(prev => prev ? `${prev} ${transcript}` : transcript)
+    // appends to existing input rather than replacing it
+  );
 
   // ── Drop zone ──────────────────────────────────────────
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true); };
@@ -577,7 +584,12 @@ function Interrogate() {
               <div className='character-container'>
                 <div className='character-avatar'>
                   {activeProfile.portraitFeatures
-                    ? <SuspectPortrait className="interrogate-main-portrait" features={activeProfile.portraitFeatures} size={560} />
+                    ? <SuspectPortrait
+                        className="interrogate-main-portrait"
+                        features={activeProfile.portraitFeatures}
+                        size={560}
+                        isSpeaking={isSpeaking}
+                      />
                     : <div style={{ width: 384, height: 384, background: '#111' }} />
                   }
                   <div className="avatar-overlay" />
@@ -613,14 +625,14 @@ function Interrogate() {
                         </div>
                       ) : (
                         <p className='bot-message'>
-                          <strong>{activeProfile?.name}:</strong> {msg.text}
+                          <strong>{activeProfile?.name}:</strong> {msg.displayText}
                         </p>
                       )}
                     </div>
                   ))}
                   {isResponding && (
                     <p className='bot-message' style={{ opacity: 0.5, fontStyle: 'italic' }}>
-                      <strong>{activeProfile?.name}:</strong> …
+                      <strong>{activeProfile?.name}:</strong> Thinking…
                     </p>
                   )}
                   <div ref={chatEndRef} />
@@ -662,6 +674,15 @@ function Interrogate() {
                       disabled={isResponding}
                       onChange={e => setInput(e.target.value)}
                     />
+                    <button
+                      type="button"
+                      onClick={toggleSpeech}
+                      disabled={isResponding}
+                      className={`mic-btn ${isListening ? 'mic-btn--active' : ''}`}
+                      title={isListening ? 'Stop listening' : 'Speak your question'}
+                    >
+                      {isListening ? '🔴' : '🎙️'}
+                    </button>
                   </div>
                   <div className='submit-button'>
                     <button

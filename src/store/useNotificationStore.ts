@@ -155,6 +155,7 @@ const IMAGE_UNSHUFFLE_CLUES = [
 const IMAGE_UNSHUFFLE_IMAGES = [
   '../../assets/Key.png',
   '../../assets/Outline.png',
+  '../../assets/MagnifyingGlass.png'
   // add more as needed
 ];
 

@@ -10,7 +10,7 @@ const PREFERRED_MODELS   = ["eleven_multilingual_v2", "eleven_turbo_v2_5", "elev
 //  TYPES
 // ─────────────────────────────────────────────
 
-interface ElevenVoice {
+export interface ElevenVoice {
   voice_id: string;
   name: string;
   labels: Record<string, string>;
@@ -18,7 +18,7 @@ interface ElevenVoice {
   high_quality_base_model_ids: string[];
 }
 
-interface VoiceSummary {
+export interface VoiceSummary {
   voice_id: string;
   name: string;
   gender: string;
@@ -30,23 +30,40 @@ interface VoiceSummary {
 }
 
 // ─────────────────────────────────────────────
+//  PER-GAME STATE
+// ─────────────────────────────────────────────
+
+const usedVoiceIds = new Set<string>();
+
+export function resetUsedVoices() {
+  usedVoiceIds.clear();
+}
+
+// ─────────────────────────────────────────────
 //  HELPERS
 // ─────────────────────────────────────────────
 
-async function fetchVoices(): Promise<ElevenVoice[]> {
+export async function fetchVoices(): Promise<ElevenVoice[]> {
   const res = await fetch(`${ELEVENLABS_BASE}/voices`, {
     headers: { "xi-api-key": ELEVENLABS_API_KEY },
   });
   if (!res.ok) throw new Error(`ElevenLabs voices fetch failed: ${res.status}`);
   const data = (await res.json()) as { voices: ElevenVoice[] };
 
-  return (data.voices ?? []).filter(v =>
-    Array.isArray(v.high_quality_base_model_ids) &&
-    v.high_quality_base_model_ids.some(m => PREFERRED_MODELS.includes(m))
-  );
+  const seen = new Set<string>();
+  return (data.voices ?? [])
+    .filter(v =>
+      Array.isArray(v.high_quality_base_model_ids) &&
+      v.high_quality_base_model_ids.some(m => PREFERRED_MODELS.includes(m))
+    )
+    .filter(v => {
+      if (seen.has(v.voice_id)) return false;
+      seen.add(v.voice_id);
+      return true;
+    });
 }
 
-function summarizeVoice(v: ElevenVoice): VoiceSummary {
+export function summarizeVoice(v: ElevenVoice): VoiceSummary {
   return {
     voice_id:    v.voice_id,
     name:        v.name ?? "Unknown",
@@ -59,7 +76,7 @@ function summarizeVoice(v: ElevenVoice): VoiceSummary {
   };
 }
 
-function scoreVoice(
+export function scoreVoice(
   v: VoiceSummary,
   ageCategory: string,
   accentHint: string | undefined,
@@ -135,7 +152,7 @@ export function createVoiceMcpServer(): McpServer {
   // ── Tool 2: Select best voice for a suspect ──
   server.tool(
     "select_v3_voice_for_suspect",
-    "Given a suspect's characteristics, returns the best matching ElevenLabs voice_id from your library.",
+    "Given a suspect's characteristics, returns the best matching ElevenLabs voice_id from your library. Will never return a voice already used in this game session.",
     {
       name:                z.string(),
       gender:              z.enum(["male", "female"]),
@@ -149,14 +166,15 @@ export function createVoiceMcpServer(): McpServer {
       const voices     = await fetchVoices();
       const candidates = voices
         .map(summarizeVoice)
-        .filter(v => v.gender.toLowerCase() === gender.toLowerCase());
+        .filter(v => v.gender.toLowerCase() === gender.toLowerCase())
+        .filter(v => !usedVoiceIds.has(v.voice_id)); // exclude already-used voices
 
       if (candidates.length === 0) {
         return {
           content: [{
             type: "text",
             text: JSON.stringify({
-              error: `No ${gender} voices found in your ElevenLabs library.`,
+              error: `No unused ${gender} voices found in your ElevenLabs library.`,
               selected_voice_id: null,
             }),
           }],
@@ -173,6 +191,7 @@ export function createVoiceMcpServer(): McpServer {
         .sort((a, b) => b.score - a.score);
 
       const best = scored[0];
+      usedVoiceIds.add(best.voice_id); // mark as used for this game session
 
       return {
         content: [{
@@ -186,6 +205,22 @@ export function createVoiceMcpServer(): McpServer {
               `"${best.name}" — age="${best.age}", accent="${best.accent}", score=${best.score}`,
             top_5_candidates: scored.slice(0, 5).map(({ score, ...v }) => ({ ...v, score })),
           }, null, 2),
+        }],
+      };
+    }
+  );
+
+  // ── Tool 3: Reset used voices (call at the start of each new game) ──
+  server.tool(
+    "reset_used_voices",
+    "Clears the list of already-assigned voices. Call this at the start of each new game session so voices can be reused.",
+    {},
+    async () => {
+      resetUsedVoices();
+      return {
+        content: [{
+          type: "text",
+          text: JSON.stringify({ success: true, message: "Voice assignments reset for new game." }),
         }],
       };
     }

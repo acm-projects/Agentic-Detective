@@ -6,7 +6,8 @@ import cluebookImg from './assets/themedcluebook.png';
 import cigaretteImg from './assets/newthemedcigarette.png';
 import caseFileImg from './assets/themedcasefile.png';
 import gunImg from './assets/themedgun.png';
-import notebookImg from './assets/themednotebook.png';
+import handcuffs from '../../assets/handcuffs.png';
+import notebookImg from './assets/notebook.png'
 import pencilImg from './assets/themedpencil.png';
 import plantImg from './assets/muchbetterthemedplant.png';
 import deskBgImg from './assets/extranewdesk.png';
@@ -178,8 +179,6 @@ function Message() {
             tooltip="Cellphone: answer and continue interrogation."
             style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
             onClick={() => {
-              const audio = new Audio("http://localhost:5555/api/voice");
-              audio.play();
               handlePhoneClick();
             }}
         />
