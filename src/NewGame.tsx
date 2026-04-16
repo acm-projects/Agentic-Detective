@@ -4,27 +4,36 @@ import { useGameStore } from "./useGameStore";
 import { useNavigate } from 'react-router';
 import { Show, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/react-router';
 import SavedGamesList from './components/savegamelist/SavedGamesList';
-import { FaSave } from "react-icons/fa";
+import { FaSave, FaUsers } from "react-icons/fa";
 import detectivePhoto from './assets/detective.png';
 import loadingImage from './assets/2gary.png';
+import Community from './Community';
 
 function NewGame() {
   const setSeed = useGameStore((s) => s.setSeed);
   const startCase = useGameStore((s) => s.startCase);
-  const navigate = useNavigate();
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const clearLoadedCase = useGameStore((s) => s.clearLoadedCase);
+    const navigate = useNavigate();
+    const audioRef = useRef<HTMLAudioElement>(null);
 
   const [personalization, setPersonalization] = useState('');
   const [timePeriod, setTimePeriod] = useState(10);
   const [intensity, setIntensity] = useState(5);
-  const [difficulty, setDifficulty] = useState(5);
+  const [difficulty, setDifficulty] = useState<1 | 2 | 3>(2);
   const [isMuted, setIsMuted] = useState(false);
+    const [showCommunity, setShowCommunity] = useState(false);
 
   const { userId, isSignedIn, isLoaded } = useAuth();
 
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    useEffect(() => {
+      clearLoadedCase();
+    }, [clearLoadedCase]);
+
+
+    // Setup background music on mount
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
 
     audio.volume = 0.3;
 
@@ -161,8 +170,40 @@ function NewGame() {
                 </div>
               </div>
             </Show>
+             {/* Community Button - Bottom Left */}
+              <button
+                onClick={() => setShowCommunity(true)}
+                className="community-button"
+                title="View Community"
+              >
+                <FaUsers /> Community
+              </button>
+
+              {/* Community Modal */}
+              <dialog 
+                className="community-modal"
+                open={showCommunity}
+                onClick={(e) => {
+                  if (e.target === e.currentTarget) {
+                    setShowCommunity(false);
+                  }
+                }}
+              >
+                <div className="community-modal-content">
+                  <button
+                    className="community-modal-close"
+                    onClick={() => setShowCommunity(false)}
+                    aria-label="Close community modal"
+                  >
+                    ✕
+                  </button>
+                  <Community onCloseModal={() => setShowCommunity(false)} />
+                </div>
+              </dialog>
           </div>
         </div>
+
+       
 
         <div className="controls-panel">
           <h2 className="section-heading">PERSONALIZE YOUR GAMEPLAY</h2>
@@ -215,25 +256,43 @@ function NewGame() {
           </div>
 
           <div className="slider-container">
-            <label className="label">
-              Difficulty: {difficulty}
-            </label>
-            <input
-              type="range"
-              min="1"
-              max="10"
-              step="1"
-              value={difficulty}
-              onChange={(e) => setDifficulty(Number(e.target.value))}
-              className="slider"
-            />
+              <label className="label">
+                Difficulty: {difficulty === 1 ? 'Easy' : difficulty === 2 ? 'Medium' : 'Hard'}
+              </label>
+              <div className="difficulty-toggle" role="group" aria-label="Difficulty selector">
+                <button
+                  type="button"
+                  className={`difficulty-option ${difficulty === 1 ? 'active' : ''}`}
+                  onClick={() => setDifficulty(1)}
+                >
+                  Easy
+                </button>
+                <button
+                  type="button"
+                  className={`difficulty-option ${difficulty === 2 ? 'active' : ''}`}
+                  onClick={() => setDifficulty(2)}
+                >
+                  Medium
+                </button>
+                <button
+                  type="button"
+                  className={`difficulty-option ${difficulty === 3 ? 'active' : ''}`}
+                  onClick={() => setDifficulty(3)}
+                >
+                  Hard
+                </button>
+              </div>
           </div>
 
           <div className="solve-row">
             <button
               className="detective-button solve-button"
-              onClick={() => {
+              onClick={async () => {
                 playClickSound();
+
+                // Fresh case should always re-run tutorial onboarding.
+                localStorage.removeItem('tutorialSeen');
+                localStorage.removeItem('tutorialStep');
 
                 setSeed({
                   freeText: personalization,
@@ -251,11 +310,24 @@ function NewGame() {
                   return;
                 }
 
-                startCase(navigate);
-                navigate('/desk');
+                const isReloadFlow = await startCase(navigate);
+                if (!isReloadFlow) {
+                  navigate('/desk');
+                }
               }}
             >
               SOLVE!
+            </button>
+
+      
+
+      
+
+            <button
+              onClick={toggleMute}
+              className="detective-button mute-button"
+            >
+              {isMuted ? 'UNMUTE' : 'MUTE'}
             </button>
           </div>
         </div>
@@ -265,7 +337,11 @@ function NewGame() {
         <p className="footer-text">Published Since 1887 · All Rights Reserved · Printed Daily Except Sundays & Public Holidays</p>
       </div>
     </div>
-  );
+    
+    );
+
+
+
 }
 
 export default NewGame;

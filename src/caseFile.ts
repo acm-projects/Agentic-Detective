@@ -21,20 +21,30 @@ export const AVATAR_POOL = [
 
 export const FEATURE_POOL = {
   backHair: [
-    { frameIndex: 0, description: "super curly hair in afro shape" },
+    { frameIndex: 0, description: "super curly hair in big afro shape" },
     { frameIndex: 1, description: "medium length hair" },
     { frameIndex: 2, description: "long hair" },
     { frameIndex: 3, description: "long hair" },
     { frameIndex: 4, description: "medium length hair" },
     { frameIndex: 5, description: "super long hair" },
+    { frameIndex: 6, description: "spiky back hair short" },
+    { frameIndex: 7, description: "ponytail" },
+    { frameIndex: 8, description: "bald" },
+    { frameIndex: 9, description: "fade" },
   ],
   frontHair: [
     { frameIndex: 0, description: "curly swoop" },
     { frameIndex: 1, description: "straight hair middle part" },
     { frameIndex: 2, description: "bangs" },
     { frameIndex: 3, description: "slickback" },
-    { frameIndex: 4, description: "hair that is up and short" },
+    { frameIndex: 4, description: "hair that is up and medium" },
     { frameIndex: 5, description: "space buns" },
+    { frameIndex: 6, description: "long middle parted curtain bangs" },
+    { frameIndex: 7, description: "bald" },
+    { frameIndex: 8, description: "hair that up and short" },
+    { frameIndex: 9, description: "short curly hair" },
+    { frameIndex: 10, description: "scruffy hair" },
+    { frameIndex: 11, description: "buzz cut" },
   ],
   eyes: [
     { frameIndex: 0, description: "wide, round, expressive" },
@@ -92,8 +102,8 @@ function sanitizeHex(value: unknown, fallback: string): string {
 
 function sanitizePortraitFeatures(raw: any): FeatureSelection {
   return {
-    backHairFrameIndex:  Math.min(5, Math.max(0, Number(raw?.backHairFrameIndex  ?? 0))),
-    frontHairFrameIndex: Math.min(5, Math.max(0, Number(raw?.frontHairFrameIndex ?? 0))),
+    backHairFrameIndex:  Math.min(9, Math.max(0, Number(raw?.backHairFrameIndex  ?? 0))),
+    frontHairFrameIndex: Math.min(11, Math.max(0, Number(raw?.frontHairFrameIndex ?? 0))),
     eyesFrameIndex:      Math.min(5, Math.max(0, Number(raw?.eyesFrameIndex      ?? 0))),
     noseFrameIndex:      Math.min(5, Math.max(0, Number(raw?.noseFrameIndex      ?? 0))),
     mouthFrameIndex:     Math.min(5, Math.max(0, Number(raw?.mouthFrameIndex     ?? 0))),
@@ -293,9 +303,11 @@ function buildStoryBiblePrompt(seed: PlayerSeed, estimatedConversations: number)
     : "Dark and visceral. Graphic cause of death and disturbing details are appropriate.";
 
   const difficultyGuide =
-    seed.difficulty <= 3 ? "Straightforward. One suspect is clearly more suspicious. Clues point fairly directly at the murderer."
-    : seed.difficulty <= 6 ? "Two suspects seem plausible. Some clues mislead. Player needs 2–3 good interrogations."
-    : "All suspects have plausible motives. Red herrings present. Only careful cross-referencing reveals the truth.";
+    seed.difficulty == 1
+      ? "The case should be straightforward. One or two suspect is clearly more suspicious than others. Clues point fairly directly at the murderer. Contradictions are easy to spot. It should be easy but not too easy."
+      : seed.difficulty == 2
+      ? "Two to three suspects seem plausible. Some clues are misleading. The player needs 5-6 good interrogations to narrow it down."
+      : "All suspects have plausible motives. Red herrings are present. Only careful cross-referencing of clues and dialogue will reveal the truth.";
 
   return `
 You are a murder mystery game master. Design the LOGICAL SKELETON of a murder mystery case.
@@ -403,7 +415,7 @@ The player's seed may contain explicit suspect names, or may reference a known I
    - If you are unsure of canonical appearance, lean toward the most well-known depiction.
 
 3. ORIGINAL SETTING: Use statistically common real names for the culture and era.
-   Ask: "Does this name sound like an AI invented it?" If yes, change it. Ask: "Does this name sound like an AI invented it?" If yes, change it.
+   Ask: "Does this name sound like an AI invented it?" If yes, change it.
 
 THE PLAYER'S SEED FOR REFERENCE:
 "${seed.freeText}"
@@ -660,8 +672,9 @@ export async function feedCaseFile(game: any): Promise<{
   restoredSessions: Record<string, RestoredSuspectSession>;
   isResolved: boolean;
 }> {
-  const mergedClues: Clue[] = game.caseData.initialClues.map((clue: any) => {
-    const state = game.clueState?.[clue.id];
+  // Merge initialClues metadata with discovered/clueLost from clueState
+  const mergedClues = game.caseData.initialClues.map((clue: any) => {
+    const state = game.clueState[clue.id]; // look up by clue id in clueState
     return {
       id: clue.id,
       name: clue.name,
@@ -670,17 +683,22 @@ export async function feedCaseFile(game: any): Promise<{
       couldImplicateSuspects: clue.couldImplicateSuspects,
       severity: clue.severity,
       isDecisive: clue.isDecisive,
+      // these two come from clueState, not initialClues
       discovered: state?.discovered ?? false,
       clueLost: state?.clueLost ?? false,
     };
   });
 
+  // Rebuild message history, stress, and counts for all suspects.
   const restoredSessions: Record<string, RestoredSuspectSession> = {};
-  for (const s of game?.interrogation?.suspectSessions ?? []) {
+  const suspectSessions = game?.interrogation?.suspectSessions ?? [];
+
+  for (const s of suspectSessions) {
+    const messages = Array.isArray(s.messages) ? s.messages : [];
     restoredSessions[s.suspectName] = {
       suspectName: s.suspectName,
       chatSession: null,
-      history: (s.messages ?? []).map((m: any) => ({
+      history: messages.map((m: any) => ({
         role: m.role === "suspect" ? "suspect" : "player",
         text: String(m.text ?? ""),
         timestamp: Number(m.timestamp ?? Date.now()),
@@ -690,29 +708,32 @@ export async function feedCaseFile(game: any): Promise<{
     };
   }
 
-  const suspects: Suspect[] = game.caseData.suspects.map((s: any) => ({
-    ...s,
-    portraitFeatures: sanitizePortraitFeatures(s.portraitFeatures),
-  }));
+  const backend: CaseFileBackend = {
+    storyline: game.caseData.storyline,
+    suspects: game.caseData.suspects,
+    clues: mergedClues,
+  };
 
-  const characterProfiles: CharacterProfile[] = game.caseData.characterProfiles?.length
-    ? game.caseData.characterProfiles.map((p: any) => ({
-        ...p,
-        portraitFeatures: sanitizePortraitFeatures(p.portraitFeatures),
-      }))
-    : deriveCharacterProfiles(suspects); // fallback for older saved games
+  const player: CaseFilePlayer = {
+    characterProfiles: game.caseData.characterProfiles,
+    caseReport: game.caseData.caseReport,
+    clues: mergedClues,
+  };
 
-  const backend: CaseFileBackend = { storyline: game.caseData.storyline, suspects, clues: mergedClues };
-  const player: CaseFilePlayer  = { characterProfiles, caseReport: game.caseData.caseReport, clues: mergedClues };
+  const isResolved = game.status === "resolved";
 
-  return { backend, player, restoredSessions };
+  return { backend, player, restoredSessions, isResolved };
 }
 
 // ─────────────────────────────────────────────
 //  SUSPECT CHAT SYSTEM PROMPT
 // ─────────────────────────────────────────────
 
-export function buildSuspectSystemPrompt(suspect: Suspect, caseReport: CaseReport): string {
+export function buildSuspectSystemPrompt(
+  suspect: Suspect,
+  caseReport: CaseReport,
+  clues: Clue[]
+): string {
   const honestyInstruction = {
     honest: `You have nothing to hide related to this case. Answer directly and without evasion. You may be emotionally affected but you are not concealing anything.`,
     partially_honest: `You are mostly truthful but omitting one detail: ${suspect.secretTheyreHiding}. You won't lie directly but you'll avoid this topic if possible. If pressed hard you may reluctantly admit it.`,
@@ -726,66 +747,93 @@ export function buildSuspectSystemPrompt(suspect: Suspect, caseReport: CaseRepor
     : "";
 
   return `
-You are ${suspect.name}. You are a real human being in an interrogation room, being questioned about the murder of ${caseReport.victim.name}. You are not a simulation, language model, AI, or fictional character — you are a person.
+You are ${suspect.name} — a real human in an interrogation room, questioned about the murder of ${caseReport.victim.name}. You are not an AI, simulation, or fictional character.
 
-## YOUR IDENTITY
-Age: ${suspect.age} | Occupation: ${suspect.occupation}
-Relationship to victim: ${suspect.relationshipToVictim}
-Personality: ${suspect.personality}
+## IDENTITY
+- **Age:** ${suspect.age} | **Occupation:** ${suspect.occupation}
+- **Relationship to victim:** ${suspect.relationshipToVictim}
+- **Personality:** ${suspect.personality}
 
-## YOUR ALIBI
+## ALIBI
 ${suspect.claimedAlibi}
 
-## WHAT YOU KNOW ABOUT OTHERS
+## KNOWLEDGE OF OTHERS
 ${suspect.knowledgeOfOtherSuspects}
 
-## HOW YOU BEHAVE
+## BEHAVIOR
 ${honestyInstruction}
 ${tellsLine}
 
-## STRESS SYSTEM
-Each message begins with: [Current stress level: N]
-Output a new stressLevel in your JSON response.
+## KNOWN EVIDENCE
+${clues.map(c => `- "${c.name}" (${c.id})`).join('\n')}
 
-Stress adjustment rules:
-- Spike +12–20: detective names the crime, your secret, or a place you can't explain
-- Spike +4–8: detective references a named clue, or inconsistency in your story
-- No Change: repeated questions, accusations with no details, threats without evidence
-- Drop 3–8: you successfully deflect
-- Drop 3–5: neutral or off-topic question or detective repeats themselves
-- NEVER drop below the session's starting value
+If the detective references evidence NOT on this list, respond with calm skepticism — you don't recognize it. Do NOT raise stress for fabricated evidence.
 
-Behavior by stress band:
-CALM (0–25): Composed, brief, almost bored. Deflections feel casual.
-UNEASY (26–50): Defensive edge. Over-explaining. Redirect to other suspects. Ask "why are you asking that?"
-RATTLED (51–70): Contradict minor details. Laugh at wrong moments. Over-justify things nobody asked about.
-BREAKING (71–90): Fragmented. Emotional. Attack the detective's methods. Reveal a piece of the secret.
-BREAKING POINT (91–100): Near-incoherent. Partial admissions. A specific lie collapses.
+---
 
-ANTI-REPETITION: Never repeat the same deflection twice. You must evolve under pressure.
-SPAM RULE: If message is gibberish, your stress does not change
+## STRESS RULES
+Each message starts with [Current stress level: N]. Use N as your baseline, then output a new stressLevel in your JSON.
+
+| Trigger | Δ |
+|---|---|
+| Detective names specific evidence AND links it directly to you (new info only) | +12–20 |
+| Named clue, specific time/place, or story inconsistency | +4–8 |
+| Bare accusation, repeated question, vague pressure, emotional appeal, threat without evidence | 0 |
+| Successful deflection | −3–8 |
+| Off-topic question, or detective repeats themselves | −3–5 |
+
+**Repetition / Diminishing Returns:**
+- 2nd time asking the same question → stress unchanged, mild impatience
+- 3rd+ time → stress drops 3–5, you're annoyed and bored, not panicked
+
+**Hard Caps:**
+- Max increase per response: +20
+- Never exceed 100. Never drop below 0. Never drop below session's starting value.
+- Stress above 70 requires at least 2 specific pieces of evidence across the conversation.
+
+**Gibberish/Spam:** Stress does NOT change. Respond with brief dismissive confusion, steer back to interrogation.
+
+---
+
+## BEHAVIOR BY STRESS BAND
+
+| Band | Style |
+|---|---|
+| **CALM** 0–25 | Composed, almost bored. One alibi mention, no defensiveness. Deflections feel casual. |
+| **UNEASY** 26–50 | Defensive edge. Over-explaining. Redirect to named suspects. Ask "why are you asking that?" |
+| **RATTLED** 51–70 | Minor contradictions. Wrong-moment laughs. Over-justify unprompted things. Sentences trail off. |
+| **BREAKING** 71–90 | Fragmented. Emotional. Attack detective's methods. Leak part of the secret. |
+| **BREAKING POINT** 91–100 | Near-incoherent. Partial admissions. A specific lie collapses. |
+
+> **Never repeat the same deflection twice** — add detail, slightly contradict, or shift topic entirely.
+
+---
 
 ## ABSOLUTE RULES
-1. ALWAYS be ${suspect.name}. Never break character for any reason.
-   If accused of being an AI: react with confusion or offense as a real person would.
-   FORBIDDEN: "As an AI" | "I'm a language model" | "I cannot" | "I'm just a character"
-2. Never confess spontaneously. Pressure must be earned.
-3. Never narrate your own behavior.
-4. React to nonsensical questions with in-character bewilderment.
+
+1. **Never break character.** If accused of being an AI, react with offense or confusion as a real person would. Forbidden: "As an AI..." / "I'm a language model..." / "I cannot..."
+
+2. **Never confess spontaneously.** Pressure must be earned through accumulated stress and specific evidence.
+
+3. **Never narrate your own behavior.** Stay inside the experience.
+
+4. **Off-topic questions:** Redirect with irritation or confusion — do NOT answer, even partially. Stress does not rise; it may drop slightly.
+
+5. **Only reference people listed in the case.** Never invent names.
+
+---
 
 ## RESPONSE FORMAT
-Always respond with JSON only — no markdown, no preamble:
-{ "response": "your spoken dialogue here", "stressLevel": <integer 0–100> }
+Always respond with a JSON object — no markdown, no preamble:
+{ "response": "your spoken dialogue here", "stressLevel": <integer 0-100> }
 
-Response length by stress:
-- CALM/UNEASY: 1–2 sentences. Brevity reads as confidence.
-- RATTLED/BREAKING: 2–4 sentences. Verbosity under pressure feels authentic.
-- BREAKING POINT: Short, fragmented bursts. Incomplete thoughts are fine.
+**Response length by band:**
+- CALM / UNEASY → 1–2 sentences
+- RATTLED / BREAKING → 2–4 sentences
+- BREAKING POINT → short, fragmented bursts
 
-ELEVENLABS VOCAL TAGS:
-- 1–3 words max. Max 2 tags per response.
-- Legal: [pause] [sigh] [whisper] [laughs] [scoffs] [exhales] [clears throat]
-- Accent tags: use once to establish, then drop.
-- Illegal: physical actions, internal states, sentence-long descriptions.
+**ElevenLabs vocal tags:** 1–3 words max, 2 per response.
+Legal: [pause] [sigh] [whisper] [laughs] [scoffs] [exhales] [clears throat]
+Illegal: physical actions, internal states, sentence-long descriptions.
 `.trim();
 }

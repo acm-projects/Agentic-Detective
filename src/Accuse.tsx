@@ -99,9 +99,53 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame } = useGameStore();
+  const { accusationResult, resetGame, player, currentSessionId } = useGameStore();
+
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
+  const [gameplayRating, setGameplayRating] = useState<number | null>(null);
+  const [featureOnLeaderboard, setFeatureOnLeaderboard] = useState(false);
+  const [feedbackSaving, setFeedbackSaving] = useState(false);
+  const [feedbackSaved, setFeedbackSaved] = useState(false);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const audioRefs = useRef<HTMLAudioElement[]>([]);
+
+  const saveFeedback = async (nextRating: number, nextFeatured: boolean) => {
+    if (feedbackSaving) return;
+    if (nextRating === null) {
+      setFeedbackError('Please choose a rating first.');
+      return;
+    }
+
+    const sessionId =
+      currentSessionId ||
+      localStorage.getItem('lastSessionId') ||
+      '';
+
+    if (!sessionId) {
+      setFeedbackError('Could not determine case session id.');
+      return;
+    }
+
+    setFeedbackSaving(true);
+    setFeedbackError(null);
+    try {
+      const res = await fetch(`http://localhost:3000/cases/${encodeURIComponent(sessionId)}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gameplayRating: nextRating,
+          featured: nextFeatured,
+        }),
+      }
+    );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setFeedbackSaved(true);
+    } catch {
+      setFeedbackError('Could not save rating right now.');
+    } finally {
+      setFeedbackSaving(false);
+    }
+  };
 
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('dark'),   120);
@@ -126,23 +170,19 @@ function Accuse() {
     return () => { audioRefs.current.forEach(a => { a.pause(); a.currentTime = 0; }); };
   }, [accusationResult]);
 
-  if (!accusationResult) {
-  return (
-    <div className="accuse-page-bg accuse-dark">
-      <div className="container accuse-fallback-content">
-        <p className="accuse-redirect">
-          No accusation made.{' '}
-          <button onClick={() => navigate('/interrogate')}>Go Back</button>
-        </p>
-      </div>
-    </div>
-  );
-}
+const mockAccusationResult = {
+  accusedName: 'Test Suspect',
+  isCorrect: false,
+  trueKiller: 'Jane Doe',
+  explanation:
+    'This is temporary mock data so the UI can render without a real case.',
+};
 
-  const { accusedName, isCorrect, trueKiller, explanation } = accusationResult;
+const result = accusationResult ?? mockAccusationResult;
 
+const { accusedName, isCorrect, trueKiller, explanation } = result;
+  const caseCode = player?.caseReport?.caseId;
 
-  
   return (
     <div className={`accuse-page-bg ${phase === 'flash' ? 'accuse-flash' : 'accuse-dark'}`}>
 
@@ -179,7 +219,58 @@ function Accuse() {
           </p>
         )}
 
-        {explanation && <p className="accuse-explanation">{explanation}</p>}
+        {explanation && (
+          <p className="accuse-explanation">{explanation}</p>
+        )}
+
+        {caseCode && (
+          <p className="accuse-case-code">
+            Case ID: <span>{caseCode}</span>
+          </p>
+        )}
+
+        <div className="accuse-feedback-panel">
+          <p className="accuse-feedback-title">Rate this game</p>
+          <div className="accuse-rating-buttons" role="group" aria-label="Game rating">
+            {[1, 2, 3, 4, 5].map((rating) => (
+              <button
+                key={rating}
+                type="button"
+                className={`accuse-rate-btn accuse-rate-star ${gameplayRating !== null && rating <= gameplayRating ? 'active' : ''}`}
+                aria-label={`Rate ${rating} star${rating > 1 ? 's' : ''}`}
+                onClick={async () => {
+                  setGameplayRating(rating);
+                  setFeedbackSaved(false);
+                  setFeedbackError(null);
+                  await saveFeedback(rating, featureOnLeaderboard);
+                }}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+
+          <label className="accuse-feature-toggle">
+            <input
+              type="checkbox"
+              checked={featureOnLeaderboard}
+              onChange={async (e) => {
+                const nextFeatured = e.target.checked;
+                setFeatureOnLeaderboard(nextFeatured);
+                setFeedbackSaved(false);
+                if (gameplayRating !== null) {
+                  await saveFeedback(gameplayRating, nextFeatured);
+                }
+              }}
+            />
+            Do you want this game on the community board?
+          </label>
+
+          {feedbackSaving && <p className="accuse-feedback-saving">Saving...</p>}
+
+          {feedbackSaved && <p className="accuse-feedback-success">Saved to community.</p>}
+          {feedbackError && <p className="accuse-feedback-error">{feedbackError}</p>}
+        </div>
 
         <div className="accuse-buttons">
           <button

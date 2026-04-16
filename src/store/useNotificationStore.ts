@@ -105,6 +105,39 @@ function generateWordleData(): WordleData {
 }
 
 // ─────────────────────────────────────────────
+//  Cipher Data Generator - TEMPORARY <<<<< REMOVE LATER IF NEEDED, ADDED THIS HERE CUZ I COULDNT FIND THE GENERATECIPHERDATA FUNCTION
+// ─────────────────────────────────────────────
+
+const CIPHER_PLAINS = [
+  "THE BUTLER LIED",
+  "CHECK THE LEDGER",
+  "THE KEY IS MISSING",
+  "MEET AT MIDNIGHT",
+  "FOLLOW THE MONEY",
+  "THE WINDOW WAS OPEN",
+  "ALIBI DOES NOT HOLD",
+  "LOOK INSIDE THE VAULT",
+  "THE LETTER IS FAKE",
+  "THE GARDENER SAW BLOOD",
+];
+
+function generateCipherData(): CaesarCipherData {
+  const plain = pickRandom(CIPHER_PLAINS).toUpperCase();
+  const shift = randBetween(1, 25);
+
+  return {
+    kind: "cipher",
+    plain,
+    shift,
+    clues: [
+      `This is a Caesar cipher with a shift of ${shift}.`,
+      `The decoded message has ${plain.length} characters.`,
+      "Spaces and punctuation are not shifted.",
+    ],
+  };
+}
+
+// ─────────────────────────────────────────────
 //  Image Unshuffle Data Generator
 // ─────────────────────────────────────────────
 
@@ -122,6 +155,7 @@ const IMAGE_UNSHUFFLE_CLUES = [
 const IMAGE_UNSHUFFLE_IMAGES = [
   '../../assets/Key.png',
   '../../assets/Outline.png',
+  '../../assets/MagnifyingGlass.png'
   // add more as needed
 ];
 
@@ -329,10 +363,10 @@ export const useNotificationStore = create<NotificationState>()(
       saveClueProgress(get);
     },
 
-    abandonMinigame(notificationId) {
-      set((s) => {
-        const n = s.notifications.find((n: { id: string }) => n.id === notificationId);
-        if (!n) return;
+            abandonMinigame(notificationId) {
+            set(s => {
+                const n = s.notifications.find((n: { id: string; }) => n.id === notificationId)
+                if (!n) return
 
         n.dismissed = true;
         s.timerPaused = false;
@@ -359,7 +393,7 @@ export const useNotificationStore = create<NotificationState>()(
 
       set((s) => {
         const n = s.notifications.find((n: { id: string }) => n.id === notificationId);
-        if (!n) return;
+        if (!n || n.dismissed) return;
 
         n.dismissed = true;
         s.timerPaused = false;

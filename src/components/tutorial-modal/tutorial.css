@@ -1,0 +1,20 @@
+.tutorial-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(90, 89, 89, 0.33);
+    z-index: 9998;
+}
+
+.tutorial-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 9999;
+    width: min(520px, calc(100vw - 32px));
+    background: #0f0e0d;
+    border: 1px solid #3a2e20;
+    padding: 36px;
+    color: #ffff;
+}
+

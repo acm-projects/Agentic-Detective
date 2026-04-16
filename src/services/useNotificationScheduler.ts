@@ -20,7 +20,7 @@ export function useNotificationScheduler(
   const purgeExpired = useNotificationStore(s => s.purgeExpired)
   const totalConversationCount = useGameStore(s => s.totalConversationCount)
   const elapsedMs = elapsed * 1000
- 
+  
   const lastElapsedSecondRef = useRef(-1)
   const lastMessageCountRef = useRef(-1)
  

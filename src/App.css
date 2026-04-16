@@ -465,6 +465,43 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
+
+  display: block;
+  transform: rotate(-25deg);
+}
+
+.difficulty-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.difficulty-option {
+  background-color: #1a1a1a;
+  color: #ffffff;
+  border: 1px solid #6a6a6a;
+  padding: 10px 8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.62rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.difficulty-option:hover {
+  border-color: #f84a4a;
+  transform: translateY(-1px);
+}
+
+.difficulty-option.active {
+  background-color: #f84a4a;
+  color: #101010;
+  border-color: #a10303;
+}
+
+.detective-button {
+  background-color: #f84a4a;
+  color: #101010;
   border: none;
   cursor: pointer;
   transform: rotate(-15deg);
@@ -596,6 +633,9 @@ body {
   padding-top: 10px;
   text-align: center;
 }
+
+.nav-btn:hover  { color: #e8dfc8; border-color: #8a7448; }
+.nav-btn.active { color: #e8dfc8; border-color: #8b1a1a; background: rgba(139,26,26,0.15); }
 
 .footer-text {
   font-family: 'Press Start 2P', cursive;

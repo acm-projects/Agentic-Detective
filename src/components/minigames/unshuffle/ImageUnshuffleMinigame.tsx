@@ -53,9 +53,9 @@ export function ImageUnshuffleMinigame({ data, onSuccess }: Props) {
                                 transform: `rotate(${rot}deg)`,
                                 cursor: solved ? 'default' : 'pointer',
                                 outline: solved
-                                    ? '2px solid #4ade80'
+                                    ? '2px solid rgb(74, 222, 128)'
                                     : isAligned
-                                        ? '2px solid rgba(74,222,128,0.4)'
+                                        ? '5px solid rgba(74,222,128,0.4)'
                                         : '1px solid rgba(255,255,255,0.15)',
                             }}
                             onClick={() => handleTileClick(idx)}
