@@ -138,7 +138,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
                     <button
                         type="button"
                         className="detective-button"
-                        onClick={handlePlayByCode(caseCode)}
+                        onClick={() => handlePlayByCode(caseCode)}
                         disabled={loadingCase || !caseCode.trim()}
                     >
                         {loadingCase ? 'Loading...' : 'Play'}

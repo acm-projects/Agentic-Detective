@@ -21,13 +21,25 @@ function NewGame() {
   const [intensity, setIntensity] = useState(5);
   const [difficulty, setDifficulty] = useState<1 | 2 | 3>(2);
   const [isMuted, setIsMuted] = useState(false);
-    const [showCommunity, setShowCommunity] = useState(false);
+  const [showCommunity, setShowCommunity] = useState(false);
 
   const { userId, isSignedIn, isLoaded } = useAuth();
 
-    useEffect(() => {
-      clearLoadedCase();
-    }, [clearLoadedCase]);
+  // Prevent body scroll when community modal is open
+  useEffect(() => {
+    if (showCommunity) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showCommunity]);
+
+  useEffect(() => {
+    clearLoadedCase();
+  }, [clearLoadedCase]);
 
 
     // Setup background music on mount

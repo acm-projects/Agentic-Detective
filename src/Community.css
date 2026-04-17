@@ -1,22 +1,29 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
 .community-container {
-  max-width: 1100px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 30px;
-  background-color: #151515;
-  color: #ffffff;
+  padding: 30px 52px;
+  background-color: #e7dcc4;
+  background-image:
+    url("https://www.transparenttextures.com/patterns/paper-fibers.png"),
+    url("https://www.transparenttextures.com/patterns/noise.png");
+  background-repeat: repeat, repeat;
+  color: #101010;
   font-family: 'Press Start 2P', cursive;
-  border: 2.5px solid #151515;
-  box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+  border: 3px solid #101010;
+  box-shadow:
+    inset 0 0 100px rgba(0, 0, 0, 0.08),
+    0 0 40px rgba(0, 0, 0, 0.9);
 }
 
 .community-container h2 {
   font-family: 'Press Start 2P', cursive;
   font-size: 1.5rem;
-  color: #ffffff;
+  color: #101010;
   margin-bottom: 15px;
-  border-bottom: 3px dashed #f84a4a;
+  border-bottom: 3px solid #101010;
   padding-bottom: 15px;
   letter-spacing: 2px;
 }
@@ -24,19 +31,20 @@
 .community-section {
   margin: 35px 0;
   padding: 20px;
-  background-color: #1a1a1a;
-  border-left: 4px solid #f84a4a;
-  border-top: 2px solid #8b2222;
-  border-bottom: 2px solid #8b2222;
+  background-color: #f1eadb;
+  border: 2px solid #101010;
+  box-shadow: 4px 4px 0 #101010;
 }
 
 .community-section h3 {
   font-family: 'Press Start 2P', cursive;
   font-size: 0.85rem;
-  color: #f84a4a;
+  color: #101010;
   margin-bottom: 20px;
   text-transform: uppercase;
   letter-spacing: 2px;
+  border-bottom: 1px solid #101010;
+  padding-bottom: 10px;
 }
 
 .community-grid {
@@ -47,32 +55,31 @@
 }
 
 .community-case-card {
-  background-color: #0f0f0f;
-  border: 2px solid #8b2222;
+  background-color: #ffffff;
+  border: 2px solid #101010;
   padding: 15px;
   border-radius: 0;
   transition: all 0.3s ease;
-  box-shadow: 3px 3px 0 rgba(248, 74, 74, 0.3);
+  box-shadow: 3px 3px 0 #101010;
 }
 
 .community-case-card:hover {
-  border-color: #f84a4a;
-  box-shadow: 5px 5px 0 rgba(248, 74, 74, 0.5);
-  transform: translateY(-3px);
-  background-color: #1a1a1a;
+  box-shadow: 5px 5px 0 #101010;
+  transform: translateY(-2px);
+  background-color: #f9f8f4;
 }
 
 .community-case-card h4 {
   font-family: 'Press Start 2P', cursive;
   font-size: 0.80rem;
   margin: 0 0 10px 0;
-  color: #f84a4a;
+  color: #101010;
   letter-spacing: 1px;
 }
 
 .case-author {
   font-size: 0.8rem;
-  color: #aaa;
+  color: #555;
   margin: 5px 0;
   font-style: italic;
   font-family: 'Courier Prime', monospace;
@@ -80,21 +87,21 @@
 
 .community-case-code {
   font-size: 0.72rem;
-  color: #f5c2c2;
+  color: #666;
   margin: 4px 0 8px;
   font-family: 'Courier Prime', monospace;
 }
 
 .community-case-rating {
   font-size: 0.72rem;
-  color: #ffd27d;
+  color: #8b7a5a;
   margin: 0 0 10px;
   font-family: 'Courier Prime', monospace;
 }
 
 .case-description {
   font-size: 0.8rem;
-  color: #ccc;
+  color: #333;
   margin: 12px 0 15px 0;
   line-height: 1.5;
   font-family: 'Courier Prime', monospace;
@@ -105,6 +112,15 @@
   padding: 8px 12px;
   font-size: 0.6rem;
   margin-top: 8px;
+  transform: none;
+}
+
+.community-section .detective-button {
+  transform: none;
+}
+
+.community-container > .detective-button {
+  transform: none;
 }
 
 .community-list {
@@ -115,9 +131,9 @@
 
 .community-list li {
   padding: 12px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #d0c5ad;
   font-size: 1rem;
-  color: #ccc;
+  color: #333;
   font-family: 'Courier Prime', monospace;
   letter-spacing: 1px;
 }
@@ -135,7 +151,7 @@
 
 .community-share-help {
   margin: 0 0 0.8rem;
-  color: #ccc;
+  color: #555;
   font-family: 'Courier Prime', monospace;
   font-size: 0.75rem;
 }
@@ -149,21 +165,20 @@
 .community-share-input {
   flex: 1;
   min-width: 0;
-  background: #101010;
-  color: #fff;
-  border: 1px solid #8b2222;
+  background: rgba(255, 255, 255, 0.25);
+  color: #101010;
+  border: 2px solid #101010;
   padding: 10px;
   font-family: 'Courier Prime', monospace;
 }
 
 .community-share-input:focus {
   outline: none;
-  border-color: #f84a4a;
-  box-shadow: 0 0 0 2px rgba(248, 74, 74, 0.2);
+  background: #fdfceb;
 }
 
 .community-share-error {
-  color: #ff7777;
+  color: #8b2222;
   margin-top: 0.65rem;
   font-family: 'Courier Prime', monospace;
   font-size: 0.75rem;
@@ -206,9 +221,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #872828;
+  background-color: #2c5aa0;
   color: #ecf0f1;
-  border: 2px solid #4b0000;
+  border: 2px solid #1a3560;
   border-radius: 4px;
   padding: 10px 16px;
   font-size: 14px;
@@ -219,17 +234,27 @@
 }
 
 .community-button:hover {
-  background-color: #4b0000;
-  border-color: #320707;
+  background-color: #1a3560;
+  border-color: #0d1f3a;
   transform: scale(1.05);
 }
 
 .community-modal {
   position: fixed;
   inset: 0;
-  display: none;
-  background-color: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 99999;
+  overflow: hidden;
+}
+
+.community-modal::backdrop {
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 99999;
 }
 
 .community-modal[open] {
@@ -240,10 +265,15 @@
 
 .community-modal-content {
   position: relative;
-  background-color: rgba(0, 0, 0, 0.4);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-  max-width: 90vw;
+  background-color: #e7dcc4;
+  background-image:
+    url("https://www.transparenttextures.com/patterns/paper-fibers.png"),
+    url("https://www.transparenttextures.com/patterns/noise.png");
+  background-repeat: repeat, repeat;
+  border: 3px solid #101010;
+  border-radius: 0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+  max-width: 65vw;
   max-height: 90vh;
   overflow-y: auto;
   padding: 20px;
