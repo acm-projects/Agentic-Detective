@@ -153,7 +153,7 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame, player, currentSessionId } = useGameStore();
+  const { accusationResult, resetGame, seed, currentSessionId } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
   const [gameplayRating, setGameplayRating] = useState<number | null>(null);
@@ -187,6 +187,7 @@ function Accuse() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: seed?.userId ?? '',
           gameplayRating: nextRating,
           featured: nextFeatured,
         }),

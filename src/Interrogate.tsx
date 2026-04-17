@@ -135,6 +135,7 @@ function Interrogate() {
   const {
     player,
     seed,
+    currentSessionId,
     activeSuspectName,
     isFirstClueDiscovery,
     isResponding,
@@ -191,7 +192,7 @@ function Interrogate() {
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const timerPaused = useNotificationStore(s => s.timerPaused);
-  const sessionId = player?.caseReport?.caseId ?? '';
+  const sessionId = currentSessionId || player?.caseReport?.caseId || '';
   const closeNotesModal = () => {
     setShowNotes(false);
     setNoteInputOpen(false);
@@ -205,8 +206,11 @@ function Interrogate() {
     setNotesLoading(true);
     setNotesError(null);
     try {
+      const userId = seed?.userId ?? '';
+      const query = new URLSearchParams({ suspectName: activeSuspectName });
+      if (userId) query.set('userId', userId);
       const res = await fetch(
-        `http://localhost:3000/case/${sessionId}/suspectNotes?suspectName=${encodeURIComponent(activeSuspectName)}`
+        `http://localhost:3000/case/${sessionId}/suspectNotes?${query.toString()}`
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: SuspectNote[] = await res.json();
@@ -216,7 +220,7 @@ function Interrogate() {
     } finally {
       setNotesLoading(false);
     }
-  }, [activeSuspectName, sessionId]);
+  }, [activeSuspectName, sessionId, seed?.userId]);
 
   useEffect(() => {
     if (showNotes) {
@@ -240,6 +244,7 @@ function Interrogate() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          userId: seed?.userId ?? '',
           suspectName: activeSuspectName,
           suspectNotes: noteDraft.trim(),
         }),
