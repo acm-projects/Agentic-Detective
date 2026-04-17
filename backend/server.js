@@ -347,14 +347,15 @@ app.post('/cases/create', async (req, res) => {
     };
 
     // Case content is global and user-agnostic.
-    await casesCollection.updateOne(
+    const caseResult = await casesCollection.updateOne(
       { sessionId },
       { $setOnInsert: caseDoc },
       { upsert: true }
     );
+    console.log('[/cases/create] cases write:', caseResult.upsertedCount, 'inserted,', caseResult.matchedCount, 'matched');
 
     // User profile stores which cases this user has created.
-    await usersCollection.updateOne(
+    const userResult = await usersCollection.updateOne(
       { userId },
       {
         $setOnInsert: { userId, createdAt: now },
@@ -363,16 +364,19 @@ app.post('/cases/create', async (req, res) => {
       },
       { upsert: true }
     );
+    console.log('[/cases/create] users write:', userResult.upsertedCount, 'inserted,', userResult.matchedCount, 'matched');
 
     // Game collection stores user-specific gameplay state.
-    await gameCollection.updateOne(
+    const gameResult = await gameCollection.updateOne(
       { sessionId, userId },
       { $setOnInsert: gameDoc },
       { upsert: true }
     );
+    console.log('[/cases/create] game write:', gameResult.upsertedCount, 'inserted,', gameResult.matchedCount, 'matched');
 
     res.json({ success: true, sessionId });
   } catch (err) {
+    console.error('[/cases/create] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -521,16 +525,20 @@ app.post('/cases/:sessionId/outcome', async (req, res) => {
 
     const result = await gameCollection.updateOne(
       userId ? { sessionId, userId } : { sessionId },
-      { $set: {
-        outcome: {
-          accusedName,
-          isCorrect,
-          trueKiller,
-          explanation,
-          decidedAt: nowIso(),
-          gameplayRating: null,
-          featured: false,
-          feedbackAt: null,
+      {
+        $set: {
+          outcome: {
+            accusedName,
+            isCorrect,
+            trueKiller,
+            explanation,
+            decidedAt: nowIso(),
+            gameplayRating: null,
+            featured: false,
+            feedbackAt: null,
+          },
+          updatedAt: nowIso(),
+          lastAutosavedAt: nowIso(),
         },
         $inc: { revision: 1 }
       }
