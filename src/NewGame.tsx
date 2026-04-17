@@ -69,6 +69,15 @@ function NewGame() {
     console.log("User Sign in status: " + isSignedIn);
   }, [isLoaded, isSignedIn]);
 
+  // Keep auth fields in store in sync so Community shared-case loads can create game docs.
+  useEffect(() => {
+    if (!isLoaded) return;
+    setSeed({
+      userId: userId ?? "",
+      isSignedIn: Boolean(isSignedIn),
+    });
+  }, [isLoaded, isSignedIn, userId, setSeed]);
+
   useEffect(() => {
     localStorage.removeItem("lastSessionId");
     localStorage.removeItem("lastCaseId");
@@ -304,10 +313,7 @@ function NewGame() {
                   return;
                 }
 
-                const isReloadFlow = await startCase(navigate);
-                if (!isReloadFlow) {
-                  navigate('/desk');
-                }
+                await startCase(navigate);
               }}
             >
               SOLVE!
