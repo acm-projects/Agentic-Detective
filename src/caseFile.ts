@@ -117,17 +117,27 @@ function sanitizePortraitFeatures(raw: any): FeatureSelection {
 
 // Strip markdown fences + sanitize control characters inside JSON string values only
 function cleanRawJson(raw: string): string {
-  return raw
+  let cleaned = raw
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/```\s*$/i, "")
-    .trim()
-    .replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
-      match
-        .replace(/(?<!\\)\n/g, "\\n")
-        .replace(/(?<!\\)\r/g, "\\r")
-        .replace(/(?<!\\)\t/g, "\\t")
-    );
+    .trim();
+  
+  // Fix newlines and other control chars inside JSON strings
+  cleaned = cleaned.replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
+    match
+      .replace(/(?<!\\)\n/g, "\\n")
+      .replace(/(?<!\\)\r/g, "\\r")
+      .replace(/(?<!\\)\t/g, "\\t")
+  );
+  
+  // Remove any trailing non-JSON characters (text after the closing brace)
+  const lastBraceIndex = cleaned.lastIndexOf("}");
+  if (lastBraceIndex !== -1) {
+    cleaned = cleaned.slice(0, lastBraceIndex + 1);
+  }
+  
+  return cleaned;
 }
 
 // ─────────────────────────────────────────────
@@ -228,6 +238,7 @@ export interface RestoredSuspectSession {
   history: Array<{ role: "player" | "suspect"; text: string; timestamp: number }>;
   conversationCount: number;
   stressLevel: number;
+  suspicionLevel: "low" | "medium" | "high" | null;
 }
 
 // ─────────────────────────────────────────────
@@ -342,27 +353,27 @@ IF THE SETTING IS ORIGINAL:
 
 Respond ONLY with valid JSON:
 {
-  "victimName": string,
-  "victimAge": number,
-  "victimOccupation": string,
-  "victimBackground": string,
-  "causeOfDeath": string,
-  "bodyFoundAt": string,
-  "murdererIndex": number,
-  "murderWeapon": string,
-  "murderLocation": string,
-  "murderTime": string,
-  "hiddenBackstory": string,
-  "trueSequenceOfEvents": string,
-  "difficultyNotes": string,
+  "victimName": "Name",
+  "victimAge": 50,
+  "victimOccupation": "Occupation",
+  "victimBackground": "Their background and history",
+  "causeOfDeath": "How they were killed",
+  "bodyFoundAt": "Location",
+  "murdererIndex": 0,
+  "murderWeapon": "The weapon used",
+  "murderLocation": "Where it happened",
+  "murderTime": "When it happened",
+  "hiddenBackstory": "Secret background that explains motive",
+  "trueSequenceOfEvents": "Detailed sequence of what actually happened",
+  "difficultyNotes": "Notes on difficulty",
   "suspectSlots": [
-    { "occupation": string, "relationshipToVictim": string, "honestyLevel": "honest" | "partially_honest" | "deceptive" }
+    { "occupation": "Job title", "relationshipToVictim": "How they knew victim", "honestyLevel": "honest" }
   ],
   "clues": [
-    { "id": string, "type": string, "isDecisive": boolean, "severity": "low" | "medium" | "high", "implicatesSuspectIndices": number[] }
+    { "id": "clue_1", "type": "jewel", "isDecisive": false, "severity": "high", "implicatesSuspectIndices": [0, 1] }
   ],
   "contradictions": [
-    { "suspectIndex": number, "theirClaim": string, "actualTruth": string, "exposedByClueId": string, "exposedByDialogue": string | null }
+    { "suspectIndex": 0, "theirClaim": "What they said", "actualTruth": "What actually happened", "exposedByClueId": "clue_1", "exposedByDialogue": "Contradiction in their words or null" }
   ]
 }`.trim();
 }
@@ -463,61 +474,61 @@ COLORS — generate hex values, do NOT pick from a fixed list:
 Respond ONLY with valid JSON. No markdown, no commentary:
 {
   "suspects": [{
-    "name": string,
-    "age": number,
-    "gender": "male" | "female",
-    "occupation": string,
-    "relationshipToVictim": string,
-    "personality": string,
-    "physicalDescription": string,
-    "avatarId": string,
-    "trueAlibi": string,
-    "claimedAlibi": string,
-    "trueMotive": string | null,
-    "isGuilty": boolean,
-    "honestyLevel": "honest" | "partially_honest" | "deceptive",
-    "secretTheyreHiding": string | null,
-    "lyingTells": string | null,
-    "knowledgeOfOtherSuspects": string,
-    "conversationsNeededToBreak": number,
+    "name": "Suspect Name",
+    "age": 35,
+    "gender": "male",
+    "occupation": "Occupation",
+    "relationshipToVictim": "Friend, Colleague, etc",
+    "personality": "Description of personality",
+    "physicalDescription": "Physical appearance description",
+    "avatarId": "avatar_01",
+    "trueAlibi": "What actually happened",
+    "claimedAlibi": "What they claim happened",
+    "trueMotive": "Why they did it or null",
+    "isGuilty": false,
+    "honestyLevel": "honest",
+    "secretTheyreHiding": "A secret or null",
+    "lyingTells": "How you tell they're lying or null",
+    "knowledgeOfOtherSuspects": "What they know about others",
+    "conversationsNeededToBreak": 4,
     "portraitFeatures": {
-      "backHairFrameIndex": number,
-      "frontHairFrameIndex": number,
-      "eyesFrameIndex": number,
-      "noseFrameIndex": number,
-      "mouthFrameIndex": number,
-      "hairColor": string,
-      "skinColor": string,
-      "eyeColor": string,
-      "shirtColor": string,
-      "lipColor": string
+      "backHairFrameIndex": 0,
+      "frontHairFrameIndex": 1,
+      "eyesFrameIndex": 2,
+      "noseFrameIndex": 1,
+      "mouthFrameIndex": 0,
+      "hairColor": "#8B4513",
+      "skinColor": "#FDBCB4",
+      "eyeColor": "#654321",
+      "shirtColor": "#FF6B6B",
+      "lipColor": "#CD5C5C"
     }
   }],
   "caseReport": {
-    "caseTitle": string,
-    "caseId": string,
-    "setting": string,
-    "date": string,
+    "caseTitle": "The Case Title",
+    "caseId": "CASE-001",
+    "setting": "The location and atmosphere",
+    "date": "Date of discovery",
     "victim": {
-      "name": string,
-      "age": number,
-      "occupation": string,
-      "background": string,
-      "causeOfDeath": string,
-      "bodyFoundAt": string
+      "name": "Victim Name",
+      "age": 50,
+      "occupation": "Their job",
+      "background": "Their history",
+      "causeOfDeath": "How they died",
+      "bodyFoundAt": "Where the body was found"
     },
-    "officialBriefing": string,
-    "knownFacts": [string],
-    "openQuestions": [string]
+    "officialBriefing": "Brief summary of the case without spoilers",
+    "knownFacts": ["Fact 1", "Fact 2"],
+    "openQuestions": ["Question 1", "Question 2"]
   },
   "clues": [{
-    "id": string,
-    "name": string,
-    "description": string,
-    "location": string,
-    "couldImplicateSuspects": [string],
-    "severity": "low" | "medium" | "high",
-    "isDecisive": boolean
+    "id": "clue_1",
+    "name": "Clue name",
+    "description": "Clue description",
+    "location": "Where found",
+    "couldImplicateSuspects": ["Suspect Name 1", "Suspect Name 2"],
+    "severity": "high",
+    "isDecisive": false
   }]
 }`.trim();
 }
@@ -540,7 +551,17 @@ async function callWithRetry<T>(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const result = await model.generateContent(prompt);
-      const cleaned = cleanRawJson(result.response.text());
+      const raw = result.response.text();
+      const cleaned = cleanRawJson(raw);
+      
+      // Log first 500 chars and last 200 chars for debugging
+      if (cleaned.length > 700) {
+        console.log(`[LLM] Response start: ${cleaned.slice(0, 500)}`);
+        console.log(`[LLM] Response end: ${cleaned.slice(-200)}`);
+      } else {
+        console.log(`[LLM] Full response: ${cleaned}`);
+      }
+      
       return JSON.parse(cleaned) as T;
     } catch (err) {
       lastError = err;
@@ -623,7 +644,7 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   // Save to MongoDB if signed in
   if (seed.isSignedIn && seed.userId) {
     try {
-      await fetch("http://localhost:3000/cases/create", {
+      const response = await fetch("http://localhost:3000/cases/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -650,9 +671,17 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
           },
         }),
       });
-      console.log("[MongoDB] Case saved");
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("[MongoDB] POST failed:", response.status, errorData);
+        return;
+      }
+      
+      const result = await response.json();
+      console.log("[MongoDB] Case saved successfully:", result);
     } catch (err) {
-      console.warn("[MongoDB] Could not save case:", err);
+      console.error("[MongoDB] Could not save case:", err);
     }
   }
 
@@ -705,6 +734,9 @@ export async function feedCaseFile(game: any): Promise<{
       })),
       conversationCount: Number(s.conversationCount ?? 0),
       stressLevel: Number(s.currentStress ?? 0),
+      suspicionLevel: (s.suspicionLevel === "low" || s.suspicionLevel === "medium" || s.suspicionLevel === "high")
+        ? s.suspicionLevel
+        : null,
     };
   }
 

@@ -11,7 +11,6 @@ import { generateCaseFile, feedCaseFile, buildSuspectSystemPrompt } from "./case
 import { streamSpeech } from "./services/ttsService";
 import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-console.log(import.meta.env.VITE_GEMINI_API_KEY)
 
 // ─────────────────────────────────────────────
 //  CHAT TYPES
@@ -25,12 +24,15 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+export type SuspicionLevel = "low" | "medium" | "high";
+
 export interface SuspectSession {
   suspectName: string;
   chatSession: ChatSession | null;
   history: ChatMessage[];
   conversationCount: number;
   stressLevel: number;
+  suspicionLevel: SuspicionLevel | null;
 }
 
 // ─────────────────────────────────────────────
@@ -85,6 +87,7 @@ interface GameState {
   proceedToInvestigation: (navigate: (path: string) => void) => void;
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
+  setSuspicionLevelForSuspect: (suspectName: string, level: SuspicionLevel | null) => void;
   sendMessage: (
     text: string,
     displayText: string,
@@ -99,7 +102,7 @@ interface GameState {
   setCurrentSessionId: (sessionId: string) => void; // This function can only be called when the user is signed in
   setSelectedCase: (caseDoc: any) => void;
   setSessions: (sessions: Record<string, SuspectSession>) => void;
-  loadSharedCaseTemplate: (template: any, navigate: (path: string) => void) => Promise<void>;
+  loadSharedCaseTemplate: (template: any, caseCode: string, navigate: (path: string) => void) => Promise<void>;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -323,9 +326,27 @@ export const useGameStore = create<GameState>((set, get) => ({
           history: existingSession?.history ?? [],
           conversationCount: existingSession?.conversationCount ?? 0,
           stressLevel: existingSession?.stressLevel ?? 0,
+            suspicionLevel: existingSession?.suspicionLevel ?? null,
         },
       },
     }));
+  },
+
+  setSuspicionLevelForSuspect: (suspectName, level) => {
+    set((state) => {
+      const currentSession = state.sessions[suspectName];
+      if (!currentSession) return state;
+
+      return {
+        sessions: {
+          ...state.sessions,
+          [suspectName]: {
+            ...currentSession,
+            suspicionLevel: level,
+          },
+        },
+      };
+    });
   },
 
 
@@ -540,6 +561,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             suspectName: s.suspectName,
             conversationCount: s.conversationCount,
             currentStress: s.stressLevel,
+            suspicionLevel: s.suspicionLevel ?? null,
             firstInterrogatedAt: null,
             lastInterrogatedAt: new Date().toISOString(),
             messages: s.history.map((m) => ({
@@ -554,6 +576,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              userId: seed.userId,
               status: state.phase === "resolved" ? "resolved" : "in_progress",
               game: {
                 phase: state.phase,
@@ -671,6 +694,7 @@ set({ isResponding: false });
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              userId: seed.userId,
               sessionId,
               caseId: player?.caseReport?.caseId ?? sessionId,
               accusedName,
@@ -755,7 +779,7 @@ set({ isResponding: false });
 
   setSessions: (sessions) => set({ sessions }),
 
-  loadSharedCaseTemplate: async (template, navigate) => {
+  loadSharedCaseTemplate: async (template, caseCode, navigate) => {
     try {
       const currentSeed = get().seed ?? DEFAULT_SEED;
       const templateSeed = template?.seed ?? {};
@@ -790,7 +814,10 @@ set({ isResponding: false });
       } catch (err) {
         console.warn("[VoiceSelector] Failed, continuing without voices:", err);
       }
-      const sharedSessionId = `SHARE-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+      const sharedSessionId = String(caseCode ?? template?.caseData?.caseReport?.caseId ?? "").trim();
+      if (!sharedSessionId) {
+        throw new Error('Missing case code for shared session');
+      }
 
       set({
         phase: "briefing",
@@ -834,7 +861,24 @@ set({ isResponding: false });
               initialClues,
             },
           }),
-        }).catch(() => {});
+        })
+          .then(async (res) => {
+            if (!res.ok) {
+              const errorData = await res.json();
+              console.error('[loadSharedCaseTemplate] POST failed:', res.status, errorData);
+              return;
+            }
+            const result = await res.json();
+            console.log('[loadSharedCaseTemplate] Game created successfully:', result);
+          })
+          .catch((err) => {
+            console.error('[loadSharedCaseTemplate] Network error:', err);
+          });
+      } else {
+        console.warn('[loadSharedCaseTemplate] Skipping /cases/create because auth is missing in seed:', {
+          isSignedIn: mergedSeed.isSignedIn,
+          userId: mergedSeed.userId,
+        });
       }
 
       navigate('/report');

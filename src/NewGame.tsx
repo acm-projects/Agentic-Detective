@@ -21,13 +21,25 @@ function NewGame() {
   const [intensity, setIntensity] = useState(5);
   const [difficulty, setDifficulty] = useState<1 | 2 | 3>(2);
   const [isMuted, setIsMuted] = useState(false);
-    const [showCommunity, setShowCommunity] = useState(false);
+  const [showCommunity, setShowCommunity] = useState(false);
 
   const { userId, isSignedIn, isLoaded } = useAuth();
 
-    useEffect(() => {
-      clearLoadedCase();
-    }, [clearLoadedCase]);
+  // Prevent body scroll when community modal is open
+  useEffect(() => {
+    if (showCommunity) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showCommunity]);
+
+  useEffect(() => {
+    clearLoadedCase();
+  }, [clearLoadedCase]);
 
 
     // Setup background music on mount
@@ -56,6 +68,15 @@ function NewGame() {
   useEffect(() => {
     console.log("User Sign in status: " + isSignedIn);
   }, [isLoaded, isSignedIn]);
+
+  // Keep auth fields in store in sync so Community shared-case loads can create game docs.
+  useEffect(() => {
+    if (!isLoaded) return;
+    setSeed({
+      userId: userId ?? "",
+      isSignedIn: Boolean(isSignedIn),
+    });
+  }, [isLoaded, isSignedIn, userId, setSeed]);
 
   useEffect(() => {
     localStorage.removeItem("lastSessionId");
@@ -310,10 +331,7 @@ function NewGame() {
                   return;
                 }
 
-                const isReloadFlow = await startCase(navigate);
-                if (!isReloadFlow) {
-                  navigate('/desk');
-                }
+                await startCase(navigate);
               }}
             >
               SOLVE!
