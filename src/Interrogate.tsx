@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress } from './useGameStore';
+import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress, type SuspicionLevel } from './useGameStore';
 import { StressBar } from './StressBar';
 import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
@@ -29,8 +29,6 @@ interface SuspectNote {
   suspectNotes: string;
   createdAt?: string;
 }
-
-type SuspicionLevel = 'low' | 'medium' | 'high';
 
 interface InterrogateImageProp {
   src: string;
@@ -135,6 +133,7 @@ function Interrogate() {
   const {
     player,
     seed,
+    phase,
     currentSessionId,
     activeSuspectName,
     isFirstClueDiscovery,
@@ -146,6 +145,7 @@ function Interrogate() {
     sendMessage,
     makeAccusation,
     tickElapsed,
+    setSuspicionLevelForSuspect,
   } = useGameStore();
 
   const isSpeaking = useGameStore(s => s.isSpeaking);
@@ -156,7 +156,6 @@ function Interrogate() {
   const [showNotebook, setShowNotebook] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
-  const [selectedSuspicionLevel, setSelectedSuspicionLevel] = useState<SuspicionLevel | null>(null);
   const [tutorialOpenOnce, setTutorialOpenOnce] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
@@ -193,6 +192,58 @@ function Interrogate() {
 
   const timerPaused = useNotificationStore(s => s.timerPaused);
   const sessionId = currentSessionId || player?.caseReport?.caseId || '';
+  const storedSuspicionLevel = useGameStore(s =>
+    activeSuspectName ? s.sessions[activeSuspectName]?.suspicionLevel ?? null : null
+  );
+  const notebookSuspicionLevel = storedSuspicionLevel ?? activeProfile?.suspicionLevel ?? null;
+
+  const saveSuspicionLevel = useCallback(async (nextLevel: SuspicionLevel) => {
+    if (!activeSuspectName) return;
+
+    const store = useGameStore.getState();
+    const userId = store.seed?.userId ?? '';
+    const persistedSessionId = store.currentSessionId || store.player?.caseReport?.caseId || '';
+    if (!userId || !persistedSessionId) return;
+
+    const suspectSessions = Object.values(store.sessions).map((s) => ({
+      suspectName: s.suspectName,
+      conversationCount: s.conversationCount,
+      currentStress: s.stressLevel,
+      suspicionLevel: s.suspectName === activeSuspectName ? nextLevel : (s.suspicionLevel ?? null),
+      firstInterrogatedAt: null,
+      lastInterrogatedAt: new Date().toISOString(),
+      messages: s.history.map((m) => ({
+        role: m.role,
+        text: m.text,
+        timestamp: m.timestamp,
+      })),
+    }));
+
+    const { useNotificationStore } = await import('./store/useNotificationStore');
+    const notificationState = useNotificationStore.getState();
+
+    await fetch(`http://localhost:3000/cases/${persistedSessionId}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        status: phase === 'resolved' ? 'resolved' : 'in_progress',
+        game: {
+          phase,
+          elapsedSeconds: elapsed,
+          activeSuspectName,
+          totalConversationCount,
+          seed,
+        },
+        interrogation: { suspectSessions },
+        schedulerState: {
+          lastFiredAt: notificationState.lastFiredAt,
+          nextFireAt: notificationState.nextFireAt,
+          timerPaused: notificationState.timerPaused,
+        },
+      }),
+    }).catch(() => {});
+  }, [activeSuspectName, elapsed, phase, seed, totalConversationCount]);
   const closeNotesModal = () => {
     setShowNotes(false);
     setNoteInputOpen(false);
@@ -278,15 +329,6 @@ function Interrogate() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
-
-  useEffect(() => {
-    if (!activeProfile) return;
-    if ((seed?.difficulty ?? 0) < 3) {
-      setSelectedSuspicionLevel(activeProfile.suspicionLevel);
-      return;
-    }
-    setSelectedSuspicionLevel(null);
-  }, [activeProfile, seed?.difficulty]);
 
   const { isListening, toggle: toggleSpeech } = useSpeechToText(
     (transcript) => setInput(prev => prev ? `${prev} ${transcript}` : transcript)
@@ -996,9 +1038,12 @@ function Interrogate() {
                         <button
                           key={level}
                           type="button"
-                          className={`notebook-suspicion-btn suspicion-${level} ${selectedSuspicionLevel === level ? 'active' : ''}`}
-                          onClick={() => setSelectedSuspicionLevel(level)}
-                          aria-pressed={selectedSuspicionLevel === level}
+                          className={`notebook-suspicion-btn suspicion-${level} ${notebookSuspicionLevel === level ? 'active' : ''}`}
+                          onClick={() => {
+                            setSuspicionLevelForSuspect(activeProfile.name, level);
+                            void saveSuspicionLevel(level);
+                          }}
+                          aria-pressed={notebookSuspicionLevel === level}
                         >
                           {level.toUpperCase()}
                         </button>

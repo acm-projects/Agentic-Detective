@@ -24,12 +24,15 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+export type SuspicionLevel = "low" | "medium" | "high";
+
 export interface SuspectSession {
   suspectName: string;
   chatSession: ChatSession | null;
   history: ChatMessage[];
   conversationCount: number;
   stressLevel: number;
+  suspicionLevel: SuspicionLevel | null;
 }
 
 // ─────────────────────────────────────────────
@@ -84,6 +87,7 @@ interface GameState {
   proceedToInvestigation: (navigate: (path: string) => void) => void;
   goToBriefing: (navigate: (path: string) => void) => void;
   startInterrogation: (suspectName: string) => void;
+  setSuspicionLevelForSuspect: (suspectName: string, level: SuspicionLevel | null) => void;
   sendMessage: (
     text: string,
     displayText: string,
@@ -322,9 +326,27 @@ export const useGameStore = create<GameState>((set, get) => ({
           history: existingSession?.history ?? [],
           conversationCount: existingSession?.conversationCount ?? 0,
           stressLevel: existingSession?.stressLevel ?? 0,
+            suspicionLevel: existingSession?.suspicionLevel ?? null,
         },
       },
     }));
+  },
+
+  setSuspicionLevelForSuspect: (suspectName, level) => {
+    set((state) => {
+      const currentSession = state.sessions[suspectName];
+      if (!currentSession) return state;
+
+      return {
+        sessions: {
+          ...state.sessions,
+          [suspectName]: {
+            ...currentSession,
+            suspicionLevel: level,
+          },
+        },
+      };
+    });
   },
 
 
@@ -539,6 +561,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             suspectName: s.suspectName,
             conversationCount: s.conversationCount,
             currentStress: s.stressLevel,
+            suspicionLevel: s.suspicionLevel ?? null,
             firstInterrogatedAt: null,
             lastInterrogatedAt: new Date().toISOString(),
             messages: s.history.map((m) => ({
