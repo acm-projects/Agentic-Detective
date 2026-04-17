@@ -449,7 +449,7 @@ function NewGame() {
             onClick={() => setShowSavedGames(false)}
             aria-label="Close saved games modal"
           >
-            ✕
+            x
           </button>
           <SavedGamesList
             onCaseSelected={() => setShowSavedGames(false)}

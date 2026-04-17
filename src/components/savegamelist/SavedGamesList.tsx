@@ -1,7 +1,9 @@
+// IMPORTANT: create a filtering feature to: filter based on isStarred, and phase; include sort mechanism
 import { useAuth } from "@clerk/react";
 import { useCallback, useEffect, useState } from "react";
 import "./savegamelist.css";
 import { useGameStore } from "../../useGameStore";
+import { CiStar } from "react-icons/ci";
 
 type SavedCase = {
   sessionId: string;
@@ -15,6 +17,7 @@ type SavedCase = {
       caseTitle?: string;
     };
   };
+  isStarred: boolean;
 };
 
 type SavedGamesListProps = {
@@ -44,12 +47,19 @@ function SavedGameCard({
 }) {
   const currentSessionId = useGameStore((s) => s.currentSessionId);
   const isSelected = currentSessionId === game.sessionId;
+  const [isStarred, setIsStarred] = useState(false);
 
   const title = game.caseData?.caseReport?.caseTitle ?? "Untitled Case";
   const phase = game.status === "resolved" ? "resolved" : game.game?.phase ?? "unknown";
   const lastPlayed = game.lastAutosavedAt
     ? new Date(game.lastAutosavedAt).toLocaleString()
     : "Unknown";
+
+  const handleStarClick = (game: SavedCase) => {
+    setIsStarred(!isStarred);
+    game.isStarred = !game.isStarred;
+  };
+
 
   return (
     <li>
@@ -66,20 +76,40 @@ function SavedGameCard({
         }}
         aria-pressed={isSelected}
       >
-        <h4 className={`card-title-text ${isSelected ? "selected" : ""}`}>{title}</h4>
-        <p className="saved-game-meta">Game Phase: {phase}</p>
-        <p className="saved-game-submeta">Last Played: {lastPlayed}</p>
-        {isSelected && (
-          <button 
-            type="button" 
-            className="card-solve-button"
-            onClick={async (e) => {
-              e.stopPropagation();
-              onSelect(game);
-              await onSolve(game);
+        <div className="card-top-section">
+
+          <div className="card-stats">
+            <h4 className={`card-title-text ${isSelected ? "selected" : ""}`}>{title}</h4>
+            <p className="saved-game-meta">Game Phase: {phase}</p>
+            <p className="saved-game-submeta">Last Played: {lastPlayed}</p>
+          </div>
+
+          <div className="card-star-section">
+            <button 
+              className= {`card-star-button ${isStarred ? "starred" : ""}`} 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                handleStarClick(game); 
               }}
-            >Solve </button>
-        )}
+            > 
+              <CiStar /> 
+            </button>
+          </div>
+        </div>
+
+        <div className="card-bottom-section">
+          {isSelected && (
+            <button 
+              type="button" 
+              className="card-solve-button"
+              onClick={async (e) => {
+                e.stopPropagation();
+                onSelect(game);
+                await onSolve(game);
+                }}
+              >Solve </button>
+          )}
+        </div>
       </div>
     </li>
 
@@ -94,6 +124,10 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
   const [cases, setCases] = useState<SavedCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filterPhase, setFilterPhase] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterStarred, setFilterStarred] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("lastPlayed-desc");
 
   const loadCases = useCallback(async () => {
     if (!isLoaded) return;
@@ -139,6 +173,60 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
     onCaseSelected?.();
   };
 
+  const filterAndSortCases = useCallback(() => {
+    let filtered = [...cases];
+
+    // Apply phase filter
+    if (filterPhase !== "all") {
+      filtered = filtered.filter((game) => {
+        const phase = game.status === "resolved" ? "resolved" : game.game?.phase ?? "unknown";
+        return phase.toLowerCase() === filterPhase.toLowerCase();
+      });
+    }
+
+
+    // Apply starred filter
+    if (filterStarred === "starred") {
+      filtered = filtered.filter((game) => game.isStarred);
+    } else if (filterStarred === "unstarred") {
+      filtered = filtered.filter((game) => !game.isStarred);
+    }
+
+    // Apply sort
+    if (sortBy === "lastPlayed-asc") {
+      filtered.sort((a, b) => {
+        const aTime = a.lastAutosavedAt ? new Date(a.lastAutosavedAt).getTime() : 0;
+        const bTime = b.lastAutosavedAt ? new Date(b.lastAutosavedAt).getTime() : 0;
+        return aTime - bTime;
+      });
+    } else if (sortBy === "lastPlayed-desc") {
+      filtered.sort((a, b) => {
+        const aTime = a.lastAutosavedAt ? new Date(a.lastAutosavedAt).getTime() : 0;
+        const bTime = b.lastAutosavedAt ? new Date(b.lastAutosavedAt).getTime() : 0;
+        return bTime - aTime;
+      });
+    } else if (sortBy === "phase-asc") {
+      filtered.sort((a, b) => {
+        const aPhase = a.status === "resolved" ? "resolved" : a.game?.phase ?? "unknown";
+        const bPhase = b.status === "resolved" ? "resolved" : b.game?.phase ?? "unknown";
+        return aPhase.localeCompare(bPhase);
+      });
+    } else if (sortBy === "phase-desc") {
+      filtered.sort((a, b) => {
+        const aPhase = a.status === "resolved" ? "resolved" : a.game?.phase ?? "unknown";
+        const bPhase = b.status === "resolved" ? "resolved" : b.game?.phase ?? "unknown";
+        return bPhase.localeCompare(aPhase);
+      });
+    } else if (sortBy === "starred-first") {
+      filtered.sort((a, b) => {
+        if (a.isStarred === b.isStarred) return 0;
+        return a.isStarred ? -1 : 1;
+      });
+    }
+
+    return filtered;
+  }, [cases, filterPhase, filterStatus, filterStarred, sortBy]);
+
   return (
     <section className="saved-games-panel" aria-label="Saved games">
       <div className="saved-games-header">
@@ -166,6 +254,70 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
         </p>
       )}
 
+      {isSignedIn && cases.length > 0 && (
+        <div className="filter-sort-section">
+          <div className="filter-sort-group">
+            <label className="filter-sort-label">Phase:</label>
+            <select
+              className="filter-sort-select"
+              value={filterPhase}
+              onChange={(e) => setFilterPhase(e.target.value)}
+            >
+              <option value="all">All Phases</option>
+              {/* {<option value="setup">Setup</option>
+              <option value="generating">Generating</option>
+              <option value="refreshed">Refreshed</option>} */}
+              <option value="briefing">Briefing</option>
+              <option value="interrogation">Interrogation</option>
+              <option value="resolved">Resolved</option>
+            </select>
+          </div>
+
+          {/* {<div className="filter-sort-group">
+            <label className="filter-sort-label">Status:</label>
+            <select
+              className="filter-sort-select"
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            >
+              <option value="all">All Statuses</option>
+              <option value="in_progress">In Progress</option>
+              <option value="paused">Paused</option>
+              <option value="resolved">Resolved</option>
+              <option value="abandoned">Abandoned</option>
+            </select>
+          </div>} */}
+
+          <div className="filter-sort-group">
+            <label className="filter-sort-label">Starred:</label>
+            <select
+              className="filter-sort-select"
+              value={filterStarred}
+              onChange={(e) => setFilterStarred(e.target.value)}
+            >
+              <option value="all">All</option>
+              <option value="starred">Starred Only</option>
+              <option value="unstarred">Unstarred Only</option>
+            </select>
+          </div>
+
+          <div className="filter-sort-group">
+            <label className="filter-sort-label">Sort By:</label>
+            <select
+              className="filter-sort-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="lastPlayed-desc">Last Played (Newest First)</option>
+              <option value="lastPlayed-asc">Last Played (Oldest First)</option>
+              <option value="phase-asc">Phase (A-Z)</option>
+              <option value="phase-desc">Phase (Z-A)</option>
+              <option value="starred-first">Starred First</option>
+            </select>
+          </div>
+        </div>
+      )}
+
       {error && (
         <p className="saved-games-error" role="alert">
           {error}
@@ -179,16 +331,24 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
       )}
 
       {isSignedIn && cases.length > 0 && (
-        <ul className="saved-games-list" aria-label="Saved game files">
-          {cases.map((game) => (
-            <SavedGameCard
-              key={game.sessionId}
-              game={game}
-              onSelect={handleSelectCase}
-              onSolve={handleSolveCase}
-            />
-          ))}
-        </ul>
+        <>
+          {filterAndSortCases().length === 0 ? (
+            <p className="saved-games-message" role="status">
+              No games match your filters.
+            </p>
+          ) : (
+            <ul className="saved-games-list" aria-label="Saved game files">
+              {filterAndSortCases().map((game) => (
+                <SavedGameCard
+                  key={game.sessionId}
+                  game={game}
+                  onSelect={handleSelectCase}
+                  onSolve={handleSolveCase}
+                />
+              ))}
+            </ul>
+          )}
+        </>
       )}
     </section>
   );

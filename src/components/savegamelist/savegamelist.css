@@ -27,7 +27,7 @@
 .title-text {
     margin: 0;
     color: #101010;
-    font-size: 0.95rem;
+    font-size: 1.95rem;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -67,7 +67,7 @@
 .saved-games-error {
     margin: 8px 0 10px;
     font-family: 'Courier Prime', monospace;
-    font-size: 0.82rem;
+    font-size: 1rem;
 }
 
 .saved-games-count,
@@ -122,16 +122,90 @@
     box-shadow: 2px 2px 0 #1f5c3a;
 }
 
+.card-top-section {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    width: 100%;
+
+}
+
+.card-stats {
+    margin-right: 0;
+    flex: 1;
+    min-width: 0;
+}
+
+.card-star-section {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
 .card-title-text {
     margin: 0 0 8px;
     color: #101010;
-    font-size: 0.8rem;
-    line-height: 1.5;
+    font-family: 'Press Start 2P', cursive;
+    font-size: clamp(0.66rem, 0.64rem + 0.25vw, 0.78rem);
+    line-height: 1.45;
+    letter-spacing: 0.4px;
 }
 
 .card-title-text.selected {
     color: #1f5c3a;
 }
+
+.card-solve-button {
+    width: 100%;
+}
+
+.card-solve-button:hover {
+    background-color: #1f5c3a;
+    color: #f1eadb;
+}
+
+.card-star-button:hover {
+    background-color: #da9928;
+    color: #f1eadb;
+}
+
+.card-star-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 2px solid #101010;
+    background-color: #f1eadb;
+    color: #8a6b2f;
+    box-shadow: 2px 2px 0 #101010;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+    line-height: 0;
+}
+
+.card-star-button svg {
+    width: 1.05rem;
+    height: 1.05rem;
+}
+
+.card-star-button:focus-visible {
+    outline: 3px solid #fcd34d;
+    outline-offset: 2px;
+}
+
+.card-star-button:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 #101010;
+}
+
+.card-star-button.starred {
+    background-color: #da9928;
+    color: #f1eadb;
+
+}
+
 
 .saved-game-meta,
 .saved-game-submeta {
@@ -141,12 +215,14 @@
 
 .saved-game-meta {
     color: #101010;
-    font-size: 0.82rem;
+    font-size: clamp(0.8rem, 0.78rem + 0.15vw, 0.9rem);
+    line-height: 1.4;
 }
 
 .saved-game-submeta {
     color: #3c3c3c;
-    font-size: 0.74rem;
+    font-size: clamp(0.72rem, 0.7rem + 0.12vw, 0.8rem);
+    line-height: 1.4;
     margin-top: 3px;
 }
 
@@ -157,5 +233,88 @@
 
     .title-text {
         font-size: 0.75rem;
+    }
+}
+
+.filters-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.filter-text {
+    padding: 5px;
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 8px; /* adjust to taste */
+    padding: 5px;
+    vertical-align: center;
+    margin-top: 5px;
+}
+
+.filter-button {
+    max-height: 30px;
+}
+
+.filter-sort-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 16px 0 20px;
+    padding: 16px;
+    background-color: #f5f0e6;
+    border: 2px solid #8a7861;
+    border-radius: 0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-sort-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.filter-sort-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #101010;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.filter-sort-select {
+    padding: 8px 8px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.75rem;
+    color: #101010;
+    background-color: #f1eadb;
+    border: 2px solid #101010;
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23101010' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 18px;
+    padding-right: 32px;
+}
+
+.filter-sort-select:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
+}
+
+.filter-sort-select:focus {
+    outline: 3px solid #fcd34d;
+    outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+    .filter-sort-section {
+        grid-template-columns: 1fr;
+        gap: 12px;
     }
 }
