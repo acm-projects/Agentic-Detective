@@ -25,8 +25,11 @@ interface Contributor {
 }
 
 export default function Community({ onCloseModal }: CommunityProps) {
-    const { isSignedIn } = useAuth();
+    const { isSignedIn, userId } = useAuth();
     const navigate = useNavigate();
+    const startCase = useGameStore(s => s.startCase);
+    const setCurrentSessionId = useGameStore(s => s.setCurrentSessionId);
+    const setSelectedCase = useGameStore(s => s.setSelectedCase);
     const loadSharedCaseTemplate = useGameStore(s => s.loadSharedCaseTemplate);
     const [caseCode, setCaseCode] = useState('');
     const [loadingCase, setLoadingCase] = useState(false);
@@ -63,17 +66,34 @@ export default function Community({ onCloseModal }: CommunityProps) {
     }, []);
 
     const handlePlayByCode = async (inputCode?: string) => {
-        const trimmedCode = inputCode; //(inputCode ?? caseCode).trim();
+        const trimmedCode = (inputCode ?? caseCode).trim();
         if (!trimmedCode || loadingCase) return;
         console.log("Attempting to load case with code:", trimmedCode);
 
         setLoadingCase(true);
         setError(null);
         try {
+            // If this signed-in user already has progress for this case ID, resume it instead of resetting.
+            if (isSignedIn && userId) {
+                const existingRes = await fetch(
+                    `http://localhost:3000/cases/${encodeURIComponent(trimmedCode)}?userId=${encodeURIComponent(userId)}`
+                );
+                if (existingRes.ok) {
+                    const existingDoc = await existingRes.json();
+                    if (existingDoc?.game) {
+                        setCurrentSessionId(trimmedCode);
+                        setSelectedCase(existingDoc);
+                        await startCase(navigate);
+                        onCloseModal?.();
+                        return;
+                    }
+                }
+            }
+
             const res = await fetch(`http://localhost:3000/community/cases/${encodeURIComponent(trimmedCode)}/template`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const template = await res.json();
-            await loadSharedCaseTemplate(template, navigate);
+            await loadSharedCaseTemplate(template, trimmedCode, navigate);
             onCloseModal?.();
         } catch {
             setError('Could not find that case code.');
