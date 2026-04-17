@@ -250,6 +250,7 @@ function buildInitialSuspectSessions(suspects = []) {
     suspectName: s.name,
     conversationCount: 0,
     currentStress: 0,
+    suspicionLevel: null,
     firstInterrogatedAt: null,
     lastInterrogatedAt: null,
     messages: [],

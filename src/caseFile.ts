@@ -238,6 +238,7 @@ export interface RestoredSuspectSession {
   history: Array<{ role: "player" | "suspect"; text: string; timestamp: number }>;
   conversationCount: number;
   stressLevel: number;
+  suspicionLevel: "low" | "medium" | "high" | null;
 }
 
 // ─────────────────────────────────────────────
@@ -733,6 +734,9 @@ export async function feedCaseFile(game: any): Promise<{
       })),
       conversationCount: Number(s.conversationCount ?? 0),
       stressLevel: Number(s.currentStress ?? 0),
+      suspicionLevel: (s.suspicionLevel === "low" || s.suspicionLevel === "medium" || s.suspicionLevel === "high")
+        ? s.suspicionLevel
+        : null,
     };
   }
 

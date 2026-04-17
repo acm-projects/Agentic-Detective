@@ -221,9 +221,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background-color: #2c5aa0;
+  background-color: #872828;
   color: #ecf0f1;
-  border: 2px solid #1a3560;
+  border: 2px solid #4b0000;
   border-radius: 4px;
   padding: 10px 16px;
   font-size: 14px;
@@ -234,8 +234,8 @@
 }
 
 .community-button:hover {
-  background-color: #1a3560;
-  border-color: #0d1f3a;
+  background-color: #4b0000;
+  border-color: #320707;
   transform: scale(1.05);
 }
 
