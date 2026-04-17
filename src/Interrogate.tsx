@@ -51,6 +51,12 @@ interface InterrogatePanelProp {
   children?: React.ReactNode;
 }
 
+interface NotificationBoardPayload {
+  title: string;
+  bodyText: React.ReactNode;
+  condition: boolean;
+}
+
 // ── Draggable hook ─────────────────────────────────────
 function useDraggableModal(initialPos: { x: number; y: number }) {
   const [pos, setPos] = useState(initialPos);
@@ -134,6 +140,23 @@ function InterrogatePanelWithToolTip({ tooltip, className, style, title, onClick
   )
 }
 
+// Notification Board Common Function
+function PopulateNotificationBoard({
+  title,
+  bodyText,
+  condition,
+}: NotificationBoardPayload) {
+  if (!condition) return null;
+
+  return (
+    <div className="first-clue-guide" role="status" aria-live="polite">
+      <p className="first-clue-guide-title">{title}</p>
+      <p className="first-clue-guide-body">{bodyText}</p>
+    </div>
+  );
+
+}
+
 function Interrogate() {
   const TUTORIAL_KEY = 'tutorialSeen';
   const TUTORIAL_STEP_KEY = 'tutorialStep';
@@ -169,7 +192,6 @@ function Interrogate() {
   const [showNotes, setShowNotes] = useState(false);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
   const [tutorialVersion, setTutorialVersion] = useState(0);
-  const [selectedSuspicionLevel, setSelectedSuspicionLevel] = useState<SuspicionLevel | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
@@ -191,7 +213,13 @@ function Interrogate() {
   const [isDragOver, setIsDragOver] = useState(false);
   // const [recentlyLostClueName, setRecentlyLostClueName] = useState<string | null>(null);
   const previousLostCountRef = useRef(lostClueCount);
-  const [newClueLost, setNewClueLost] = useState(false)
+  const [newClueLost, setNewClueLost] = useState(false);
+  const [accuseUnlockedNotice, setAccuseUnlockNotice] = useState(false);
+  const [stressIncreaseNotice, setStressIncreaseNotice] = useState<{
+    title: string;
+    bodyText: React.ReactNode;
+  } | null>(null);
+  const previousStressRef = useRef(stressLevel);
 
   // ── Three fully independent drag positions ─────────────
   const { pos: cluePos,     onMouseDown: clueMouseDown     } = useDraggableModal({ x: window.innerWidth - 380, y: 120 });
@@ -206,6 +234,7 @@ function Interrogate() {
   const [noteDraft, setNoteDraft] = useState('');
   const [noteSaving, setNoteSaving] = useState(false);
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const previousAccusationUnlockedRef = useRef(accusationUnlocked);
 
   const timerPaused = useNotificationStore(s => s.timerPaused);
   const sessionId = currentSessionId || player?.caseReport?.caseId || '';
@@ -311,6 +340,32 @@ function Interrogate() {
   }, [lostClueCount]);
 
   useEffect(() => {
+    const previousStress = previousStressRef.current;
+
+    if (stressLevel > previousStress && activeSuspectName) {
+      setStressIncreaseNotice({
+        title: 'Stress Increased',
+        bodyText: (
+          <>
+            {activeSuspectName} became more stressed after your last question.
+            <br />
+          </>
+        ),
+      });
+
+      const timeoutId = window.setTimeout(() => {
+        setStressIncreaseNotice(null);
+      }, 7000);
+
+      previousStressRef.current = stressLevel;
+
+      return () => window.clearTimeout(timeoutId);
+    }
+
+    previousStressRef.current = stressLevel;
+  }, [activeSuspectName, stressLevel]);
+
+  useEffect(() => {
     if (!newClueLost) return;
 
     const id = window.setTimeout(() => {
@@ -319,6 +374,24 @@ function Interrogate() {
 
     return () => window.clearTimeout(id);
   }, [newClueLost]);
+
+  // Accusation Notification
+  useEffect(() => {
+    const wasLocked = !previousAccusationUnlockedRef.current;
+
+    if (wasLocked && accusationUnlocked) {
+      setAccuseUnlockNotice(true);
+
+      const id = window.setTimeout(() => {
+        setAccuseUnlockNotice(false);
+      }, 10000);
+
+      previousAccusationUnlockedRef.current = accusationUnlocked;
+      return () => window.clearTimeout(id);
+    }
+
+    previousAccusationUnlockedRef.current = accusationUnlocked;
+  }, [accusationUnlocked]);
 
   // ── Save note ──────────────────────────────────────────
   const saveNote = useCallback(async () => {
@@ -621,24 +694,34 @@ function Interrogate() {
             </div>
           </Show>
         </div> */}
+        {/* Notification Board */}
         <div className='notification-board'>
-          {hasLostClues && newClueLost && (
-            <div className="first-clue-guide" role="status" aria-live="polite">
-              <p className="first-clue-guide-title">Clue Lost</p>
-              <p className="first-clue-guide-body">
-                You failed the minigame, and have lost a key clue for your investigation.
-              </p>
-            </div>
-          )}
-          {isFirstClueDiscovery && (
-            <div className="first-clue-guide" role="status" aria-live="polite">
-              <p className="first-clue-guide-title">First Clue Discovered</p>
-              <p className="first-clue-guide-body">
-                <strong>Step 1:</strong> Click the highlighted Desk button above. <br /> <br />
-                <strong>Step 2:</strong> Open the Clues page from the Desk to review your newly acquired evidence.
-              </p>
-            </div>
-          )}  
+          <PopulateNotificationBoard
+            condition={hasLostClues && newClueLost}
+            title="Clue Lost"
+            bodyText="You failed the minigame, and have lost a key clue for your investigation."
+          />
+          <PopulateNotificationBoard
+            condition={accuseUnlockedNotice}
+            title="Accusation Unlocked"
+            bodyText="You can now make your accusation."
+          />
+          <PopulateNotificationBoard
+            condition={Boolean(stressIncreaseNotice)}
+            title={stressIncreaseNotice?.title ?? ''}
+            bodyText={stressIncreaseNotice?.bodyText ?? ''}
+          />
+          <PopulateNotificationBoard
+            condition={isFirstClueDiscovery}
+            title="First Clue Discovered"
+            bodyText={
+              <>
+              <strong>Step 1:</strong> Click the highlighted Desk button above. <br /> <br />
+              <strong>Step 2:</strong> Open the Clues page from the Desk to review your newly acquired evidence.
+              </>
+            }
+          />
+
         </div>
       </div>
       

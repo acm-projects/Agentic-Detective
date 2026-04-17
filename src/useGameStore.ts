@@ -163,6 +163,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       return false;
     }
     set({ phase: "generating", error: null });
+    navigate("/loading");
 
     if (!isReloadFlow) {
       try {

@@ -190,9 +190,7 @@ function NewGame() {
       return;
     }
 
-    const startCasePromise = startCase(navigate);
-    navigate('/desk');
-    await startCasePromise;
+    await startCase(navigate);
   };
 
   const handleSavedCaseSolve = async (game: { sessionId: string }) => {
