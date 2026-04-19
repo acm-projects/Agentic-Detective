@@ -9,8 +9,8 @@ export async function callModel({
   model,
   system,
   messages,
-  temperature = 0.7,
-  max_tokens = 16000,  // ← was 1000, case generation needs much more
+  temperature = 0.9,
+  max_tokens = 8000,  // ← was 1000, case generation needs much more
 }: {
   model: ModelId;
   system?: string;

@@ -424,7 +424,7 @@ const raw = await callModel({
   model: fastModel,
   system: systemPrompt,
   messages,
-  temperature: 0.7,
+  temperature: 0.9,
 });
       console.log("suspect raw response", raw);
       let responseText = raw;

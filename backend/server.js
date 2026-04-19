@@ -909,7 +909,7 @@ app.post('/api/llm', async (req, res) => {
     },
     body: JSON.stringify({
       model: model ?? 'claude-haiku-4-5',
-      max_tokens: max_tokens ?? 16000,
+      max_tokens: max_tokens ?? 8000,
       system,
       messages,
       temperature,

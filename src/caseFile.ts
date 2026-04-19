@@ -663,7 +663,6 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
       if (!response.ok) {
         const errorData = await response.json();
         console.error("[MongoDB] POST failed:", response.status, errorData);
-        return;
       }
       
       const result = await response.json();
