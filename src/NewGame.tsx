@@ -6,7 +6,7 @@ import { Show, SignInButton, SignUpButton, UserButton, useAuth } from '@clerk/re
 import SavedGamesList from './components/savegamelist/SavedGamesList';
 import { FaSave, FaUsers } from "react-icons/fa";
 import detectivePhoto from './assets/detective.png';
-import loadingImage from './assets/loadingimage.png';
+import loadingImage from './assets/2gary.png';
 import Community from './Community';
 
 function NewGame() {
@@ -106,6 +106,24 @@ function NewGame() {
         src="/assets/mondamusic-spy-detective-robbery-music-491671.mp3"
         loop
       />
+
+      <div className="top-buttons">
+        <button
+          className="detective-button small-btn top-left-btn"
+          onClick={() => {
+            alert("Community coming soon");
+          }}
+        >
+          COMMUNITY
+        </button>
+
+        <button
+          onClick={toggleMute}
+          className="detective-button small-btn top-right-btn"
+        >
+          {isMuted ? 'UNMUTE' : 'MUTE'}
+        </button>
+      </div>
 
       <div className="top-rule"></div>
 

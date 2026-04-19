@@ -1,0 +1,277 @@
+/* ═══════════════════════════════════════════════════════
+   Suspects.css — Full page background + 4 corner polaroids
+   with layered character avatars
+═══════════════════════════════════════════════════════ */
+
+.suspects-page {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('./assets/finishedtrialchop.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.decor {
+  position: absolute;
+  width: 170px;
+  height: auto;
+  top: 63%;
+  left: 58%;
+  transform: rotate(-10deg) translate(-50%, -50%);
+  filter: 
+        drop-shadow(0px 0px 16px rgba(255,255,255,0)) 
+        drop-shadow(8px 8px 0px rgba(0,0,0,0.3)); 
+  opacity: .8; 
+}
+
+.strings-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.layout {
+  position: absolute;
+  top: 25%;
+  left: 63%;
+  transform: rotate(3deg) translate(-50%, -50%);
+  width: 20%;
+  height: auto;
+  opacity: .7;
+  filter: 
+         drop-shadow(0px 0px 16px rgba(255,255,255,0)) 
+         drop-shadow(8px 8px 0px rgba(0,0,0,0.3)); 
+  z-index: 3; 
+}
+
+/* ── Each corner is a relative container so avatar sits on top ── */
+.suspect-corner {
+  position: absolute;
+  width: 325px;
+  height: auto;
+  z-index: 5;
+  cursor: pointer;
+}
+
+.suspect-corner:hover .polaroid-bg {
+  filter: 
+    drop-shadow(0px 0px 16px rgba(255,255,255,0))
+    drop-shadow(8px 8px 0px rgba(0,0,0,0.3))
+    drop-shadow(0px 0px 18px rgba(255,255,255,0.9))
+    drop-shadow(0px 0px 8px rgba(255,255,255,0.6));
+}
+
+.top-left {
+  top: 1em;
+  left: 6em;
+  transform: rotate(8deg);
+}
+
+.top-right {
+  top: 1em;
+  right: 8em;
+  transform: rotate(6deg);
+}
+
+.bottom-left {
+  bottom: 2em;
+  left: 8em;
+  transform: rotate(0deg);
+}
+
+.bottom-right {
+  bottom: 2em;
+  right: 10em;
+  transform: rotate(-10deg);
+}
+
+/* ── Polaroid frame fills the container ── */
+.polaroid-bg {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: 
+         drop-shadow(0px 0px 16px rgba(255,255,255,0)) 
+         drop-shadow(8px 8px 0px rgba(0,0,0,0.3)); 
+  z-index: 2;
+  transition: filter 0.2s ease;
+}
+
+.newspaper {
+  position: absolute;
+  top: 43%;
+  left: 87%;
+  transform: translateX(-50%);
+  width: 20%;
+  height: auto;
+  filter: 
+          drop-shadow(0px 0px 16px rgba(255,255,255,0)) 
+          drop-shadow(8px 8px 0px rgba(0,0,0,0.3));
+  z-index: 1; 
+  opacity: .8; 
+}
+ 
+.arrest-title {
+  position: fixed;
+  top: 30px;
+  left: 52%;
+  transform: translateX(-50%);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 34px;
+  color: #bfbfbf;
+  text-shadow: 3px 3px 0 #000;
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 6px;
+  white-space: nowrap;
+}
+
+.who-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 250px;
+  height: auto;
+  filter: 
+         drop-shadow(0px 0px 16px rgba(255,255,255,0)) 
+         drop-shadow(8px 8px 0px rgba(0,0,0,0.3)); 
+}
+
+.victim {
+  position: absolute;
+  top: 83%;
+  left: 35%;
+  transform: rotate(-5deg) translate(-50%, -50%);
+  width: 250px;
+  height: auto;
+  opacity: .8;
+  filter: 
+         drop-shadow(0px 0px 16px rgba(255,255,255,0)) 
+         drop-shadow(8px 8px 0px rgba(0,0,0,0.3)); 
+}
+
+.clipping {
+  position: absolute;
+  top: 45%;
+  left: 33%;
+  transform: translate(-50%, -50%);
+  width: 250px;
+  height: auto;
+  filter: 
+         drop-shadow(0px 0px 16px rgba(255,255,255,0)) 
+         drop-shadow(8px 8px 0px rgba(0,0,0,0.3)); 
+  z-index: 7; 
+  opacity: .8; 
+}
+
+/* ── Avatar sits absolutely on top of the polaroid ── */
+.character-avatar {
+  position: absolute;
+  top: 23%;
+  left: 54%;
+  transform: translateX(-50%);
+  width: 47%;
+  height: auto;
+  object-fit: contain;
+}
+
+/* ── Jail gif overlay on arrested polaroid ── */
+.jailher-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 6;
+}
+
+/* ── Arrest popup ── */
+.arrest-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 50;
+}
+
+.arrest-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 51;
+  background: #e0dcd3;
+  border: 4px solid #111;
+  box-shadow: 6px 6px 0 #111;
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-width: 280px;
+}
+
+.arrest-popup-label {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: #555;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.arrest-popup-name {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1rem;
+  color: #111;
+  margin: 0;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.arrest-popup-buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.arrest-confirm {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  padding: 0.5em 1em;
+  background: #af0f0f;
+  color: #fff;
+  border: 3px solid #111;
+  box-shadow: 3px 3px 0 #111;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+
+.arrest-confirm:hover {
+  background: #8a0b0b;
+}
+
+.arrest-cancel {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.5rem;
+  padding: 0.5em 1em;
+  background: #e0dcd3;
+  color: #111;
+  border: 3px solid #111;
+  box-shadow: 3px 3px 0 #111;
+  cursor: pointer;
+  letter-spacing: 0.1em;
+}
+
+.arrest-cancel:hover {
+  background: #ccc8bf;
+}

@@ -1,167 +1,168 @@
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap');
 
-
-/* ── Page base ─────────────────────────────────────────────────────────────── */
-.accuse-page {
+.accuse-page-bg {
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: flex-start;
   min-height: 100vh;
+  padding: 0;
+  box-sizing: border-box;
   transition: background-color 2.5s ease;
-  font-family: 'Press Start 2P', cursive;
 }
 
-/* ── Gunshot flash ─────────────────────────────────────────────────────────── */
 .accuse-flash {
   background-color: #ffffff;
 }
 
 .accuse-dark {
-  background-color: #0a0a0a;
+  background-color: #101010;
 }
 
-/* ── Content wrapper — starts invisible, fades in ─────────────────────────── */
-.accuse-content {
-  text-align: center;
-  padding: 2rem;
+.accuse-container-content {
   opacity: 0;
   transform: translateY(12px);
   transition: opacity 1.1s ease, transform 1.1s ease;
-  pointer-events: none;
+  min-height: 100vh;
+  padding-bottom: 60px;
+  display: flex;
+  flex-direction: column;
 }
 
 .accuse-visible {
   opacity: 1;
   transform: translateY(0);
-  pointer-events: all;
 }
 
-/* ── Verdict heading ───────────────────────────────────────────────────────── */
+.accuse-hidden {
+  pointer-events: none;
+}
+
 .accuse-verdict {
-  font-size: clamp(2rem, 6vw, 4rem);
-  font-family: inherit;           /* keeps your game's font */
-  letter-spacing: 0.04em;
+  font-size: clamp(2.2rem, 4vw, 2.6rem);
+  font-family: 'Press Start 2P', cursive;
+  letter-spacing: -1px;
   text-transform: uppercase;
-  margin-bottom: 1rem;
+  margin: 2px 0;
+  width: 100%;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
 }
 
 .accuse-guilty {
-  color: #39d353;                 /* green */
+  color: #004f0d;
 }
 
 .accuse-innocent {
-  color: #e03c3c;                 /* red */
+  color: #790101;
 }
 
-/* ── Sub-text ──────────────────────────────────────────────────────────────── */
 .accuse-sub {
-  font-size: 1.1rem;
-  margin-top: 0.25rem;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 1rem;
+  margin-top: 18px;
   opacity: 0.85;
+  text-align: center;
 }
 
 .accuse-truth {
-  color: #cccccc;
+  color: #555555;
+  font-family: 'Press Start 2P', cursive;
   font-size: 1rem;
   margin: 0.5rem 0 1.25rem;
+  text-align: center;
 }
 
 .accuse-killer {
-  color: #e03c3c;
-  font-weight: bold;
+  color: #8b0000;
 }
 
-/* ── Buttons ───────────────────────────────────────────────────────────────── */
-.accuse-buttons {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  margin-top: 2.5rem;
-  flex-wrap: wrap;
+.accuse-status-box {
+  font-family: 'Courier Prime', monospace !important;
+  border: 2px solid #000000;
+  padding: 14px 16px;
+  margin: 1rem 0 0.75rem 0;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  color: #111111 !important;
 }
 
-.accuse-btn {
-  padding: 0.6rem 1.6rem;
-  font-family: inherit;
-  font-size: 0.95rem;
-  border: 2px solid #ffffff44;
+.accuse-truth-box {
+  font-family: 'Courier Prime', monospace !important;
+  border: 2px solid #000000;
+  padding: 14px 16px;
+  margin: 0 0 0.5rem 0;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  color: #111111 !important;
+}
+
+.accuse-extra-box {
+  border: 2px solid #000000;
+  padding: 12px;
+  margin: 0 0 1.5rem 0;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
   background: transparent;
-  color: #ffffff;
-  cursor: pointer;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  transition: background 0.2s, border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
-.accuse-btn:hover {
-  background: #ffffff18;
-  border-color: #ffffffaa;
-}
-
-.accuse-btn-secondary {
-  border-color: #ffffff22;
-  color: #aaaaaa;
-}
-
-.accuse-btn-secondary:hover {
-  background: #ffffff0e;
-  border-color: #ffffff55;
-  color: #ffffff;
-}
-
-/* ── Fallback redirect ─────────────────────────────────────────────────────── */
-.accuse-redirect {
-  color: #aaaaaa;
-}
-
-.accuse-redirect button {
-  margin-left: 0.5rem;
-  background: none;
-  border: none;
-  color: #6af;
-  cursor: pointer;
-  text-decoration: underline;
+.accuse-chosen-img {
+  width: 60%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: grayscale(90%);
 }
 
 .accuse-explanation {
-    color: white;
-}
-
-.accuse-case-code {
-  margin-top: 1rem;
-  color: #ddd;
-  font-size: 0.85rem;
-}
-
-.accuse-case-code span {
-  color: #fff;
-  border: 1px solid #ffffff55;
-  padding: 0.2rem 0.5rem;
+  font-family: 'Courier Prime', monospace;
+  font-size: 1rem;
+  color: #101010;
+  text-align: left;
+  line-height: 1.8;
+  margin: 0 0 1.5rem;
+  width: 100%;
+  border: 2px solid #000000;
+  padding: 12px 16px;
+  box-sizing: border-box;
 }
 
 .accuse-feedback-panel {
-  margin-top: 1.1rem;
-  padding: 1rem;
+  margin: 0 0 0 0;
+  width: 100%;
+  padding: 0.5rem;
   border: 1px solid #ffffff33;
-  background: rgba(255, 255, 255, 0.04);
+  background: #323232;
+  box-sizing: border-box;
 }
 
 .accuse-feedback-title {
-  margin: 0 0 0.8rem;
+  margin: 0 0 0.4rem;
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 0.7rem;
 }
 
 .accuse-rating-buttons {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.9rem;
+  gap: 0.25rem;
+  margin-bottom: 0.4rem;
 }
 
 .accuse-rate-btn {
-  min-width: 2.2rem;
-  padding: 0.4rem 0.55rem;
+  min-width: 1.6rem;
+  padding: 0.2rem;
   border: 1px solid #ffffff66;
   background: transparent;
   color: #fff;
@@ -170,9 +171,9 @@
 }
 
 .accuse-rate-star {
-  width: 2.4rem;
-  height: 2.2rem;
-  font-size: 1.05rem;
+  width: 1.8rem;
+  height: 1.6rem;
+  font-size: 0.85rem;
   line-height: 1;
   display: inline-flex;
   align-items: center;
@@ -196,25 +197,125 @@
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   color: #ddd;
-  font-size: 0.74rem;
+  font-size: 0.6rem;
 }
 
 .accuse-feedback-success {
   color: #39d353;
-  margin-top: 0.7rem;
-  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
 }
 
 .accuse-feedback-error {
   color: #ff6b6b;
-  margin-top: 0.7rem;
-  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
 }
 
 .accuse-feedback-saving {
   color: #c7d2ff;
-  margin-top: 0.7rem;
-  font-size: 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.65rem;
+}
+
+.accuse-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 1rem;
+  width: 100%;
+  align-items: start;
+}
+
+.accuse-col-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.accuse-col-right {
+  display: flex;
+  flex-direction: column;
+  padding-top: 1rem;
+}
+
+.accuse-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.6rem;
+  padding-left: 0;
+}
+
+.accuse-buttons .detective-button {
+  width: 100%;
+  background: #5a0a0a;
+  color: #ffffff;
+  border: 2px solid #2b0000;
+}
+
+.accuse-buttons .detective-button:hover {
+  background: #7a0f0f;
+}
+
+.accuse-container-content .newsletter-strip {
+  margin-top: 32px;
+  margin-bottom: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.accuse-container-content .subtitle {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+.accuse-fallback-content {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.accuse-redirect {
+  color: #555555;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+}
+
+.accuse-redirect button {
+  margin-left: 0.5rem;
+  background: none;
+  border: none;
+  color: #c93b35;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.6rem;
+}
+
+.accuse-case-code {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.9rem;
+  color: #111111;
+  border: 2px solid #000000;
+  padding: 8px 12px;
+  background: transparent;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.accuse-case-code span {
+  color: #8b0000;
+  border: 1px solid #ffffff55;
+  padding: 0.2rem 0.5rem;
+}
+
+.footer-strip {
+  margin-top: -14px;
+  border-top: 2px solid #000000;
+  padding-top: 8px;
 }
