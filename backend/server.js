@@ -25,7 +25,7 @@ const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http:
 
 app.use(cors({
   origin: allowedOrigins,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
 }));
@@ -306,6 +306,7 @@ app.post('/cases/create', async (req, res) => {
       sessionId,
       caseId: sessionId,
       userId: userId ?? "",
+      isStarred: false,
       createdAt: now,
       updatedAt: now,
       lastAutosavedAt: now,
@@ -735,28 +736,6 @@ app.get('/community/feed', async (req, res) => {
   }
 });
 
-app.get('/cases/user/:userId', async (req, res) => {
-  console.log("User ID case fetching endpoint reached!!!");
-  console.log("userId:", req.params.userId);
-  try {
-    const { userId } = req.params;
-
-    const docs = await db.collection("cases")
-      .find({ userId }, { projection: { _id: 0 } })
-      .sort({ updatedAt: -1 })
-      .toArray();
-
-    if (!docs.length) {
-      console.log("No cases found for this user");
-      return res.json([]);
-    }
-
-    res.json(docs);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
 app.get('/cases/:sessionId', async (req, res) => {
   try {
     const caseDoc = await casesCollection.findOne(
@@ -830,6 +809,45 @@ app.get('/cases/user/:userId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 })
+
+// PATCH is used as it's altering a state of an existing resource (PUT and POST are for creating new entries)
+app.patch('/cases/:sessionId/star', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { userId, isStarred } = req.body;
+
+    if (!userId || !String(userId).trim()) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    if (typeof isStarred !== 'boolean') {
+      return res.status(400).json({ error: 'isStarred must be boolean' });
+    }
+
+    const result = await gameCollection.updateOne(
+      {
+        $or: [{ sessionId }, { caseId: sessionId }],
+        userId: String(userId).trim(),
+      },
+      {
+        $set: {
+          isStarred,
+          updatedAt: nowIso(),
+          lastAutosavedAt: nowIso(),
+        },
+        $inc: { revision: 1 },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Case not found for this user' });
+    }
+
+    res.json({ success: true, sessionId, isStarred });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 /*
 app.post('/case/create', async (req, res) => {
   console.log('[/case/create] received:', req.body.caseId);

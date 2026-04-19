@@ -33,21 +33,25 @@ async function fetchCasesFromUserId(userId: string): Promise<SavedCase[]> {
   }
 
   const data = (await response.json()) as SavedCase[];
+
   return Array.isArray(data) ? data : [];
 }
 
 function SavedGameCard({
   game,
+  userId,
   onSelect,
   onSolve,
 }: {
   game: SavedCase;
+  userId: string;
   onSelect: (game: SavedCase) => void;
   onSolve: (game: SavedCase) => void | Promise<void>;
 }) {
   const currentSessionId = useGameStore((s) => s.currentSessionId);
   const isSelected = currentSessionId === game.sessionId;
-  const [isStarred, setIsStarred] = useState(false);
+  const [isStarred, setIsStarred] = useState(game.isStarred ?? false);
+  const [isStarring, setIsStarring] = useState(false);
 
   const title = game.caseData?.caseReport?.caseTitle ?? "Untitled Case";
   const phase = game.status === "resolved" ? "resolved" : game.game?.phase ?? "unknown";
@@ -55,9 +59,27 @@ function SavedGameCard({
     ? new Date(game.lastAutosavedAt).toLocaleString()
     : "Unknown";
 
-  const handleStarClick = (game: SavedCase) => {
-    setIsStarred(!isStarred);
-    game.isStarred = !game.isStarred;
+  const handleStarClick = async (game: SavedCase) => {
+    if (isStarring) return;
+    const newStarred = !isStarred;
+    setIsStarred(newStarred); // optimistic update
+    setIsStarring(true);
+    try {
+      const response = await fetch(`http://localhost:3000/cases/${game.sessionId}/star`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, isStarred: newStarred }),
+      });
+      if (!response.ok) {
+        throw new Error(`Star request failed: ${response.status}`);
+      }
+      game.isStarred = newStarred;
+    } catch (err) {
+      console.error("Failed to persist star:", err);
+      setIsStarred(!newStarred); // roll back on failure
+    } finally {
+      setIsStarring(false);
+    }
   };
 
 
@@ -91,6 +113,9 @@ function SavedGameCard({
                 e.stopPropagation(); 
                 handleStarClick(game); 
               }}
+              disabled={isStarring}
+              aria-label={isStarred ? "Unstar this case" : "Star this case"}
+              aria-pressed={isStarred}
             > 
               <CiStar /> 
             </button>
@@ -125,7 +150,6 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filterPhase, setFilterPhase] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterStarred, setFilterStarred] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("lastPlayed-desc");
 
@@ -225,7 +249,7 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
     }
 
     return filtered;
-  }, [cases, filterPhase, filterStatus, filterStarred, sortBy]);
+  }, [cases, filterPhase, filterStarred, sortBy]);
 
   return (
     <section className="saved-games-panel" aria-label="Saved games">
@@ -329,7 +353,6 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
           No saved games found yet.
         </p>
       )}
-
       {isSignedIn && cases.length > 0 && (
         <>
           {filterAndSortCases().length === 0 ? (
@@ -342,6 +365,7 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
                 <SavedGameCard
                   key={game.sessionId}
                   game={game}
+                  userId={userId ?? ""}
                   onSelect={handleSelectCase}
                   onSolve={handleSolveCase}
                 />
