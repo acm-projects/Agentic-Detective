@@ -6,6 +6,7 @@ import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
 import './App.css';
 import CaseReportScreen from './CaseReportScreen.tsx';
+import LoadingScreen from './LoadingScreen.tsx';
 import Interrogate from "./Interrogate";
 import Accuse from './Accuse.tsx';
 import Suspects from './Suspects.tsx';
@@ -21,7 +22,7 @@ function AppInner() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const location = useLocation();
-  const isSilentPage = location.pathname === '/' || location.pathname === '/accuse';
+  const isSilentPage = location.pathname === '/' || location.pathname === '/loading' || location.pathname === '/accuse';
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -68,6 +69,7 @@ function AppInner() {
       <audio ref={audioRef} src={mainMp3} loop />
       <Routes>
         <Route path="/" element={<NewGame />} />
+        <Route path="/loading" element={<LoadingScreen />} />
         <Route path="/sign-in/*" element={<SignIn />} />
         <Route path="/sign-up/*" element={<SignUp />} />
         <Route path="/user-profile/*" element={<UserProfile />} />

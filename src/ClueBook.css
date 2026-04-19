@@ -245,10 +245,16 @@
 }
 
 /* ── Back button ── */
-.back-btn {
+.back-btn-row {
+  display: flex;
   position: fixed;
   bottom: 24px;
   left: 24px;
+  gap: 10px;
+  z-index: 20;
+}
+
+.back-btn {
   font-family: 'Press Start 2P', monospace;
   font-size: 7px;
   letter-spacing: 2px;
@@ -264,7 +270,6 @@
   padding: 10px 16px;
   cursor: pointer;
   text-transform: uppercase;
-  z-index: 20;
   transition: background 0.1s steps(1);
 }
 
@@ -272,3 +277,4 @@
   background: var(--px-border);
   color: var(--bg-paper);
 }
+

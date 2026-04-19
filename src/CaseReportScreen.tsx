@@ -2,6 +2,7 @@ import { useGameStore } from "./useGameStore";
 import "./CaseReportScreen.css";
 import { useNavigate } from "react-router";
 import { useState, useRef, useCallback, useEffect } from "react";
+import TutorialModal from './components/tutorial-modal/Tutorial';
 
 const LENS_SIZE = 200;   // diameter in px
 const ZOOM = 2.0;        // zoom level
@@ -16,6 +17,8 @@ export default function CaseReportScreen() {
   const navigate = useNavigate();
   const { player } = useGameStore();
   const report = player?.caseReport;
+  const TUTORIAL_READY_KEY = 'tutorialReadyAfterReport'; // keeps track of whether case report has been viewed or not
+  const TUTORIAL_DESK_ENTERED_KEY = 'tutorialDeskEntered';
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<HTMLDivElement>(null);
@@ -31,6 +34,10 @@ export default function CaseReportScreen() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
+  useEffect(() => {
+    localStorage.setItem(TUTORIAL_READY_KEY, 'true');
+  }, []);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const overlay = overlayRef.current;
     if (!overlay) return;
@@ -43,6 +50,10 @@ export default function CaseReportScreen() {
   }, []);
 
   const handleMouseLeave = useCallback(() => setLens(null), []);
+  const handleGoToDesk = () => {
+    localStorage.setItem(TUTORIAL_DESK_ENTERED_KEY, 'true');
+    navigate('/desk');
+  };
 
   if (!report) return null;
 
@@ -60,49 +71,51 @@ export default function CaseReportScreen() {
   }
 
   return (
-    <div
-      className="report-overlay"
-      ref={overlayRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ cursor: lens ? "none" : "default" }}
-    >
-      {lens && (
-        <div
-          className="magnifier-lens"
-          style={{
-            left: lens.x - half,
-            top: lens.y - half,
-            width: LENS_SIZE,
-            height: LENS_SIZE,
-          }}
-        >
+    <>
+      <TutorialModal />
+      <div
+        className="report-overlay"
+        ref={overlayRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ cursor: lens ? "none" : "default" }}
+      >
+        {lens && (
           <div
-            className="magnifier-clone-wrap"
+            className="magnifier-lens"
             style={{
-              transform: `translate(${cloneTranslateX}px, ${cloneTranslateY}px) scale(${ZOOM})`,
-              transformOrigin: "0 0",
-              width: docRect ? docRect.width : "auto",
+              left: lens.x - half,
+              top: lens.y - half,
+              width: LENS_SIZE,
+              height: LENS_SIZE,
             }}
           >
-            <MagnifiedDocContent report={report} />
+            <div
+              className="magnifier-clone-wrap"
+              style={{
+                transform: `translate(${cloneTranslateX}px, ${cloneTranslateY}px) scale(${ZOOM})`,
+                transformOrigin: "0 0",
+                width: docRect ? docRect.width : "auto",
+              }}
+            >
+              <MagnifiedDocContent report={report} />
+            </div>
+            <div className="magnifier-rim" />
+            <div className="magnifier-glare" />
+            <div className="magnifier-crosshair" />
           </div>
-          <div className="magnifier-rim" />
-          <div className="magnifier-glare" />
-          <div className="magnifier-crosshair" />
-        </div>
-      )}
+        )}
 
-      <div className="report-document" ref={docRef}>
-        <div className="report-agency">
-          Agentic Detective Bureau &nbsp;·&nbsp; Homicide Division
-        </div>
-        <div className="report-header">
-          <span className="case-id">Case File № {report.caseId}</span>
-          <h1 className="report-title">{report.caseTitle}</h1>
-          <p className="report-meta">{report.date} &nbsp;—&nbsp; {report.setting}</p>
-          <div className="stamp">Confidential</div>
-        </div>
+        <div className="report-document" ref={docRef}>
+          <div className="report-agency">
+            Agentic Detective Bureau &nbsp;·&nbsp; Homicide Division
+          </div>
+          <div className="report-header">
+            <span className="case-id">Case File № {report.caseId}</span>
+            <h1 className="report-title">{report.caseTitle}</h1>
+            <p className="report-meta">{report.date} &nbsp;—&nbsp; {report.setting}</p>
+            <div className="stamp">Confidential</div>
+          </div>
 
         <div className="report-section">
           <div className="report-section-title">Victim</div>
@@ -152,14 +165,12 @@ export default function CaseReportScreen() {
           </div>
         </div>
 
-        <button className="begin-button" onClick={() => navigate("/desk")}>
-          <span>Go to Desk</span>
-        </button>
-        <button className="begin-button" onClick={() => navigate("/interrogate")}>
-          <span>Interrogate</span>
-        </button>
+          <button className="begin-button" onClick={handleGoToDesk}>
+            <span>Go to Your Desk</span>
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

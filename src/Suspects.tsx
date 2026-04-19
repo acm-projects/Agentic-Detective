@@ -50,7 +50,7 @@ const dot = (x: number, y: number): React.CSSProperties => ({
 
 function Suspects() {
   const navigate = useNavigate();
-  const { player, makeAccusation } = useGameStore();
+  const { player, makeAccusation, accusationUnlocked } = useGameStore();
   const profiles = player?.characterProfiles ?? [];
 
   const cornerProfiles: Partial<Record<CornerCls, typeof profiles[number]>> = {};
@@ -63,6 +63,11 @@ function Suspects() {
 
   const handlePolaroidClick = (cls: CornerCls) => {
     if (arrestedCorner) return;
+    if (!accusationUnlocked) {
+      alert('You need to discover at least 2 clues before making an accusation.');
+      return;
+    }
+
     const profile = cornerProfiles[cls];
     if (!profile) return;
     setPopup({ cls, name: profile.name });

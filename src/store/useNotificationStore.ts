@@ -22,10 +22,9 @@ const SCHEDULE_CONFIG = {
 */
 
 const MESSAGE_SCHEDULE_CONFIG = {
-  firstNotificationWindowMessageCount: [2, 5] as [number, number], // originally 5, 10
-  cooldownMessageCount: [2, 5] as [number, number], // originally 5, 10
+  firstNotificationWindowMessageCount: [1, 2] as [number, number], // originally 5, 10
+  cooldownMessageCount: [1, 2] as [number, number], // originally 5, 10
   toastLifetime: 40_000,
-  minGameTimeRemaining: 60_000,
 };
 
 interface PersistedSchedulerState {
@@ -276,15 +275,30 @@ export const useNotificationStore = create<NotificationState>()(
           clueLost: Boolean(clue.clueLost),
           notificationId: undefined,
         }));
+        s.notifications = []; // these werent being reset before, causing the notification store bug
+        s.lastFiredAt = null;
+        s.nextFireAt = null;
+        s.timerPaused = false;
       });
     },
 
-    tick(elapsed, totalGameDuration, messageCount) {
+    tick(_elapsed, _totalGameDuration, messageCount) {
       const state = get();
-      if (state.timerPaused) return;
+      if (state.timerPaused) {
+        const hasBlockingNotification = state.notifications.some((n) => !n.dismissed);
+        if (!hasBlockingNotification) {
+          // Recover from stale persisted pause state (for example after reload/sign-in).
+          set((s) => {
+            s.timerPaused = false;
+          });
+        } else {
+          return;
+        }
+      }
 
-      const remaining = totalGameDuration - elapsed;
-      if (remaining < MESSAGE_SCHEDULE_CONFIG.minGameTimeRemaining) return;
+    // Removed as might cause bugs
+    //   const remaining = totalGameDuration - elapsed;
+    //   if (remaining < MESSAGE_SCHEDULE_CONFIG.minGameTimeRemaining) return;
 
       const nowMessageCount = messageCount;
       console.log("message count: " + messageCount);
@@ -437,7 +451,9 @@ export const useNotificationStore = create<NotificationState>()(
           typeof schedulerState?.lastFiredAt === "number" ? schedulerState.lastFiredAt : null;
         s.nextFireAt =
           typeof schedulerState?.nextFireAt === "number" ? schedulerState.nextFireAt : null;
-        s.timerPaused = Boolean(schedulerState?.timerPaused);
+        // Notifications/minigame UI is not persisted, so a persisted paused timer must not
+        // block scheduling after reload.
+        s.timerPaused = false;
       });
     },
 

@@ -236,7 +236,6 @@
 .community-button:hover {
   background-color: #4b0000;
   border-color: #320707;
-  transform: scale(1.05);
 }
 
 .community-modal {
