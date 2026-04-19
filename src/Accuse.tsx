@@ -230,15 +230,48 @@ function Accuse() {
     };
   }, [accusationResult]);
 
-  const mockAccusationResult = {
-    accusedName: 'Test Suspect',
-    isCorrect: false,
-    trueKiller: 'Jane Doe',
-    explanation: 'This is temporary mock data so the UI can render without a real case.',
-  };
+  if (!accusationResult) {
+    return (
+      <div className={`accuse-page-bg ${phase === 'flash' ? 'accuse-flash' : 'accuse-dark'}`}>
+        <div className={`container accuse-container-content ${phase === 'reveal' ? 'accuse-visible' : 'accuse-hidden'}`}>
+          <div className="newsletter-strip">
+            <span className="newsletter-text">The Daily Crimeletter</span>
+          </div>
 
-  const result = accusationResult ?? mockAccusationResult;
-  const { accusedName, isCorrect, trueKiller, explanation } = result;
+          <h1 className="accuse-verdict accuse-innocent">No accusation yet</h1>
+
+          <div className="title-divider" />
+
+          <div className="subtitle">
+            <span className="subtitle-side left">Case Closed</span>
+            <span className="subtitle-text">Verdict Edition</span>
+            <span className="subtitle-side right">Justice Served</span>
+          </div>
+
+          <p className="accuse-explanation">
+            No verdict has been recorded for this case yet. Return to interrogation and make your accusation there.
+          </p>
+
+          <div className="accuse-buttons">
+            <button
+              className="detective-button"
+              onClick={() => navigate('/interrogate')}
+            >
+              Go to Interrogation
+            </button>
+          </div>
+
+          <div className="footer-strip">
+            <p className="footer-text">
+              © The Daily Crimeletter — All Rights Reserved — Unauthorised Reproduction Prohibited — Est. 1887
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const { accusedName, isCorrect, trueKiller, explanation } = accusationResult;
   const caseCode = player?.caseReport?.caseId;
 
   return (

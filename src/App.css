@@ -107,32 +107,6 @@ body {
   z-index: 2;
 }
 
-/* --- TOP BUTTONS --- */
-.top-buttons {
-  position: absolute;
-  top: 28px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 16px;
-  box-sizing: border-box;
-  z-index: 50;
-}
-
-.top-left-btn,
-.top-right-btn {
-  font-size: 0.55rem;
-  padding: 6px 10px;
-  box-shadow: 1px 1px 0px #000000;
-}
-
-.top-left-btn:hover,
-.top-right-btn:hover {
-  transform: translate(-1px, -1px);
-  box-shadow: 2px 2px 0px #000000;
-}
-
 /* --- TOP RULE --- */
 .top-rule {
   width: 100%;
@@ -687,16 +661,6 @@ body {
   background-color: #7a1f1f;
 }
 
-.detective-button {
-  background-color: #f84a4a;
-  color: #101010;
-  border: none;
-  cursor: pointer;
-  transform: rotate(-15deg);
-  background-color: transparent;
-  filter: grayscale(90%) contrast(1.1);
-}
-
 .solve-button {
   width: 100%;
 }
@@ -818,106 +782,6 @@ body {
   }
 }
 
-.saved-games-button,
-.community-button {
-  width: 100%;
-  border: 2px solid #000000;
-  background: #f1eadb;
-  color: #101010;
-  padding: 10px 12px;
-  font-family: 'Press Start 2P', cursive;
-  font-size: 0.58rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.saved-games-button:hover,
-.community-button:hover {
-  background: #e6dac0;
-}
-
-.saved-games-button:focus-visible,
-.community-button:focus-visible,
-.saved-games-modal-close:focus-visible,
-.community-modal-close:focus-visible {
-  outline: 3px solid #facc15;
-  outline-offset: 2px;
-}
-
-/* When saved games modal is open, hide everything behind the overlay */
-.newgame-screen.saved-games-open {
-  z-index: 0;
-}
-
-.newgame-screen.saved-games-open .container {
-  z-index: 0;
-  position: relative;
-}
-
-.saved-games-modal {
-  position: fixed;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(16, 16, 16, 0.85);
-  z-index: 9999;
-  border: none;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-  max-width: 100vw;
-  max-height: 100vh;
-}
-
-.saved-games-modal[open] {
-  display: flex;
-}
-
-.saved-games-modal-content {
-  position: relative;
-  background-color: rgba(0, 0, 0, 0.939);
-  border: 2px solid #8b2222;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgb(0, 0, 0);
-  width: min(940px, 94vw);
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 20px;
-  animation: savedGamesModalSlideIn 0.3s ease;
-}
-
-.saved-games-modal-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #666;
-  cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.2s;
-}
-
-.saved-games-modal-close:hover {
-  color: #f51414;
-}
-
-@keyframes savedGamesModalSlideIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
 /* --- RESPONSIVE --- */
 @media (max-width: 900px) {
   body {
@@ -927,17 +791,6 @@ body {
   .container {
     padding: 0 20px 26px;
     width: min(96vw, 760px);
-  }
-
-  .top-buttons {
-    top: 10px;
-    padding: 0 10px;
-  }
-
-  .top-left-btn,
-  .top-right-btn {
-    font-size: 0.42rem;
-    padding: 5px 7px;
   }
 
   .newsletter-strip {
@@ -1016,7 +869,7 @@ body {
 /* --- FOOTER --- */
 .footer-strip {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 12px;
   border-top: 4px double #000000;
   padding-top: 10px;
   text-align: center;
@@ -1036,12 +889,12 @@ body {
 /* --- Tips Section --- */
 .tip-section {
   width: 100%;
-  margin-top: 20px;
+  margin-top: 12px;
   border-top: 4px double #000000;
-  padding-top: 10px;
+  padding-top: 12px;
+  padding-bottom: 2px;
   text-align: center;
   position: relative;
-  z-index: -1;
 }
 
 .tip-title {
@@ -1056,6 +909,11 @@ body {
   letter-spacing: 0.5px;
   line-height: 2;
   margin-top: 2%;
+  margin-bottom: 5%;
   text-transform: uppercase;
 
+}
+
+.tip-content h6 {
+  margin: 0;
 }

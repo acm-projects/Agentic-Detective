@@ -56,9 +56,8 @@ function Message() {
 
   const { phase, player } = useGameStore();
   const navigate = useNavigate();
-  const { isFirstClueDiscovery, clearFirstClueDiscovery } = useGameStore();
+  const { isFirstClueDiscovery, clearFirstClueDiscovery, accusationUnlocked } = useGameStore();
 
-  const [suspectsOpen, setSuspectsOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState<number>(() => Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? -1));
   const [tutorialSeen, setTutorialSeen] = useState<boolean>(() => localStorage.getItem(TUTORIAL_KEY) === 'true');
 
@@ -100,7 +99,14 @@ function Message() {
   const handlePhoneClick = () => navigate('/interrogate');
   const handleClueBookClick = () => { clearFirstClueDiscovery(); navigate('/clues'); };
   const handleCaseFileClick = () => navigate('/report');
-  const handleNotebookClick = () => navigate('/suspects');
+  const handleAccuseClick = () => {
+    if (!accusationUnlocked) {
+      alert('You need to discover at least 2 clues before making an accusation.');
+      return;
+    }
+
+    navigate('/suspects');
+  };
 
   return (
     <>
@@ -174,7 +180,7 @@ function Message() {
             alt="Accusation" 
             tooltip="Make your accusation here."
             style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(220deg)', zIndex: 10 }} 
-            onClick={() => setSuspectsOpen(true)}
+            onClick={handleAccuseClick}
             tutorialId='tutorial-accusation'
           />
 

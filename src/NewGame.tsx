@@ -209,24 +209,6 @@ function NewGame() {
         loop
       />
 
-      <div className="top-buttons">
-        <button
-          className="detective-button small-btn top-left-btn"
-          onClick={() => {
-            alert("Community coming soon");
-          }}
-        >
-          COMMUNITY
-        </button>
-
-        <button
-          onClick={toggleMute}
-          className="detective-button small-btn top-right-btn"
-        >
-          {isMuted ? 'UNMUTE' : 'MUTE'}
-        </button>
-      </div>
-
       <div className="top-rule"></div>
 
       <div className="newsletter-strip">
@@ -473,7 +455,6 @@ function NewGame() {
           </div>
         </div>
       </div>
-      <br />
 
       {!showSavedGames && (
         <div className='tip-section'>

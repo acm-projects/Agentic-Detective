@@ -22,8 +22,8 @@ const SCHEDULE_CONFIG = {
 */
 
 const MESSAGE_SCHEDULE_CONFIG = {
-  firstNotificationWindowMessageCount: [2, 5] as [number, number], // originally 5, 10
-  cooldownMessageCount: [2, 5] as [number, number], // originally 5, 10
+  firstNotificationWindowMessageCount: [1, 2] as [number, number], // originally 5, 10
+  cooldownMessageCount: [1, 2] as [number, number], // originally 5, 10
   toastLifetime: 40_000,
 };
 
