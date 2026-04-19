@@ -681,6 +681,30 @@ app.get('/cases/:sessionId', async (req, res) => {
   }
 });
 
+//ai backend
+app.post('/api/llm', async (req, res) => {
+  const { system, messages, model, temperature, max_tokens } = req.body;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': process.env.ANTHROPIC_API_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: model ?? 'claude-haiku-4-5',
+      max_tokens: max_tokens ?? 16000,
+      system,
+      messages,
+      temperature,
+    }),
+  });
+
+  const data = await response.json();
+  res.json(data);
+});
+
 // ── Start server only after DB connects ──
 connectDB()
   .then(() => {

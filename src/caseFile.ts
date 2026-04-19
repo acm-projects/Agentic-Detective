@@ -4,9 +4,9 @@
 //  Call 2: Full Case    (creative, built on locked story)
 // ============================================================
 import type { PlayerSeed, Storyline } from "./obj/backendInterfaces";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
+import { callModel, fastModel } from "./services/ai";
+
 
 // ─────────────────────────────────────────────
 //  AVATAR POOL
@@ -531,17 +531,15 @@ async function callWithRetry<T>(
   temperature: number,
   maxRetries = 2
 ): Promise<T> {
-  const model = genAI.getGenerativeModel({
-    model: "gemini-3.1-flash-lite-preview",
-    generationConfig: { temperature, responseMimeType: "application/json" },
-  });
-
   let lastError: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const result = await model.generateContent(prompt);
-      const cleaned = cleanRawJson(result.response.text());
-      return JSON.parse(cleaned) as T;
+      const text = await callModel({
+        model: fastModel,
+        messages: [{ role: "user", content: prompt }],
+        temperature,
+      });
+      return JSON.parse(cleanRawJson(text)) as T;
     } catch (err) {
       lastError = err;
       console.warn(`[LLM] Attempt ${attempt + 1} failed:`, err);

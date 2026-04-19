@@ -4,15 +4,13 @@
 // ============================================================
 
 import { create } from "zustand";
-import { GoogleGenerativeAI, ChatSession, SchemaType } from "@google/generative-ai";
 import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import type { PlayerSeed } from "./obj/backendInterfaces";
 import { generateCaseFile, feedCaseFile, buildSuspectSystemPrompt } from "./caseFile";
 import { streamSpeech } from "./services/ttsService";
 import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 console.log(import.meta.env.VITE_GEMINI_API_KEY)
-
+import { callModel, fastModel } from "./services/ai";
 // ─────────────────────────────────────────────
 //  CHAT TYPES
 // ─────────────────────────────────────────────
@@ -27,7 +25,6 @@ export interface ChatMessage {
 
 export interface SuspectSession {
   suspectName: string;
-  chatSession: ChatSession | null;
   history: ChatMessage[];
   conversationCount: number;
   stressLevel: number;
@@ -262,88 +259,47 @@ export const useGameStore = create<GameState>((set, get) => ({
     },
 
   startInterrogation: (suspectName) => {
-    const { backend, player, sessions } = get();
-    if (!backend || !player) return;
+  const { backend, player, sessions } = get();
+  if (!backend || !player) return;
 
-    const existingSession = sessions[suspectName];
+  // Session already exists — nothing to initialize
+  if (sessions[suspectName]) {
+    set({ phase: "interrogation", activeSuspectName: suspectName });
+    return;
+  }
 
-    // Reuse existing session only if live chatSession is already valid.
-    if (existingSession && existingSession.chatSession !== null) {
-      set({ phase: "interrogation", activeSuspectName: suspectName });
-      return;
-    }
-
-    const suspect = backend.suspects.find(s => s.name === suspectName);
-    if (!suspect) return;
-
-    const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport, player.clues);
-
-    const model = genAI.getGenerativeModel({
-      model: "gemini-3.1-flash-lite-preview",
-      systemInstruction: systemPrompt,
-      generationConfig: {
-        temperature: 0.7,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: SchemaType.OBJECT,
-          properties: {
-            response:    { type: SchemaType.STRING },
-            stressLevel: { type: SchemaType.INTEGER },
-          },
-          required: ["response", "stressLevel"],
-        },
+  // Fresh session
+  set(state => ({
+    phase: "interrogation",
+    activeSuspectName: suspectName,
+    sessions: {
+      ...state.sessions,
+      [suspectName]: {
+        suspectName,
+        history: [],
+        conversationCount: 0,
+        stressLevel: 0,
       },
-    });
-
-    console.log("[suspect data]", JSON.stringify(suspect, null, 2));
-
-
-    // Feed restored history so the model has conversation continuity after reload.
-    const history = (existingSession?.history ?? [])
-      .filter(m => m.text && m.text.trim().length > 0)
-      .map(m => ({
-        role: m.role === "player" ? "user" : "model",
-        parts: [{ text: m.text }],
-      }));
-
-    const chatSession = model.startChat({ 
-      history
-    });
-
-    set(state => ({
-      phase: "interrogation",
-      activeSuspectName: suspectName,
-      sessions: {
-        ...state.sessions,
-        [suspectName]: {
-          // preserve existing history/stress if session was restored from mongo
-          ...(existingSession ?? {}),
-          suspectName,
-          chatSession, // ✅ always a valid ChatSession now
-          history: existingSession?.history ?? [],
-          conversationCount: existingSession?.conversationCount ?? 0,
-          stressLevel: existingSession?.stressLevel ?? 0,
-        },
-      },
-    }));
-  },
+    },
+  }));
+},
 
 
   // ── Send a player message to the active suspect ──
   sendMessage: async (text, displayText, displayClues) => {
       
-    const { activeSuspectName, sessions } = get();
-    const { seed } = get() as { seed: PlayerSeed};
+    const { activeSuspectName, backend, player } = get();
+    const { seed } = get() as { seed: PlayerSeed };
 
-    if (!activeSuspectName || !sessions[activeSuspectName] || get().isResponding) return;
+    if (!activeSuspectName || !backend || !player || get().isResponding) return;
 
-    // Restored saves can have chatSession = null until interrogation is re-opened.
-    if (sessions[activeSuspectName].chatSession === null) {
+    // Ensure session exists — startInterrogation is idempotent
+    if (!get().sessions[activeSuspectName]) {
       get().startInterrogation(activeSuspectName);
     }
 
     const session = get().sessions[activeSuspectName];
-    if (!session || session.chatSession === null) {
+    if (!session) {
       set({ error: "Could not initialize interrogation session. Please reopen this suspect and try again." });
       return;
     }
@@ -429,10 +385,27 @@ export const useGameStore = create<GameState>((set, get) => ({
         : "";
 
       const messageWithContext = `${spamPrefix}${repetitionPrefix}[Current stress level: ${session.stressLevel}]\n\n${text}`;
-      const result = await session.chatSession.sendMessage(messageWithContext);
-      const raw = result.response.text();
+      const messages: { role: "user" | "assistant"; content: string }[] = [
+  ...session.history
+    .filter(m => m.text?.trim())
+    .map(m => ({
+      role: (m.role === "player" ? "user" : "assistant") as "user" | "assistant",
+      content: m.text,
+    })),
+  { role: "user", content: messageWithContext },
+];
+
+const suspect = backend.suspects.find(s => s.name === activeSuspectName)!;
+const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport, player.clues);
+
+const raw = await callModel({
+  model: fastModel,
+  system: systemPrompt,
+  messages,
+  temperature: 0.7,
+});
+      console.log("suspect raw response", raw);
       let responseText = raw;
-      console.log("suspect raw response");
       console.log(responseText);
       let newStress = session.stressLevel; // default: keep current if parse fails
 
