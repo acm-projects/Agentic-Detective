@@ -144,7 +144,7 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame, seed, currentSessionId } = useGameStore();
+  const { accusationResult, resetGame, seed, currentSessionId, player } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
   const [gameplayRating, setGameplayRating] = useState<number | null>(null);
@@ -263,15 +263,18 @@ function Accuse() {
           <span className="subtitle-side right">Justice Served</span>
         </div>
 
-        <p className={`accuse-sub accuse-status-box ${isCorrect ? 'accuse-guilty' : 'accuse-innocent'}`}>
-          {isCorrect ? 'Case closed. Justice served.' : 'The killer is still out there…'}
-        </p>
-
-        {!isCorrect && (
-          <>
-            <p className="accuse-truth accuse-truth-box">
-              The real killer was <span className="accuse-killer">{trueKiller}</span>
+        <div className="accuse-body">
+          {/* LEFT COLUMN */}
+          <div className="accuse-col-left">
+            <p className={`accuse-sub accuse-status-box ${isCorrect ? 'accuse-guilty' : 'accuse-innocent'}`}>
+              {isCorrect ? 'Case closed. Justice served.' : 'The killer is still out there…'}
             </p>
+
+            {!isCorrect && (
+              <p className="accuse-truth accuse-truth-box">
+                The real killer was <span className="accuse-killer">{trueKiller}</span>
+              </p>
+            )}
 
             <div className="accuse-extra-box">
               <img
@@ -280,77 +283,80 @@ function Accuse() {
                 className="accuse-chosen-img"
               />
             </div>
-          </>
-        )}
-
-        {explanation && (
-          <p className="accuse-explanation">{explanation}</p>
-        )}
-
-        {caseCode && (
-          <p className="accuse-case-code">
-            Case ID: <span>{caseCode}</span>
-          </p>
-        )}
-
-        <div className="accuse-feedback-panel">
-          <p className="accuse-feedback-title">Rate this game</p>
-
-          <div className="accuse-rating-buttons" role="group" aria-label="Game rating">
-            {[1, 2, 3, 4, 5].map((rating) => (
-              <button
-                key={rating}
-                type="button"
-                className={`accuse-rate-btn accuse-rate-star ${gameplayRating !== null && rating <= gameplayRating ? 'active' : ''}`}
-                aria-label={`Rate ${rating} star${rating > 1 ? 's' : ''}`}
-                onClick={async () => {
-                  setGameplayRating(rating);
-                  setFeedbackSaved(false);
-                  setFeedbackError(null);
-                  await saveFeedback(rating, featureOnLeaderboard);
-                }}
-              >
-                ★
-              </button>
-            ))}
           </div>
 
-          <label className="accuse-feature-toggle">
-            <input
-              type="checkbox"
-              checked={featureOnLeaderboard}
-              onChange={async (e) => {
-                const nextFeatured = e.target.checked;
-                setFeatureOnLeaderboard(nextFeatured);
-                setFeedbackSaved(false);
+          {/* RIGHT COLUMN */}
+          <div className="accuse-col-right">
+            {explanation && (
+              <p className="accuse-explanation">{explanation}</p>
+            )}
 
-                if (gameplayRating !== null) {
-                  await saveFeedback(gameplayRating, nextFeatured);
-                }
-              }}
-            />
-            Do you want this game on the community board?
-          </label>
+            {caseCode && (
+              <p className="accuse-case-code">
+                Case ID: <span>{caseCode}</span>
+              </p>
+            )}
 
-          {feedbackSaving && <p className="accuse-feedback-saving">Saving...</p>}
-          {feedbackSaved && <p className="accuse-feedback-success">Saved to community.</p>}
-          {feedbackError && <p className="accuse-feedback-error">{feedbackError}</p>}
-        </div>
+            <div className="accuse-feedback-panel">
+              <p className="accuse-feedback-title">Rate this game</p>
 
-        <div className="accuse-buttons">
-          <button
-            className="detective-button"
-            onClick={() => {
-              audioRefs.current.forEach(a => {
-                a.pause();
-                a.currentTime = 0;
-              });
-              resetGame();
-              navigate('/');
-            }}
-          >
-            New Case
-          </button>
+              <div className="accuse-rating-buttons" role="group" aria-label="Game rating">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    className={`accuse-rate-btn accuse-rate-star ${gameplayRating !== null && rating <= gameplayRating ? 'active' : ''}`}
+                    aria-label={`Rate ${rating} star${rating > 1 ? 's' : ''}`}
+                    onClick={async () => {
+                      setGameplayRating(rating);
+                      setFeedbackSaved(false);
+                      setFeedbackError(null);
+                      await saveFeedback(rating, featureOnLeaderboard);
+                    }}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+
+              <label className="accuse-feature-toggle">
+                <input
+                  type="checkbox"
+                  checked={featureOnLeaderboard}
+                  onChange={async (e) => {
+                    const nextFeatured = e.target.checked;
+                    setFeatureOnLeaderboard(nextFeatured);
+                    setFeedbackSaved(false);
+
+                    if (gameplayRating !== null) {
+                      await saveFeedback(gameplayRating, nextFeatured);
+                    }
+                  }}
+                />
+                Do you want this game on the community board?
+              </label>
+
+              {feedbackSaving && <p className="accuse-feedback-saving">Saving...</p>}
+              {feedbackSaved && <p className="accuse-feedback-success">Saved to community.</p>}
+              {feedbackError && <p className="accuse-feedback-error">{feedbackError}</p>}
+            </div>
+
+            <div className="accuse-buttons">
+              <button
+                className="detective-button"
+                onClick={() => {
+                  audioRefs.current.forEach(a => {
+                    a.pause();
+                    a.currentTime = 0;
+                  });
+                  resetGame();
+                  navigate('/');
+                }}
+              >
+                New Case
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="footer-strip">
