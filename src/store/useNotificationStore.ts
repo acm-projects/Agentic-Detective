@@ -43,7 +43,7 @@ function pickRandom<T>(arr: T[]) {
 }
 
 const NOTIFICATION_TYPES: NotificationType[] = ["mail"];
-const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle", "cipher"];
+const MINIGAME_TYPES: MinigameType[] = ["wordle"];
 
 const HEADLINES: Record<NotificationType, string[]> = {
   mail: [
@@ -65,41 +65,12 @@ const FLAVOR_TEXTS: Record<NotificationType, string[]> = {
 //  Wordle Data Generator
 // ─────────────────────────────────────────────
 
-const WORDLE_DETECTIVE_WORDS = [
-  { answer: "KNIFE", hint: "The murder weapon may be closer than you think." },
-  { answer: "ALIBI", hint: "Someone's story doesn't quite add up." },
-  { answer: "BLOOD", hint: "The forensics report holds a grim detail." },
-  { answer: "VAULT", hint: "Something was locked away the night of the murder." },
-  { answer: "CLOAK", hint: "A witness described what the figure was wearing." },
-  { answer: "FORGE", hint: "A document in the study may not be authentic." },
-  { answer: "DECOY", hint: "Not everything found at the scene was accidental." },
-  { answer: "GUEST", hint: "An unexpected visitor arrived that evening." },
-  { answer: "LYING", hint: "One suspect's testimony contradicts another." },
-  { answer: "MOTIVE", hint: "Follow the money." },
-  { answer: "TRACE", hint: "A tiny piece of evidence was left behind." },
-  { answer: "STAIN", hint: "Something spilled during the struggle." },
-  { answer: "PRINT", hint: "A mark on the glass could identify the culprit." },
-  { answer: "SCENE", hint: "Reconstruct what happened where the body was found." },
-  { answer: "CHASE", hint: "Someone was seen running shortly after the crime." },
-  { answer: "RIVAL", hint: "The victim had a bitter competitor." },
-  { answer: "MONEY", hint: "A suspicious transfer happened before the murder." },
-  { answer: "RUMOR", hint: "Whispers around town hint at a dark secret." },
-  { answer: "STEAL", hint: "Was the killing tied to a theft?" },
-  { answer: "ENTRY", hint: "How did the killer get inside?" },
-  { answer: "NOTES", hint: "The victim wrote something important before dying." },
-  { answer: "CLOCK", hint: "The stopped time may reveal when it happened." },
-  { answer: "DOORS", hint: "One of them was left unlocked that night." },
-  { answer: "PANEL", hint: "A hidden compartment may conceal evidence." },
-  { answer: "DRINK", hint: "What the victim consumed might hold a clue." },
-];
-
 function generateWordleData(): WordleData {
-  const entry = pickRandom(WORDLE_DETECTIVE_WORDS);
   return {
     kind: "wordle",
-    answer: entry.answer.toUpperCase(),
+    answer: "THIEF",
     maxNumGuesses: 6,
-    hint: entry.hint,
+    hint: "Five letters. The culprit is a THIEF.",
   };
 }
 
@@ -248,6 +219,7 @@ interface NotificationState {
   dismissNotification: (id: string) => void;
   abandonMinigame: (id: string) => void;
   resolveMinigame: (notificationId: string, success: boolean) => void;
+  unlockAllClues: () => void;
   setTimerPaused: (paused: boolean) => void;
   hydrateSchedulerState: (schedulerState?: PersistedSchedulerState | null) => void;
   purgeExpired: () => void;
@@ -439,6 +411,23 @@ export const useNotificationStore = create<NotificationState>()(
           useGameStore.getState().markClueDiscovered(discoveredClueId as string);
         });
       }
+    },
+
+    unlockAllClues() {
+      set((s) => {
+        s.clues.forEach((clue) => {
+          clue.discovered = true;
+          clue.clueLost = false;
+          clue.notificationId = undefined;
+        });
+        s.notifications.forEach((n) => {
+          n.dismissed = true;
+        });
+        s.timerPaused = false;
+        s.lastFiredAt = null;
+        s.nextFireAt = null;
+      });
+      saveClueProgress(get);
     },
 
     setTimerPaused(paused) {

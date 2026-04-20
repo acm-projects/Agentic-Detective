@@ -6,13 +6,13 @@ import s2 from './assets/s2.png';
 import s3 from './assets/s3.png';
 import s4 from './assets/s4.png';
 import jailHer from './assets/jailher.gif';
-import suspectavatar from './assets/portraitgirl.png';
 import who from './assets/updatedwho.png';
 import decor from './assets/decor.png';
 import newspaper from './assets/newsdecor.png';
 import victim from './assets/choppedvictim.png';
 import clipping from './assets/clipping.png';
 import layout from './assets/layout.png';
+import SuspectPortrait from './components/SuspectPortrait';
 import './Suspects.css';
 
 // ─────────────────────────────────────────────
@@ -80,6 +80,8 @@ function Suspects() {
     setTimeout(() => makeAccusation(popup.name, navigate), 1800);
   };
 
+  const getBadgeClass = (cls: CornerCls) => `suspect-name-badge ${cls}`;
+
   return (
     <div className="suspects-page">
 
@@ -142,7 +144,22 @@ function Suspects() {
           onClick={() => handlePolaroidClick(cls)}
         >
           <img src={CORNER_IMGS[cls]} alt="polaroid" className="polaroid-bg" />
-          <img src={suspectavatar} alt="character" className="character-avatar" />
+          <div className="character-avatar">
+            {cornerProfiles[cls]?.portraitFeatures ? (
+              <SuspectPortrait
+                features={cornerProfiles[cls]!.portraitFeatures}
+                size={300}
+                style={{ width: '100%', height: '100%' }}
+              />
+            ) : (
+              <div className="character-avatar-fallback" />
+            )}
+          </div>
+          {cornerProfiles[cls]?.name && (
+            <div className={getBadgeClass(cls)}>
+              {cornerProfiles[cls]!.name}
+            </div>
+          )}
           {arrestedCorner === cls && (
             <img src={jailHer} alt="jail" className="jailher-overlay" />
           )}

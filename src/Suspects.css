@@ -59,6 +59,8 @@
   height: auto;
   z-index: 5;
   cursor: pointer;
+  display: flex;
+  align-items: center;
 }
 
 .suspect-corner:hover .polaroid-bg {
@@ -73,24 +75,28 @@
   top: 1em;
   left: 6em;
   transform: rotate(8deg);
+  flex-direction: row;
 }
 
 .top-right {
   top: 1em;
   right: 8em;
   transform: rotate(6deg);
+  flex-direction: row-reverse;
 }
 
 .bottom-left {
   bottom: 2em;
   left: 8em;
   transform: rotate(0deg);
+  flex-direction: row;
 }
 
 .bottom-right {
   bottom: 2em;
   right: 10em;
   transform: rotate(-10deg);
+  flex-direction: row-reverse;
 }
 
 /* ── Polaroid frame fills the container ── */
@@ -176,12 +182,66 @@
 /* ── Avatar sits absolutely on top of the polaroid ── */
 .character-avatar {
   position: absolute;
-  top: 23%;
-  left: 54%;
+  top: 18%;
+  left: 50%;
   transform: translateX(-50%);
-  width: 47%;
-  height: auto;
-  object-fit: contain;
+  width: 56%;
+  height: 58%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.character-avatar > div {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.character-avatar-fallback {
+  width: 100%;
+  height: 100%;
+  background: rgba(17, 17, 17, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.suspect-name-badge {
+  position: absolute;
+  top: 52%;
+  transform: translateY(-50%);
+  background: #e8dfd0;
+  border: 3px solid #111;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.35);
+  color: #111;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.46rem;
+  line-height: 1.35;
+  letter-spacing: 0.08em;
+  padding: 0.55rem 0.75rem;
+  text-transform: uppercase;
+  max-width: 150px;
+  z-index: 7;
+  pointer-events: none;
+}
+
+.suspect-name-badge.top-left,
+.suspect-name-badge.bottom-left {
+  left: 100%;
+  margin-left: 12px;
+}
+
+.suspect-name-badge.top-right,
+.suspect-name-badge.bottom-right {
+  right: 100%;
+  margin-right: 12px;
+}
+
+.suspect-name-badge.top-left,
+.suspect-name-badge.bottom-left,
+.suspect-name-badge.top-right,
+.suspect-name-badge.bottom-right {
+  writing-mode: horizontal-tb;
 }
 
 /* ── Jail gif overlay on arrested polaroid ── */

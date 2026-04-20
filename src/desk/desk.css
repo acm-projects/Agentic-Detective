@@ -205,3 +205,33 @@
     bottom: clamp(10px, 2.4vh, 18px);
   }
 }
+
+.desk-unlock-clues-btn {
+  position: absolute;
+  right: clamp(12px, 2.6vw, 28px);
+  bottom: clamp(12px, 2.6vh, 26px);
+  z-index: 10050;
+  border: 2px solid #1a1a1a;
+  background: linear-gradient(180deg, #ffe69f 0%, #efc24b 100%);
+  color: #1a1a1a;
+  font-family: 'Press Start 2P', cursive;
+  font-size: clamp(0.45rem, 0.85vw, 0.6rem);
+  line-height: 1.4;
+  padding: 0.7rem 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  box-shadow: 3px 3px 0 #1a1a1a;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.16s ease;
+}
+
+.desk-unlock-clues-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #1a1a1a;
+  filter: brightness(1.03);
+}
+
+.desk-unlock-clues-btn:active {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 #1a1a1a;
+}

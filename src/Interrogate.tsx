@@ -178,7 +178,6 @@ function Interrogate() {
     totalConversationCount,
     startInterrogation,
     sendMessage,
-    makeAccusation,
     tickElapsed,
     setSuspicionLevelForSuspect,
   } = useGameStore();
@@ -640,28 +639,10 @@ function Interrogate() {
           </Tooltip>
         ) : (
           <button
-            onClick={() =>
-              (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
-            }
+            onClick={() => navigate('/suspects')}
           >
             Accuse
           </button>
-        )}
-        {accusationUnlocked && (
-          <dialog className="nes-dialog" id="accuse">
-            <form method="dialog">
-              <h3>Make Your Accusation</h3>
-              <p>Who do you think did it?</p>
-              {profiles.map(p => (
-                <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
-                  {p.name}
-                </button>
-              ))}
-              <menu className="dialog-menu">
-                <button>Cancel</button>
-              </menu>
-            </form>
-          </dialog>
         )}
 
         {isFirstTimePlayer && (

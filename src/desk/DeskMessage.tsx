@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react'
 import { useGameStore } from '../useGameStore';
+import { useNotificationStore } from '../store/useNotificationStore';
 import { Tooltip } from '../components/tooltip/Tooltip';
 import cluebookImg from './assets/themedcluebook.png';
 import cigaretteImg from './assets/newthemedcigarette.png';
@@ -57,6 +58,8 @@ function Message() {
   const { phase, player } = useGameStore();
   const navigate = useNavigate();
   const { isFirstClueDiscovery, clearFirstClueDiscovery, accusationUnlocked } = useGameStore();
+  const unlockAllPlayerClues = useGameStore(s => s.unlockAllClues);
+  const unlockAllNotificationClues = useNotificationStore(s => s.unlockAllClues);
 
   const [tutorialStep, setTutorialStep] = useState<number>(() => Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? -1));
   const [tutorialSeen, setTutorialSeen] = useState<boolean>(() => localStorage.getItem(TUTORIAL_KEY) === 'true');
@@ -106,6 +109,11 @@ function Message() {
     }
 
     navigate('/suspects');
+  };
+
+  const handleUnlockAllCluesClick = () => {
+    unlockAllNotificationClues();
+    unlockAllPlayerClues();
   };
 
   return (
@@ -220,6 +228,15 @@ function Message() {
             </div>
           )}
         </div>
+
+        <button
+          type='button'
+          className='desk-unlock-clues-btn'
+          onClick={handleUnlockAllCluesClick}
+          aria-label='Unlock all clues'
+        >
+          Unlock All Clues
+        </button>
       </div>
     </>
   );

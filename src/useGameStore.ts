@@ -96,6 +96,7 @@ interface GameState {
   makeAccusation: (suspectName: string, navigate: (path: string) => void) => void;
   resetGame: () => void;
   markClueDiscovered: (clueId: string) => void;
+  unlockAllClues: () => void;
   clearFirstClueDiscovery: () => void;
   clearLoadedCase: () => void;
   tickElapsed: () => void;
@@ -736,6 +737,23 @@ set({ isResponding: false });
     }
 
     console.log("num disc cluee: " +useGameStore.getState().numDiscoveredClues)
+  },
+
+  unlockAllClues: () => {
+    set((state) => {
+      if (!state.player) return state;
+
+      const totalClues = state.player.clues.length;
+      return {
+        numDiscoveredClues: totalClues,
+        isFirstClueDiscovery: false,
+        accusationUnlocked: totalClues >= ACCUSATION_MIN_CLUES,
+        player: {
+          ...state.player,
+          clues: state.player.clues.map((c) => ({ ...c, discovered: true, clueLost: false })),
+        },
+      };
+    });
   },
 
   clearFirstClueDiscovery: () => {

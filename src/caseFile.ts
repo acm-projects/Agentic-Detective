@@ -8,17 +8,6 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
 
-// ─────────────────────────────────────────────
-//  AVATAR POOL
-// ─────────────────────────────────────────────
-
-export const AVATAR_POOL = [
-  { id: "avatar_01", description: "brown hair, small nose, pink lips, mole, upturned eyebrows" },
-  { id: "avatar_02", description: "black hair, long nose, purple lips, downturned eyebrows, freckles" },
-  { id: "avatar_03", description: "yellow hair, wide nose, mustache, thick eyebrows, and green shirt" },
-  { id: "avatar_04", description: "grey hair, glasses, long nose, blue sweater vest, medium thick eyebrows" },
-] as const;
-
 export const FEATURE_POOL = {
   backHair: [
     { frameIndex: 0, description: "super curly hair in big afro shape" },
@@ -145,7 +134,7 @@ function cleanRawJson(raw: string): string {
 // ─────────────────────────────────────────────
 
 export type ClueSeverity = "low" | "medium" | "high";
-export type AvatarId = typeof AVATAR_POOL[number]["id"];
+export type AvatarId = string;
 
 export interface Suspect {
   name: string;
@@ -384,8 +373,6 @@ Respond ONLY with valid JSON:
 // ─────────────────────────────────────────────
 
 function buildFullCasePrompt(seed: PlayerSeed, bible: StoryBible, estimatedConversations: number): string {
-  const avatarList = AVATAR_POOL.map((a) => `  "${a.id}": ${a.description}`).join("\n");
-
   const backHairList  = FEATURE_POOL.backHair.map( (f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
   const frontHairList = FEATURE_POOL.frontHair.map((f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
   const eyeList       = FEATURE_POOL.eyes.map(     (f) => `  ${f.frameIndex}: ${f.description}`).join("\n");
@@ -442,9 +429,19 @@ THE PLAYER'S SEED FOR REFERENCE:
 Match tone, era, and aesthetic to the player's setting. Cast archetypes that feel like winks — not copies.
 Clue descriptions should feel native to the setting (a cipher in a spy thriller vs a Victorian mystery).
 
-## AVATARS
-${avatarList}
-For each suspect: write physicalDescription first, then pick the avatarId that best matches it.
+## PORTRAIT COMPOSITION
+Do not choose from preset avatar archetypes.
+For each suspect, assemble the portrait from the feature pools below by choosing:
+- one back hair frame
+- one front hair frame
+- one eye frame
+- one nose frame
+- one mouth frame
+- a matching hair, skin, eye, shirt, and lip color palette
+
+Make the physicalDescription explicitly describe the combined look you assembled.
+Then set avatarId to a short unique slug derived from that composition, such as "curly-bangs-glasses-blue-shirt".
+Every suspect must have a different avatarId.
 
 ## PORTRAIT FEATURES
 
@@ -481,7 +478,7 @@ Respond ONLY with valid JSON. No markdown, no commentary:
     "relationshipToVictim": "Friend, Colleague, etc",
     "personality": "Description of personality",
     "physicalDescription": "Physical appearance description",
-    "avatarId": "avatar_01",
+    "avatarId": "curly-bangs-blue-shirt",
     "trueAlibi": "What actually happened",
     "claimedAlibi": "What they claim happened",
     "trueMotive": "Why they did it or null",

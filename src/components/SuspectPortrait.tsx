@@ -184,6 +184,7 @@ interface SuspectPortraitProps {
   size?: number
   className?: string
   isSpeaking?: boolean
+  style?: React.CSSProperties
 }
 
 // Shared image cache so sprites are only loaded once across all portrait instances
@@ -207,7 +208,7 @@ function getImages(): Promise<Record<string, HTMLImageElement>> {
 //  COMPONENT
 // ─────────────────────────────────────────────
 
-export default function SuspectPortrait({ features, size = 384, className, isSpeaking = false }: SuspectPortraitProps) {
+export default function SuspectPortrait({ features, size = 384, className, isSpeaking = false, style }: SuspectPortraitProps) {
   const canvasRef     = useRef<HTMLCanvasElement>(null)
   const loadedRef     = useRef(false)
   const featuresRef   = useRef(features)
@@ -246,7 +247,7 @@ export default function SuspectPortrait({ features, size = 384, className, isSpe
   return (
   <div 
     className={className}   // ← move className here
-    style={{ position: 'relative', display: 'inline-block', width: renderedSize, height: renderedSize }}
+    style={{ position: 'relative', display: 'inline-block', width: renderedSize, height: renderedSize, ...style }}
   >
     <canvas
       ref={canvasRef}
