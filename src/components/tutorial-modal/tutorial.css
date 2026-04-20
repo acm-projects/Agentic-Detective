@@ -1,20 +1,286 @@
-.tutorial-backdrop {
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap');
+
+.tutorial-dock {
+    --tutorial-paper: #fff4d8;
+    --tutorial-ink: #111111;
+    --tutorial-accent: #8a1515;
+    --tutorial-accent-dark: #5f2400;
+    --tutorial-frame: #1a1a1a;
+    --tutorial-muted: #4b3d2a;
+
     position: fixed;
-    inset: 0;
-    background: rgba(90, 89, 89, 0.33);
-    z-index: 9998;
+    right: 18px;
+    bottom: 18px;
+    z-index: 12020;
+    width: min(460px, calc(100vw - 20px));
+    padding: 12px;
+    border: 3px solid var(--tutorial-frame);
+    border-radius: 0;
+    color: var(--tutorial-ink);
+    font-family: 'VT323', monospace;
+    background: var(--tutorial-paper);
+    box-shadow:
+        6px 6px 0 rgba(0, 0, 0, 0.45),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.28);
 }
 
-.tutorial-modal {
+.tutorial-dock.tutorial-dock--left {
+    left: 18px;
+    right: auto;
+}
+
+.tutorial-dock-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.tutorial-step-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.5rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #fff5db;
+    background: #8a1515;
+    border: 2px solid #1a1a1a;
+    border-radius: 0;
+    padding: 6px 10px;
+}
+
+.tutorial-skip-link {
+    font-family: 'Press Start 2P', cursive;
+    background: #e3d5a5;
+    color: #1a1a1a;
+    border: 2px solid #1a1a1a;
+    font-size: 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    padding: 5px 8px;
+    box-shadow: 2px 2px 0 #1a1a1a;
+}
+
+.tutorial-skip-link:hover {
+    background: #111111;
+    color: #ffffff;
+}
+
+.tutorial-dock-progress {
+    margin-top: 9px;
+    display: grid;
+    gap: 5px;
+}
+
+.tutorial-dock-progress span {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.42rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #3e2f1f;
+}
+
+.tutorial-progress-track {
+    height: 10px;
+    border: 2px solid #1a1a1a;
+    border-radius: 0;
+    background: #fff7e6;
+    overflow: hidden;
+}
+
+.tutorial-progress-fill {
+    display: block;
+    height: 100%;
+    background: #8a1515;
+    transition: width 220ms ease;
+}
+
+.tutorial-card {
+    margin-top: 10px;
+    border: 3px solid #1a1a1a;
+    border-radius: 0;
+    padding: 12px;
+    background: #fef7e6;
+    box-shadow: 3px 3px 0 rgba(26, 26, 26, 0.65);
+}
+
+.tutorial-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 7px;
+    padding: 5px 8px;
+    border-radius: 0;
+    border: 2px solid #1a1a1a;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.45rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: #e3d5a5;
+}
+
+.tutorial-card h2 {
+    margin: 0;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.58rem;
+    line-height: 1.55;
+    text-transform: uppercase;
+}
+
+.tutorial-card p {
+    margin: 7px 0 0;
+    font-size: 1.18rem;
+    line-height: 1.2;
+    color: #16120b;
+}
+
+.tutorial-step-dots {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.tutorial-step-dots button {
+    min-width: 30px;
+    height: 30px;
+    font-family: 'Press Start 2P', cursive;
+    border: 2px solid #1a1a1a;
+    border-radius: 0;
+    background: #f2e4c2;
+    color: #2b2117;
+    cursor: pointer;
+    font-size: 0.44rem;
+    box-shadow: 2px 2px 0 #1a1a1a;
+    transition: transform 120ms ease, background-color 120ms ease;
+}
+
+.tutorial-step-dots button:hover {
+    transform: translateY(-1px);
+    background: #111111;
+    color: #ffffff;
+}
+
+.tutorial-step-dots button.active {
+    background: #8a1515;
+    border-color: #1a1a1a;
+    color: #fff5db;
+}
+
+.tutorial-actions {
+    margin-top: 11px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.tutorial-actions button {
+    height: 36px;
+    min-width: 86px;
+    font-family: 'Press Start 2P', cursive;
+    border-radius: 0;
+    border: 2px solid #1a1a1a;
+    background: #e3d5a5;
+    color: #1a1a1a;
+    cursor: pointer;
+    font-size: 0.45rem;
+    text-transform: uppercase;
+    box-shadow: 3px 3px 0 #1a1a1a;
+}
+
+.tutorial-actions button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.tutorial-primary-btn {
+    background: #8a1515 !important;
+    border-color: #1a1a1a !important;
+    color: #fff5db !important;
+}
+
+.tutorial-spotlight-layer {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 9999;
-    width: min(520px, calc(100vw - 32px));
-    background: #0f0e0d;
-    border: 1px solid #3a2e20;
-    padding: 36px;
-    color: #ffff;
+    inset: 0;
+    pointer-events: none;
+    z-index: 12010;
+}
+
+.tutorial-spotlight-hole {
+    position: fixed;
+    border-radius: 0;
+    box-shadow: 0 0 0 9999px rgba(8, 5, 3, 0.56);
+}
+
+.tutorial-spotlight-pulse {
+    position: fixed;
+    border-radius: 0;
+    border: 3px solid rgba(255, 245, 200, 0.98);
+    box-shadow:
+        0 0 0 0 rgba(241, 213, 140, 0.62),
+        0 0 0 8px rgba(241, 213, 140, 0.28);
+    animation: tutorialPulse 1.45s ease-out infinite;
+}
+
+.tutorial-spotlight-callout {
+    position: fixed;
+    width: min(320px, calc(100vw - 30px));
+    padding: 8px 10px;
+    border-radius: 0;
+    border: 3px solid #1a1a1a;
+    background: #fff4d8;
+    color: #111111;
+    box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.42);
+}
+
+.tutorial-spotlight-callout-label {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 0.38rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #7f1a1a;
+}
+
+.tutorial-spotlight-callout p {
+    margin: 5px 0 0;
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    line-height: 1.15;
+    font-weight: 400;
+}
+
+@keyframes tutorialPulse {
+    0% {
+        box-shadow:
+            0 0 0 0 rgba(251, 213, 125, 0.62),
+            0 0 0 8px rgba(251, 213, 125, 0.22);
+    }
+    100% {
+        box-shadow:
+            0 0 0 12px rgba(251, 213, 125, 0),
+            0 0 0 22px rgba(251, 213, 125, 0);
+    }
+}
+
+@media (max-width: 768px) {
+    .tutorial-dock {
+        right: 8px;
+        left: 8px;
+        bottom: 10px;
+        width: auto;
+        padding: 12px;
+    }
+
+    .tutorial-card h2 {
+        font-size: 0.53rem;
+    }
+
+    .tutorial-card p {
+        font-size: 1.08rem;
+    }
 }
 

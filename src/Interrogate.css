@@ -396,6 +396,18 @@ a { color: inherit; text-decoration: none; }
   transform: scale(1.02);
 }
 
+.droplet-container {
+  position: relative;
+  top: -310px;
+  left: 80%;
+  transform: translateX(-50%);
+}
+
+.stress-droplet-img {
+  z-index: 5;
+  scale: 0.5;
+}
+
 /* ── Header ── */
 .header-row {
   position: relative; display: flex;
@@ -450,12 +462,21 @@ a { color: inherit; text-decoration: none; }
 }
 
 .character-container {
-  display: flex; flex-direction: row; gap: 1rem;
-  flex: 0 0 auto; max-height: 200px;
+  display: flex; 
+  flex-direction: row; 
+  gap: 1rem;
+  flex: 0 0 auto; 
+  max-height: 200px;
   margin-top: 18vh;
-  margin-left: clamp(5rem, 8vw, 16rem);
-  width: 80%; position: relative;
-  right: -26.5rem; align-items: flex-start; bottom: -1.2rem;
+  margin-left: 18vw;
+  width: clamp(460px, 74%, 980px);
+  position: relative;
+  z-index: 2;
+  top: 1.2rem;
+  left: 0;
+  transform: translateX(clamp(18px, 2.2vw, 34px));
+  align-items: flex-start;
+  justify-content: center;
 }
 
 .character-avatar img {
@@ -670,7 +691,7 @@ a { color: inherit; text-decoration: none; }
 ═══════════════════════════════════════════ */
 .clue-modal {
   position: fixed;
-  width: 310px;
+  width: 340px;
   background: #1a1d25;
   border: 1px solid #2a2e3a;
   border-top: 3px solid #3a3f52;
@@ -740,7 +761,9 @@ a { color: inherit; text-decoration: none; }
 .clue-modal-close:hover { background: #9b2020; color: #ffd0d0; }
 
 .clue-modal-hint {
-  font-size: 10px; color: #3a4358;
+  font-size: 10px; 
+  color: #ffffff;
+  font-weight: bold;
   letter-spacing: 0.1em; text-transform: uppercase;
   padding: 6px 14px; border-bottom: 1px solid #1e2130;
   background: repeating-linear-gradient(
@@ -821,6 +844,41 @@ a { color: inherit; text-decoration: none; }
   font-family: 'Courier New', monospace;
 }
 .clue-modal-footer b { color: #6a8aaa; font-weight: 700; }
+
+.clue-modal-navigator {
+  display: flex;
+  padding: 10px;
+  align-items: center; /* only works if display set to flex*/
+  justify-content: center;
+  gap: 8px;
+}
+
+.clue-modal-button {
+  min-width: 92px;
+  padding: 6px 12px;
+  border: 1px solid #2a2e3a;
+  border-top: 2px solid #3a3f52;
+  background: #14161e;
+  color: #cbd5ea;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.clue-modal-button:hover {
+  background: #9b2020;
+  border-color: #d14a4a;
+  color: #ffdede;
+}
+
+.clue-modal-button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.65);
+}
 
 /* ═══════════════════════════════════════════
    NOTES MODAL additions
@@ -1191,7 +1249,10 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 1280px) {
   .user-icon { top: 2.1em; left: clamp(0.6rem, 1.6vw, 1rem); }
   .currently-interrogating-container { margin-top: 3.1rem; }
-  .character-container { width: 88%; right: -18rem; bottom: -0.8rem; }
+  .character-container {
+    width: clamp(380px, 78%, 720px);
+    transform: translateX(clamp(12px, 2vw, 24px));
+  }
   .chatbot {
     left: 0; transform: translateX(clamp(12px, 2vw, 24px));
     width: clamp(380px, 78%, 720px);
@@ -1200,7 +1261,10 @@ a { color: inherit; text-decoration: none; }
 }
 @media (max-width: 980px) {
   .user-icon { top: 2em; left: 0.5rem; }
-  .character-container { width: 92%; right: -12rem; bottom: -0.4rem; }
+  .character-container {
+    width: clamp(300px, 86%, 620px);
+    transform: translateX(clamp(8px, 1.6vw, 16px));
+  }
   .chatbot { left: 0; transform: translateX(clamp(8px, 1.6vw, 16px)); width: clamp(300px, 86%, 620px); }
   .question-submit-box { grid-template-columns: 1fr; }
   .question-box input { border-right: none; }

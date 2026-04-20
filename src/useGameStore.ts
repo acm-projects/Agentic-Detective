@@ -106,11 +106,13 @@ interface GameState {
 const DEFAULT_SEED: PlayerSeed = {
   freeText: "",
   difficulty: 5,
-  duration: 20,
+  duration: 15,
   intensity: 5,
   userId: "",
   isSignedIn: false,
 };
+
+const ACCUSATION_MIN_CLUES = 2;
 
 export const useGameStore = create<GameState>((set, get) => ({
   phase: "setup",
@@ -159,6 +161,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       return false;
     }
     set({ phase: "generating", error: null });
+    navigate("/loading");
 
     if (!isReloadFlow) {
       try {
@@ -180,7 +183,7 @@ export const useGameStore = create<GameState>((set, get) => ({
           voiceIds,
         });
         const { useNotificationStore } = await import("./store/useNotificationStore");
-        useNotificationStore.getState().initClues(player.clues)
+        useNotificationStore.getState().initClues(player.clues);
         navigate("/report");           // ← instead of set({ phase: "briefing" })
         return false;
       } catch (err) {
@@ -223,6 +226,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             phase: isResolved ? "resolved" : restoredPhase,
             numDiscoveredClues: discoveredCluesCount,
             isFirstClueDiscovery: discoveredCluesCount === 1,
+            accusationUnlocked: discoveredCluesCount >= ACCUSATION_MIN_CLUES,
             accusationResult: restoredAccusationResult,
           });
 
@@ -387,6 +391,8 @@ export const useGameStore = create<GameState>((set, get) => ({
         : isOffTopic
         ? "[DETECTIVE INPUT CLASSIFICATION: OFF-TOPIC — completely unrelated to the case or interrogation. Do NOT answer the question. Do NOT raise stress. Respond in-character with confused irritation and redirect to the interrogation.]\n\n"
         : "";
+      const hasEvidencePresentation = Boolean(displayClues?.length);
+      const hasDirectEvidence = /directly implicates you/i.test(text);
 
       // Check for repeated questions to warn the model before it responds
       const recentForPrefix = session.history
@@ -487,6 +493,11 @@ const raw = await callModel({
           // Repeated question: freeze stress (or allow the model's drop if it dropped)
           newStress = session.stressLevel;
         }
+
+        if (!isSpam && !isOffTopic && hasEvidencePresentation && newStress <= session.stressLevel + 2) {
+          const evidenceFloor = hasDirectEvidence ? 10 : 6;
+          newStress = Math.min(100, session.stressLevel + evidenceFloor);
+        }
       } catch {
         console.warn("Could not parse suspect JSON reply — stripping stress artifact from raw text");
         // Fallback: strip any trailing stressLevel JSON fragment from raw
@@ -574,11 +585,6 @@ const raw = await callModel({
     }
 
       // Generate and play speech asynchronously (don't block UI)
-      const suspectGender = get().player?.characterProfiles.find(
-        p => p.name === activeSuspectName
-      )?.gender ?? "female";
-
-        
       //tts streamed better
       const voiceId = get().voiceIds[activeSuspectName];
       console.log(get())
@@ -631,14 +637,11 @@ set({ isResponding: false });
 
   // ── Player makes their final accusation ──
   makeAccusation: (accusedName, navigate) => {
-    const ACCUSATION_MIN_CLUES = 2; // <---- adjust based on game difficulty, eg. '2' for easy, '4' for medium, '6' for hard, ...
     const { backend, player, numDiscoveredClues } = get();
     const { seed } = get() as { seed: PlayerSeed};
     if (!backend) return;
     if (numDiscoveredClues >= ACCUSATION_MIN_CLUES) {
-      set({
-        accusationUnlocked: true,
-      })
+      set({ accusationUnlocked: true });
     }
 
     const trueKiller = backend.suspects.find(s => s.isGuilty);
@@ -692,6 +695,7 @@ set({ isResponding: false });
       return {
         numDiscoveredClues: nextNumDiscovered,
         isFirstClueDiscovery: nextNumDiscovered === 1,
+        accusationUnlocked: nextNumDiscovered >= ACCUSATION_MIN_CLUES,
         player: {
           ...state.player,
           clues: state.player.clues.map(c =>
@@ -737,6 +741,7 @@ set({ isResponding: false });
       isResponding: false,
       elapsed: 0,
       voiceIds: {},
+      accusationUnlocked: false,
     }),
   
     // keeps track of elapsed time
@@ -808,6 +813,7 @@ set({ isResponding: false });
         isResponding: false,
         voiceIds,
         currentSessionId: sharedSessionId,
+        accusationUnlocked: false,
       });
 
       const { useNotificationStore } = await import("./store/useNotificationStore");

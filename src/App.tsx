@@ -6,12 +6,12 @@ import NewGame from './NewGame.tsx';
 import ClueBook from './ClueBook.tsx';
 import './App.css';
 import CaseReportScreen from './CaseReportScreen.tsx';
+import LoadingScreen from './LoadingScreen.tsx';
 import Interrogate from "./Interrogate";
 import Accuse from './Accuse.tsx';
+import Suspects from './Suspects.tsx';
 import CaseResolvedErrorScreen from './components/caseResolvedScreen/CaseResolvedErrorScreen.tsx';
 import { SignIn, SignUp, UserProfile } from '@clerk/react-router';
-
-
 
 export const AudioContext = createContext<{
   isMuted: boolean;
@@ -22,9 +22,8 @@ function AppInner() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isMuted, setIsMuted] = useState(true);
   const location = useLocation();
-  const isSilentPage = location.pathname === '/' || location.pathname === '/accuse';
+  const isSilentPage = location.pathname === '/' || location.pathname === '/loading' || location.pathname === '/accuse';
 
-  // Play/pause based on route
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -47,7 +46,6 @@ function AppInner() {
     });
   }, [isSilentPage]);
 
-  // Force pause on mount if on silent page
   useEffect(() => {
     if (isSilentPage) {
       audioRef.current?.pause();
@@ -71,16 +69,18 @@ function AppInner() {
       <audio ref={audioRef} src={mainMp3} loop />
       <Routes>
         <Route path="/" element={<NewGame />} />
+        <Route path="/loading" element={<LoadingScreen />} />
         <Route path="/sign-in/*" element={<SignIn />} />
-      <Route path="/sign-up/*" element={<SignUp />} />
-      <Route path="/user-profile/*" element={<UserProfile />} />
-      <Route path="/desk" element={<Message />} />
+        <Route path="/sign-up/*" element={<SignUp />} />
+        <Route path="/user-profile/*" element={<UserProfile />} />
+        <Route path="/desk" element={<Message />} />
         <Route path="/report" element={<CaseReportScreen />} />
         <Route path="/clues" element={<ClueBook />} />
         <Route path="/interrogate" element={<Interrogate />} />
         <Route path="/accuse" element={<Accuse />} />
+        <Route path="/suspects" element={<Suspects />} />
         <Route path="/case-already-resolved-error" element={<CaseResolvedErrorScreen />} />
-    </Routes>
+      </Routes>
     </AudioContext.Provider>
   );
 }

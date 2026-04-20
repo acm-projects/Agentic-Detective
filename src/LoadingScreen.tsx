@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './LoadingScreen.css';
 import vinyl from './assets/7logo.png';
+import { TIP_EXAMPLES } from './NewGame';
 
 const AUDIO_SRC = '/assets/dejcomin-electronic-ambient-music-chill-mix-downtempo-background-dejcoart-430828.mp3';
 
@@ -16,6 +17,9 @@ function getAngle(e: MouseEvent | TouchEvent, el: HTMLElement) {
 export default function LoadingScreen() {
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [tipExample] = useState(
+    () => TIP_EXAMPLES[Math.floor(Math.random() * TIP_EXAMPLES.length)]
+  );
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const autoSpinRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -138,7 +142,13 @@ export default function LoadingScreen() {
         <p className="loading-subtext">
           {isDragging ? '🎛️ Scratching the record...' : 'generating suspects and clues'}
         </p>
+
+        <div className="loading-tip">
+          <p className="loading-tip-title">Gameplay Tip:</p>
+          <p className="loading-tip-content">{tipExample}</p>
+        </div>
       </div>
+      
     </div>
   );
 }

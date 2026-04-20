@@ -57,6 +57,35 @@
   animation: pulse 1.5s ease-in-out infinite;
 }
 
+.loading-tip {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  width: min(760px, 86vw);
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-top: 2px solid rgba(245, 213, 168, 0.45);
+  z-index: 10000;
+}
+
+.loading-tip-title {
+  margin: 0 0 10px;
+  color: #f5d5a8;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.loading-tip-content {
+  margin: 0;
+  color: #efe4d0;
+  font-size: 0.62rem;
+  line-height: 1.8;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 0.6;
