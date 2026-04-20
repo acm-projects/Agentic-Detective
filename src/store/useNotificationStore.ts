@@ -22,8 +22,8 @@ const SCHEDULE_CONFIG = {
 */
 
 const MESSAGE_SCHEDULE_CONFIG = {
-  firstNotificationWindowMessageCount: [1, 2] as [number, number], // originally 5, 10
-  cooldownMessageCount: [1, 2] as [number, number], // originally 5, 10
+  firstNotificationWindowMessageCount: [0, 0] as [number, number],
+  cooldownMessageCount: [1, 1] as [number, number],
   toastLifetime: 40_000,
 };
 
@@ -305,16 +305,19 @@ export const useNotificationStore = create<NotificationState>()(
       console.log("next fire at: " + state.nextFireAt);
       console.log("last fired at: " + state.lastFiredAt);
 
-      if (state.nextFireAt === null) {
+      if (nowMessageCount < 1) return;
+
+      let nextFireAt = state.nextFireAt;
+      if (nextFireAt === null) {
         const delay = randBetween(...MESSAGE_SCHEDULE_CONFIG.firstNotificationWindowMessageCount);
+        nextFireAt = nowMessageCount + delay;
         set((s) => {
-          s.nextFireAt = nowMessageCount + delay;
+          s.nextFireAt = nextFireAt;
         });
         saveClueProgress(get);
-        return;
       }
 
-      if (nowMessageCount < state.nextFireAt) return;
+      if (nextFireAt === null || nowMessageCount < nextFireAt) return;
 
       const pendingClueIds = new Set(
         state.notifications.filter((n) => !n.dismissed).map((n) => n.clueId)
