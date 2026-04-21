@@ -14,6 +14,7 @@ import victim from './assets/choppedvictim.png';
 import clipping from './assets/clipping.png';
 import layout from './assets/layout.png';
 import './Suspects.css';
+import SuspectPortrait from './components/SuspectPortrait';
 
 // ─────────────────────────────────────────────
 const WHO = { x: 50, y: 38 };
@@ -135,19 +136,36 @@ function Suspects() {
 
       <h1 className="arrest-title">ARREST</h1>
 
-      {CORNER_KEYS.map((cls) => (
-        <div
-          key={cls}
-          className={`suspect-corner ${cls}`}
-          onClick={() => handlePolaroidClick(cls)}
-        >
-          <img src={CORNER_IMGS[cls]} alt="polaroid" className="polaroid-bg" />
-          <img src={suspectavatar} alt="character" className="character-avatar" />
-          {arrestedCorner === cls && (
-            <img src={jailHer} alt="jail" className="jailher-overlay" />
-          )}
-        </div>
-      ))}
+      {CORNER_KEYS.map((cls) => {
+        const profile = cornerProfiles[cls];
+        return (
+          <div
+            key={cls}
+            className={`suspect-corner ${cls}`}
+            onClick={() => handlePolaroidClick(cls)}
+          >
+            <img src={CORNER_IMGS[cls]} alt="polaroid" className="polaroid-bg" />
+            {profile?.portraitFeatures
+              ? (
+                <div style={{
+                  position: 'absolute',
+                  top: '23%',
+                  left: '54%',
+                  transform: 'translateX(-50%)',
+                  width: '47%',
+                  pointerEvents: 'none',
+                }}>
+                  <SuspectPortrait features={profile.portraitFeatures} size={267} />
+                </div>
+              )
+              : <img src={suspectavatar} alt="character" className="character-avatar" />
+            }
+            {arrestedCorner === cls && (
+              <img src={jailHer} alt="jail" className="jailher-overlay" />
+            )}
+          </div>
+        );
+      })}
 
       <img src={who}       alt="who"       className="who-center" />
       <img src={decor}     alt="decor"     className="decor" />

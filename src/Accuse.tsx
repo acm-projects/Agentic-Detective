@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from './useGameStore';
 import portraitGirl from './assets/portraitgirl.png';
+import SuspectPortrait from './components/SuspectPortrait';
 import './Accuse.css';
 
 function playWithFadeIn(src: string, fadeDuration = 1500): HTMLAudioElement {
@@ -274,6 +275,9 @@ function Accuse() {
   const { accusedName, isCorrect, trueKiller, explanation } = accusationResult;
   const caseCode = player?.caseReport?.caseId;
 
+  // Find the accused character's portrait features from player profiles
+  const accusedProfile = player?.characterProfiles?.find(p => p.name === accusedName);
+
   return (
     <div className={`accuse-page-bg ${phase === 'flash' ? 'accuse-flash' : 'accuse-dark'}`}>
       {phase === 'reveal' && isCorrect && <FireworksCanvas />}
@@ -310,11 +314,12 @@ function Accuse() {
             )}
 
             <div className="accuse-extra-box">
-              <img
-                src={portraitGirl}
-                alt={accusedName}
-                className="accuse-chosen-img"
-              />
+              {accusedProfile?.portraitFeatures
+                ? <div style={{ filter: 'grayscale(100%)' }}>
+                    <SuspectPortrait features={accusedProfile.portraitFeatures} size={440} />
+                  </div>
+                : <img src={portraitGirl} alt={accusedName} style={{ width: 267, height: 'auto' }} />
+              }
             </div>
           </div>
 

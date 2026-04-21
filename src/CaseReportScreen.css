@@ -146,7 +146,7 @@
 /* ── CLASSIFIED stamp ── */
 .stamp {
   position: absolute;
-  top: 50%;
+  top: 13%;
   right: -12px;
   transform: translateY(-50%) rotate(12deg);
   border: 3px solid var(--red-stamp);
