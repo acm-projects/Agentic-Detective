@@ -35,7 +35,7 @@
     /* subtle vignette */
     radial-gradient(ellipse at center, transparent 60%, rgba(80,60,20,0.18) 100%);
   color: var(--ink);
-  max-width: 740px;
+  max-width: 1000px;
   width: 100%;
   padding: 64px 72px;
   border-radius: 1px;
@@ -213,7 +213,7 @@
 
 /* ── Briefing ── */
 .briefing-text {
-  font-size: 15px;
+  font-size: 10px;
   line-height: 1.85;
   color: var(--ink);
   font-style: italic;

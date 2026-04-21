@@ -4,7 +4,7 @@ import { useNavigate } from "react-router";
 import { useState, useRef, useCallback, useEffect } from "react";
 import TutorialModal from './components/tutorial-modal/Tutorial';
 
-const LENS_SIZE = 200;   // diameter in px
+const LENS_SIZE = 350;   // diameter in px
 const ZOOM = 1.3;        // zoom level
 
 interface LensPos { x: number; y: number; }
