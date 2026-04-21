@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useGameStore } from './useGameStore';
 import './Community.css';
 
+import { DEMO_GAME_DOC } from './DemoCaseFile';
+
 interface CommunityProps {
     onCloseModal?: () => void;
 }
@@ -72,6 +74,16 @@ export default function Community({ onCloseModal }: CommunityProps) {
 
         setLoadingCase(true);
         setError(null);
+
+        if (trimmedCode.toUpperCase() === "DEMO-001") {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            setCurrentSessionId("DEMO-001");
+            setSelectedCase({ game: DEMO_GAME_DOC });
+            await startCase(navigate);
+            onCloseModal?.();
+            return;
+        }
+
         try {
             // If this signed-in user already has progress for this case ID, resume it instead of resetting.
             if (isSignedIn && userId) {

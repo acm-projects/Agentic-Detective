@@ -17,12 +17,12 @@ import { useGameStore } from "./useGameStore";
 import TutorialModal from './components/tutorial-modal/Tutorial';
 
 const CLUE_PROPS = [
-  { src: jewelImg,      width: '220px', bottom: '8%',  left: '55%',  transform: 'translateX(-50%) rotate(15deg)' },
+  { src: printsclueImg,      width: '220px', bottom: '8%',  left: '55%',  transform: 'translateX(-50%) rotate(15deg)' },
   { src: weappolImg,    width: '220px', bottom: '45%', right: '42%', transform: 'translateX(50%) rotate(10deg)' },
   { src: artImg,        width: '300px', top: '5%',     left: '3%',   transform: 'rotate(-4deg)' },
   { src: letterImg,     width: '290px', bottom: '40%', left: '38%',  transform: 'translateX(-50%) rotate(15deg)' },
   { src: ciphpolImg,    width: '300px', top: '63%',    left: '26%',  transform: 'rotate(4deg)' },
-  { src: printsclueImg, width: '300px', bottom: '12%', left: '15%',  transform: 'translateX(-50%) rotate(-10deg)' },
+  { src: jewelImg, width: '300px', bottom: '12%', left: '15%',  transform: 'translateX(-50%) rotate(-10deg)' },
 ];
 
 export default function ClueBook() {

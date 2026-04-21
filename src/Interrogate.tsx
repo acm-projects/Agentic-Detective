@@ -701,11 +701,11 @@ function Interrogate() {
             title="Clue Lost"
             bodyText="You failed the minigame, and have lost a key clue for your investigation."
           />
-          <PopulateNotificationBoard
+          {/* <PopulateNotificationBoard
             condition={accuseUnlockedNotice}
             title="Accusation Unlocked"
             bodyText="You can now make your accusation."
-          />
+          /> */}
           <PopulateNotificationBoard
             condition={Boolean(stressIncreaseNotice)}
             title={stressIncreaseNotice?.title ?? ''}
