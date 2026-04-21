@@ -36,7 +36,7 @@ export const DEMO_GAME_DOC = {
   caseData: {
     storyline: {
       trueSequenceOfEvents:
-        "During ACM Projects’ Presentation Night, PM Mohammad Mehrab was found unconscious after being struck from behind. Driven by a competitive grudge, co-Director Adarsh Goura committed the assault using a heavy History textbook belonging to VP Mercedes. Adarsh borrowed the book from co-Director Suhani Rana under the guise of killing a bug, used it to attack Mohammad in a hallway, and returned it to their prep room unnoticed. Despite his feigned shock, forensic analysis later uncovered Adarsh’s fingerprints in a two-handed grip on the book’s spine—placing him at the scene of the crime.",
+        "During ACM Projects’ Presentation Night, PM Mohammad Mehrab was found unconscious after being struck from behind. Driven by a competitive grudge, co-Director Adarsh Goura committed the assault using a heavy History textbook belonging to VP Mercedes. Adarsh borrowed the book from co-Director Suhani Rana under the guise of killing a bug, used it to attack Mohammad in a hallway, and returned it to their prep room unnoticed. Despite his feigned shock, forensic analysis later uncovered Adarsh’s large foot prints, placing him at the scene of the crime.",
       murdererName: "Adarsh Goura",
       murderWeapon: "History textbook",
       murderLocation: "Hallway outside ESCW 1.315",
@@ -75,7 +75,7 @@ export const DEMO_GAME_DOC = {
         occupation: "Co-Director of ACM Projects",
         relationshipToVictim: "Direct supervisor — Mohammad reported to her and Adarsh as a PM in ACM Projects",
         personality:
-          "Warm and slightly anxious. Talks fast when nervous. Genuinely wants to help but keeps hedging her answers because she feels guilty about lending the book. She mentions adarsh stepped out to use her book to kill a bug. Keep all responses to 1-3 sentences.",
+          "Warm and slightly anxious. Talks fast when nervous. Genuinely wants to help but keeps hedging her answers because she feels guilty about lending the book. She mentions Adarsh stepped out to use her book to kill a bug. Keep all responses to 1-3 sentences.",
         physicalDescription:
           "Long black hair with curtain bangs framing her face. Medium build, usually in a hoodie. Tends to fidget with her sleeves.",
         avatarId: "avatar_01",
@@ -242,7 +242,7 @@ export const DEMO_GAME_DOC = {
         suspicionLevel: "medium",
         portraitFeatures: {
           backHairFrameIndex: 2,
-          frontHairFrameIndex: 6,
+          frontHairFrameIndex: 2,
           eyesFrameIndex: 0,
           noseFrameIndex: 1,
           mouthFrameIndex: 2,

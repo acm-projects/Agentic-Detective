@@ -440,10 +440,10 @@ const isDemoHardcoded =
   session.conversationCount === 0;
 
 const demoResponses: Record<string, string> = {
-  "Adarsh Goura": "Okay — okay. I can't do this. I did it. I took the book from Suhani, I told her it was a joke, and I went and found Mohammad in the hallway. I hit him. I didn't plan it — I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I wiped the book and came back and pretended nothing happened. I'm sorry. I'm so sorry.",
-  "Suhani Rana": "I was right there the whole time, I swear. I had no idea what he was going to do with it. He just asked to borrow it, said it was a joke, and I handed it over. I didn't think anything of it. But he was gone way longer than I said. I've been trying not to think about that.",
-  "Elijah Walker": "Yeah, I noticed. Adarsh was gone for a while — longer than a bathroom break, longer than grabbing water. I didn't say anything because I didn't want to make it weird. But when I heard about Mohammad I kept thinking about that gap. It didn't sit right.",
-  "Mercedes Xiong": "I wasn't even there that night. I gave Suhani the book after our History class and went home. That's all I know. Though — and I probably should have said this sooner — the book was actually a library rental. I checked it out. I kept meaning to return it.",
+  "Adarsh Goura": "Okay — okay. I can't hide it anymore. I DID IT. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I'm so sorry.",
+  "Suhani Rana": "I can explain myself. Me and Mercedes share history together. I used it to study. However, I thought it was weird adarsh asked for it in the middle of build night preperation. He left in the middle of the night.",
+  "Elijah Walker": "Yeah, I noticed. Adarsh was gone for a while — longer than a bathroom break. I didn't say anything because I didn't want to make it weird. But when I heard about Mohammad I kept thinking about that gap. It didn't sit right.",
+  "Mercedes Xiong": "I wasn't even there that night. I gave Suhani the book after our History class and went home. She told me it was to study.",
 };
 
 const isDemoConfession = isDemoHardcoded && activeSuspectName === "Adarsh Goura";
@@ -451,7 +451,7 @@ const isDemoConfession = isDemoHardcoded && activeSuspectName === "Adarsh Goura"
 if (isDemoHardcoded) {
   const hardcodedText = demoResponses[activeSuspectName] ?? "";
 
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise(resolve => setTimeout(resolve, 750));
 
   const hardcodedMessage: ChatMessage = {
     role: "suspect",

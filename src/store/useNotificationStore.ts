@@ -66,7 +66,7 @@ const FLAVOR_TEXTS: Record<NotificationType, string[]> = {
 // ─────────────────────────────────────────────
 
 const WORDLE_DETECTIVE_WORDS = [
-  { answer: "THEIF", hint: "A person who steals" },
+  { answer: "PRINT", hint: "They didn't leave without a trace" },
 ];
 
 function generateWordleData(): WordleData {
