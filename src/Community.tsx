@@ -16,6 +16,8 @@ interface CommunityCase {
     author: string;
     description: string;
     gameplayRating: number;
+    theme?: string;
+    details?: string;
     updatedAt?: string | null;
 }
 
@@ -24,6 +26,32 @@ interface Contributor {
     caseCount: number;
     averageRating: number;
     bestRating: number;
+}
+
+const HARDCODED_LEADERBOARD: Contributor[] = [
+    { name: 'Swarna', caseCount: 7, averageRating: 3.9, bestRating: 5.0 },
+    { name: 'Nandy', caseCount: 6, averageRating: 3.8, bestRating: 5.0 },
+    { name: 'Ryan', caseCount: 5, averageRating: 4.7, bestRating: 4.9 },
+    { name: 'Urmi', caseCount: 4, averageRating: 2.6, bestRating: 4.8 },
+];
+
+const HARDCODED_FEATURED_CASES: CommunityCase[] = [
+    {
+        caseCode: 'BEAST-001',
+        title: 'Beast Boy Case',
+        author: 'Community Spotlight',
+        description: 'Track a prank gone wrong at Titans Tower and uncover which clue is actually a trap.',
+        gameplayRating: 4.8,
+        theme: 'Teen Titans Go',
+        details: 'Tone: chaotic comedy mystery · Difficulty: Medium',
+    },
+];
+
+function renderStars(rating: number) {
+    const filledStars = Math.round(rating);
+    return Array.from({ length: 5 }, (_, idx) => (
+        <span key={idx} className={`leaderboard-star ${idx < filledStars ? 'filled' : ''}`}>★</span>
+    ));
 }
 
 export default function Community({ onCloseModal }: CommunityProps) {
@@ -37,7 +65,6 @@ export default function Community({ onCloseModal }: CommunityProps) {
     const [loadingCase, setLoadingCase] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [communityCases, setCommunityCases] = useState<CommunityCase[]>([]);
-    const [contributors, setContributors] = useState<Contributor[]>([]);
     const [feedLoading, setFeedLoading] = useState(true);
     const [feedError, setFeedError] = useState<string | null>(null);
 
@@ -54,7 +81,6 @@ export default function Community({ onCloseModal }: CommunityProps) {
                 const data = await res.json();
                 if (!mounted) return;
                 setCommunityCases(Array.isArray(data.cases) ? data.cases : []);
-                setContributors(Array.isArray(data.contributors) ? data.contributors : []);
             } catch {
                 if (!mounted) return;
                 setFeedError('Could not load community feed right now.');
@@ -121,20 +147,19 @@ export default function Community({ onCloseModal }: CommunityProps) {
 
             <div className="community-section">
                 <h3>Featured Cases</h3>
-                <div className="community-grid">
+                <div className="community-grid community-featured-grid">
                     {feedLoading && <p className="community-share-help">Loading community cases...</p>}
-                    {!feedLoading && communityCases.length === 0 && !feedError && (
-                        <p className="community-share-help">No featured community cases yet. Rate a finished game and enable featuring.</p>
-                    )}
                     {!feedLoading && feedError && <p className="community-share-error">{feedError}</p>}
                     
-                    {!feedLoading && !feedError && communityCases.map((c) => (
+                    {!feedLoading && !feedError && [...HARDCODED_FEATURED_CASES, ...communityCases].map((c) => (
                         <div className="community-case-card" key={c.caseCode}>
                             <h4>{c.title}</h4>
                             <p className="case-author">By {c.author}</p>
+                            {c.theme && <p className="community-case-theme">Theme: {c.theme}</p>}
                             <p className="community-case-code">Case ID: {c.caseCode}</p>
                             <p className="community-case-rating">Rating: {c.gameplayRating || 0}/5</p>
                             <p className="case-description">{c.description}</p>
+                            {c.details && <p className="community-case-details">{c.details}</p>}
                             <button className="detective-button" onClick={() => handlePlayByCode(c.caseCode)}>
                                 Play
                             </button>
@@ -146,10 +171,21 @@ export default function Community({ onCloseModal }: CommunityProps) {
             <div className="community-section">
                 <h3>Community Leaderboard</h3>
                 <ul className="community-list">
-                    {feedLoading && <li className="community-share-help">Loading contributors...</li>}
-                    {!feedLoading && contributors.length === 0 && <li className="community-share-help">No leaderboard entries yet.</li>}
-                    {!feedLoading && contributors.map((contributor) => (
-                        <li key={contributor.name}>🔍 {contributor.name} · Avg {contributor.averageRating}/5 · Best {contributor.bestRating}/5 · {contributor.caseCount} featured case(s)</li>
+                    {HARDCODED_LEADERBOARD.map((contributor) => (
+                        <li key={contributor.name} className="leaderboard-row">
+                            <div className="leaderboard-rank">🏆</div>
+                            <div className="leaderboard-content">
+                                <div className="leaderboard-name">{contributor.name}</div>
+                                <div className="leaderboard-rating" aria-label={`Average rating ${contributor.averageRating} out of 5`}>
+                                    <span className="leaderboard-label">Avg</span>
+                                    <span className="leaderboard-stars">{renderStars(contributor.averageRating)}</span>
+                                    <span className="leaderboard-avg-value">{contributor.averageRating.toFixed(1)}</span>
+                                </div>
+                                <div className="leaderboard-meta">
+                                    Best {contributor.bestRating.toFixed(1)}/5 · {contributor.caseCount} featured case(s)
+                                </div>
+                            </div>
+                        </li>
                     ))}
                 </ul>
             </div>
