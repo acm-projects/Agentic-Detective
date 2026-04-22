@@ -100,10 +100,10 @@ function Message() {
   const handleClueBookClick = () => { clearFirstClueDiscovery(); navigate('/clues'); };
   const handleCaseFileClick = () => navigate('/report');
   const handleAccuseClick = () => {
-    if (!accusationUnlocked) {
-      alert('You need to discover at least 2 clues before making an accusation.');
-      return;
-    }
+    // if (!accusationUnlocked) {
+    //   alert('You need to discover at least 2 clues before making an accusation.');
+    //   return;
+    // }
 
     navigate('/suspects');
   };
@@ -175,7 +175,7 @@ function Message() {
 
           {/* 5. HANDCUFFS */}
           <DeskItemWithTooltip
-            className={highlightAccusationForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
+            // className={highlightAccusationForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
             src={handcuffs} 
             alt="Accusation" 
             tooltip="Make your accusation here."
