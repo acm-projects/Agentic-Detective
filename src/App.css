@@ -868,6 +868,7 @@ body {
 
 /* --- FOOTER --- */
 .footer-strip {
+  z-index: auto;
   width: 100%;
   margin-top: 12px;
   border-top: 4px double #000000;
@@ -888,6 +889,7 @@ body {
 
 /* --- Tips Section --- */
 .tip-section {
+  z-index:0;
   width: 100%;
   margin-top: 12px;
   border-top: 4px double #000000;

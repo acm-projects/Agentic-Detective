@@ -124,7 +124,7 @@ export default function CaseReportScreen() {
             <p className="victim-details">
               {report.victim.age} years old &nbsp;·&nbsp; {report.victim.occupation}
             </p>
-            <p style={{ fontSize: 13, lineHeight: 1.6, margin: '0 0 10px', color: 'var(--ink)' }}>
+            <p style={{ fontSize: 18, lineHeight: 1.6, margin: '0 0 10px', color: 'var(--ink)' }}>
               {report.victim.background}
             </p>
             <p className="cause-of-death">✦ {report.victim.causeOfDeath}</p>
@@ -194,7 +194,7 @@ function MagnifiedDocContent({ report }: { report: CaseReport }) {
           <p className="victim-details">
             {report.victim.age} years old &nbsp;·&nbsp; {report.victim.occupation}
           </p>
-          <p style={{ fontSize: 13, lineHeight: 1.6, margin: '0 0 10px', color: 'var(--ink)' }}>
+          <p style={{ fontSize: 18, lineHeight: 1.6, margin: '0 0 10px', color: 'var(--ink)' }}>
             {report.victim.background}
           </p>
           <p className="cause-of-death">✦ {report.victim.causeOfDeath}</p>
