@@ -302,13 +302,7 @@ function Accuse() {
                 : <img src={portraitGirl} alt={accusedName} style={{ width: 267, height: 'auto' }} />
               }
             </div>
-          </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="accuse-col-right">
-            {explanation && (
-              <p className="accuse-explanation">{explanation}</p>
-            )}
 
             {caseCode && (
               <p className="accuse-case-code">
@@ -360,17 +354,18 @@ function Accuse() {
               {feedbackError && <p className="accuse-feedback-error">{feedbackError}</p>}
             </div>
 
+            
+
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="accuse-col-right">
+            {explanation && (
+              <p className="accuse-explanation">{explanation}</p>
+            )}
             <div className="accuse-buttons">
               <button
                 className="detective-button"
-                onClick={() => {
-                  audioRefs.current.forEach(a => {
-                    a.pause();
-                    a.currentTime = 0;
-                  });
-                  resetGame();
-                  navigate('/');
-                }}
               >
                 New Case
               </button>
