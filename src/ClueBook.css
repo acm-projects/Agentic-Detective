@@ -159,7 +159,7 @@
 
 .clue-detail-name {
   font-family: 'Press Start 2P', monospace;
-  font-size: 13px;
+  font-size: 18px;
   color: var(--bg-paper);
   letter-spacing: 1px;
   line-height: 1.6;
@@ -171,7 +171,7 @@
 
 .clue-detail-location {
   font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
+  font-size: 12px;
   color: var(--px-gray);
   letter-spacing: 1px;
   margin-bottom: 6px;
@@ -202,7 +202,7 @@
 
 .clue-detail-description {
   font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
+  font-size: 20px;
   color: var(--bg-dark);
   line-height: 2.2;
   letter-spacing: 0.5px;
