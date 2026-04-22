@@ -440,8 +440,8 @@ const isDemoHardcoded =
   session.conversationCount === 0;
 
 const demoResponses: Record<string, string> = {
-  "Adarsh Goura": "Okay — okay. I can't hide it anymore. I DID IT. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I'm so sorry.",
-  "Suhani Rana": "I can explain myself. Me and Mercedes share history together. I used it to study. However, I thought it was weird adarsh asked for it in the middle of build night preperation. He left in the middle of the night.",
+  "Adarsh Goura": "Okay — okay. I can't hide it anymore. I did it. I took the book from Suhani, and I went and found Mohammad. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I'm so sorry.",
+  "Suhani Rana": "I can explain myself. Me and Mercedes share history together. I used it to study. However, I thought it was weird Adarsh asked for it in the middle of presentation night preparation. He left in the middle of prep and came back.",
   "Elijah Walker": "Yeah, I noticed. Adarsh was gone for a while — longer than a bathroom break. I didn't say anything because I didn't want to make it weird. But when I heard about Mohammad I kept thinking about that gap. It didn't sit right.",
   "Mercedes Xiong": "I wasn't even there that night. I gave Suhani the book after our History class and went home. She told me it was to study.",
 };

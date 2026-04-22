@@ -316,7 +316,7 @@ export const DEMO_GAME_DOC = {
         personalityBlurb:
           "Measured and a little guarded. Doesn't volunteer information she wasn't asked for.",
         claimedAlibi:
-          "Says she wasn't even there that night — she lent the book to Suhani in the afternoon and went home.",
+          "Says she wasn't even there that night — she lent the book to Suhani in the afternoon before build night.",
         physicalDescription:
           "Black hair in a ponytail with curtain bangs. Small frame, usually in a cardigan.",
         avatarId: "avatar_04",
@@ -340,7 +340,7 @@ export const DEMO_GAME_DOC = {
       caseTitle: "The Night of the Build",
       caseId: "DEMO-001",
       setting:
-        "ESCW 1.315, a student collaboration room at the University of Texas at Dallas, on the night of Build Projects Presentation Night.",
+        "ESCW 1.315, a student collaboration room at the University of Texas at Dallas, on the night of Projects Presentation Night.",
       date: "April 1st, 2025 — 7:42 PM",
       victim: {
         name: "Mohammad Mehrab",
@@ -353,12 +353,12 @@ export const DEMO_GAME_DOC = {
           "The hallway just outside ESCW 1.315, discovered by a passing student at approximately 8:05 PM.",
       },
       officialBriefing:
-        "Mohammad Mehrab, Project Manager of the 'Agentic Detective' team in ACM Projects, was found unconscious in the hallway outside ESCW 1.315 minutes before ACM Projects Presentation Night was set to begin. He was transported to the hospital but did not survive. The blow came from behind and was delivered by a blunt object. The four ACM leadership members present in the building at the time — Suhani Rana and Adarsh Goura (co-Directors of ACM Projects), Elijah Walker (President of ACM), and Mercedes Xiong (VP of ACM) — are the only individuals with access to that hallway during the relevant window. You have been brought in to find out who did it.",
+        "Mohammad Mehrab, Project Manager of the 'Agentic Detective' team in ACM Projects, was found unconscious in the hallway outside ESCW 1.315 minutes before ACM Projects Presentation Night was set to begin. He was transported to the hospital but did not survive. The blow came from behind and was delivered by a History text book. The four ACM leadership members present in the building at the time — Suhani Rana and Adarsh Goura (co-Directors of ACM Projects), Elijah Walker (President of ACM), and Mercedes Xiong (VP of ACM) — are the only individuals with access to that hallway during the relevant window. You have been brought in to find out who did it.",
       knownFacts: [
         "Mohammad Mehrab was the PM of the 'Agentic Detective' team, the frontrunner to win ACM Projects Presentation Night.",
-        "He was struck from behind with a blunt object between 7:38 and 7:50 PM in the hallway outside ESCW 1.315.",
+        "He was struck from behind with a History textbook between 7:38 and 7:50 PM in the hallway outside ESCW 1.315.",
         "Four ACM leadership members were in or near ESCW 1.315 during that window: Suhani Rana, Adarsh Goura, Elijah Walker, and Mercedes Xiong.",
-        "A History textbook was found near the scene — wiped down, but showing trace forensic evidence.",
+        "The History textbook was owned by Mercedes",
         "No external parties had access to the hallway during the relevant window.",
       ],
       openQuestions: [
