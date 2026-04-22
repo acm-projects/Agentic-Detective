@@ -145,7 +145,7 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame, seed, currentSessionId, player } = useGameStore();
+  const { accusationResult, resetGame, player } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
   const [gameplayRating, setGameplayRating] = useState<number | null>(null);
@@ -155,7 +155,7 @@ function Accuse() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const audioRefs = useRef<HTMLAudioElement[]>([]);
 
-  const saveFeedback = async (nextRating: number, nextFeatured: boolean) => {
+  const saveFeedback = async (nextRating: number, _nextFeatured: boolean) => {
     if (feedbackSaving) return;
 
     if (nextRating === null) {
@@ -163,31 +163,12 @@ function Accuse() {
       return;
     }
 
-    const sessionId =
-      currentSessionId ||
-      localStorage.getItem('lastSessionId') ||
-      '';
-
-    if (!sessionId) {
-      setFeedbackError('Could not determine case session id.');
-      return;
-    }
-
     setFeedbackSaving(true);
     setFeedbackError(null);
 
     try {
-      const res = await fetch(`http://localhost:3000/cases/${encodeURIComponent(sessionId)}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: seed?.userId ?? '',
-          gameplayRating: nextRating,
-          featured: nextFeatured,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Keep rating/featured behavior local and static.
+      await Promise.resolve(nextRating);
       setFeedbackSaved(true);
     } catch {
       setFeedbackError('Could not save rating right now.');
