@@ -353,12 +353,12 @@ export const DEMO_GAME_DOC = {
           "The hallway just outside ESCW 1.315, discovered by a passing student at approximately 8:05 PM.",
       },
       officialBriefing:
-        "Mohammad Mehrab, Project Manager of the 'Agentic Detective' team in ACM Projects, was found unconscious in the hallway outside ESCW 1.315 minutes before ACM Projects Presentation Night was set to begin. He was transported to the hospital but did not survive. The blow came from behind and was delivered by a blunt object. The four ACM leadership members present in the building at the time — Suhani Rana and Adarsh Goura (co-Directors of ACM Projects), Elijah Walker (President of ACM), and Mercedes Xiong (VP of ACM) — are the only individuals with access to that hallway during the relevant window. You have been brought in to find out who did it. The known murder weapon was a textbook owned by Mercedes",
+        "Mohammad Mehrab, Project Manager of the 'Agentic Detective' team in ACM Projects, was found unconscious in the hallway outside ESCW 1.315 minutes before ACM Projects Presentation Night was set to begin. He was transported to the hospital but did not survive. The blow came from behind and was delivered by a History text book. The four ACM leadership members present in the building at the time — Suhani Rana and Adarsh Goura (co-Directors of ACM Projects), Elijah Walker (President of ACM), and Mercedes Xiong (VP of ACM) — are the only individuals with access to that hallway during the relevant window. You have been brought in to find out who did it.",
       knownFacts: [
         "Mohammad Mehrab was the PM of the 'Agentic Detective' team, the frontrunner to win ACM Projects Presentation Night.",
-        "He was struck from behind with a blunt object between 7:38 and 7:50 PM in the hallway outside ESCW 1.315.",
+        "He was struck from behind with a History textbook between 7:38 and 7:50 PM in the hallway outside ESCW 1.315.",
         "Four ACM leadership members were in or near ESCW 1.315 during that window: Suhani Rana, Adarsh Goura, Elijah Walker, and Mercedes Xiong.",
-        "A History textbook was found near the scene — wiped down, but showing trace forensic evidence.",
+        "The History textbook was owned by Mercedes",
         "No external parties had access to the hallway during the relevant window.",
       ],
       openQuestions: [
