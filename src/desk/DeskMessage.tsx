@@ -175,7 +175,7 @@ function Message() {
 
           {/* 5. HANDCUFFS */}
           <DeskItemWithTooltip
-            // className={highlightAccusationForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
+            className={highlightAccusationForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
             src={handcuffs} 
             alt="Accusation" 
             tooltip="Make your accusation here."
