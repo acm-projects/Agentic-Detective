@@ -168,12 +168,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       try {
         const { backend, player } = await generateCaseFile(seed);
 
-        let voiceIds: Record<string, string> = {};
-        try {
-          voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
-        } catch (err) {
-          console.warn("[VoiceSelector] Failed, continuing without voices:", err);
-        }
+        const voiceIds: Record<string, string> = {
+          "Suhani Rana": "cG2STrgPqih9Cw8EwnaA",
+          "Adarsh Goura": "UgBBYS2sOqTuMpoF3BR0",
+          "Elijah Walker": "7EzWGsX10sAS4c9m9cPf",
+          "Mercedes Xiong": "exsUS4vynmxd379XN4yO",
+        };
         set({
           backend,
           player,
@@ -289,8 +289,8 @@ set(state => ({
       history: isDemoAdarsh ? [
         {
           role: "suspect" as const,
-          text: "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I pretended nothing happened. I'm so sorry.",
-          displayText: "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I pretended nothing happened. I'm so sorry.",
+          text: "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry.",
+          displayText: "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was win everyone and I just... I panicked. I pretended nothing happened. I'm so sorry.",
           timestamp: Date.now(),
         }
       ] : [],
@@ -440,10 +440,10 @@ const isDemoHardcoded =
   session.conversationCount === 0;
 
 const demoResponses: Record<string, string> = {
-  "Adarsh Goura": "Okay — okay. I can't hide it anymore. I did it. I took the book from Suhani, and I went and found Mohammad. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I'm so sorry.",
-  "Suhani Rana": "I can explain myself. Me and Mercedes share history together. I used it to study. However, I thought it was weird Adarsh asked for it in the middle of presentation night preparation. He left in the middle of prep and came back.",
-  "Elijah Walker": "Yeah, I noticed. Adarsh was gone for a while — longer than a bathroom break. I didn't say anything because I didn't want to make it weird. But when I heard about Mohammad I kept thinking about that gap. It didn't sit right.",
-  "Mercedes Xiong": "I wasn't even there that night. I gave Suhani the book after our History class and went home. She told me it was to study.",
+  "Adarsh Goura": "I can't hide it. I took Suhani's book, found Mohammad, and hit him. I panicked — I couldn't let his team win. I'm sorry.",
+"Suhani Rana": "Mercedes and I have history. I borrowed her book to study, but Adarsh asked for it mid-prep and disappeared.",
+"Elijah Walker": "Adarsh was gone longer than a bathroom break. I didn't say anything, but when I heard about Mohammad, it didn't sit right.",
+"Mercedes Xiong": "I wasn't there. I gave Suhani the book after History class and went home. She said it was to study.",
 };
 
 const isDemoConfession = isDemoHardcoded && activeSuspectName === "Adarsh Goura";
@@ -583,10 +583,10 @@ const raw = await callModel({
 const suspectMessage: ChatMessage = {
   role: "suspect",
   text: isDemoConfession
-    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I pretended nothing happened. I'm so sorry."
+    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry."
     : responseText,
   displayText: isDemoConfession
-    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to beat everyone and I just... I panicked. I pretended nothing happened. I'm so sorry."
+    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry."
     : "",
   timestamp: Date.now(),
 };

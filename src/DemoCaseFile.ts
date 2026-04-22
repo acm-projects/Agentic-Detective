@@ -75,7 +75,7 @@ export const DEMO_GAME_DOC = {
         occupation: "Co-Director of ACM Projects",
         relationshipToVictim: "Direct supervisor — Mohammad reported to her and Adarsh as a PM in ACM Projects",
         personality:
-          "Warm and slightly anxious. Talks fast when nervous. Genuinely wants to help but keeps hedging her answers because she feels guilty about lending the book. She mentions Adarsh stepped out to use her book to kill a bug. Keep all responses to 1-3 sentences.",
+          "Warm and slightly anxious. Talks fast when nervous. Genuinely wants to help but keeps hedging her answers because she feels guilty about lending the book. She mentions Adarsh stepped out to use her book to kill a bug.",
         physicalDescription:
           "Long black hair with curtain bangs framing her face. Medium build, usually in a hoodie. Tends to fidget with her sleeves.",
         avatarId: "avatar_01",
@@ -114,7 +114,7 @@ export const DEMO_GAME_DOC = {
         occupation: "Co-Director of ACM Projects",
         relationshipToVictim: "Direct supervisor — Mohammad was a PM who reported to Adarsh and Suhani",
         personality:
-          "Laid-back and straightforward. Answers questions directly. Doesn't embellish. Will admit if he didn't notice something. Keep all responses to 1-3 sentences.",
+          "Laid-back and straightforward. Answers questions directly. Doesn't embellish. Will admit if he didn't notice something.",
         physicalDescription:
           "Medium build with hair styled up and slightly gelled. Sharp eyes. Usually in a fitted t-shirt. Has a habit of crossing his arms when standing.",
         avatarId: "avatar_03",
@@ -140,7 +140,7 @@ export const DEMO_GAME_DOC = {
           noseFrameIndex: 1,
           mouthFrameIndex: 4,
           hairColor: "#1A0A00",
-          skinColor: "#B57A50",
+          skinColor: "#876045",
           eyeColor: "#2E1A0E",
           shirtColor: "#2D3748",
           lipColor: "#9A6050",
@@ -155,7 +155,7 @@ export const DEMO_GAME_DOC = {
         occupation: "President of ACM",
         relationshipToVictim: "Club president — Mohammad was a PM in ACM Projects, a division Elijah oversees",
         personality:
-          "Laid-back and straightforward. Answers questions directly. Doesn't embellish. Will admit if he didn't notice something. Keep all responses to 1-3 sentences.",
+          "Laid-back and straightforward. Answers questions directly. Doesn't embellish. Will admit if he didn't notice something.",
         physicalDescription:
           "Short curly hair, tall frame, often in joggers and a plain t-shirt. Relaxed posture. Has a large shoe size — size 13.",
         avatarId: "avatar_02",
@@ -193,7 +193,7 @@ export const DEMO_GAME_DOC = {
         occupation: "Vice President of ACM",
         relationshipToVictim: "Club VP — Mohammad was a PM in ACM Projects, a division under ACM leadership",
         personality:
-          "Measured and a little guarded. Doesn't volunteer information she wasn't asked for. Not unfriendly — just selective. Keep all responses to 1-3 sentences.",
+          "Measured and a little guarded. Doesn't volunteer information she wasn't asked for. Not unfriendly — just selective.",
         physicalDescription:
           "Black hair in a ponytail with curtain bangs. Small frame, usually in a cardigan. Tends to speak in short, precise sentences.",
         avatarId: "avatar_04",
@@ -358,15 +358,14 @@ export const DEMO_GAME_DOC = {
         "Mohammad Mehrab was the PM of the 'Agentic Detective' team, the frontrunner to win ACM Projects Presentation Night.",
         "He was struck from behind with a History textbook between 7:38 and 7:50 PM in the hallway outside ESCW 1.315.",
         "Four ACM leadership members were in or near ESCW 1.315 during that window: Suhani Rana, Adarsh Goura, Elijah Walker, and Mercedes Xiong.",
-        "The History textbook was owned by Mercedes",
         "No external parties had access to the hallway during the relevant window.",
+        "The History textbook was owned by Mercedes",
       ],
       openQuestions: [
-        "Who had access to the History textbook in the hour before the murder?",
         "Which ACM leadership member was absent from ESCW 1.315 during the estimated time of death?",
         "Did anyone in ACM leadership have a reason to prevent Mohammad's team from winning?",
         "Why does the book appear deliberately wiped if it was just borrowed casually?",
-        "Whose footprint matches the large impression found near the body?",
+        "Who had access to the History textbook in the hour before the murder?",
       ],
     },
 

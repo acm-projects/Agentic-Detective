@@ -168,11 +168,6 @@ function Accuse() {
       localStorage.getItem('lastSessionId') ||
       '';
 
-    if (!sessionId) {
-      setFeedbackError('Could not determine case session id.');
-      return;
-    }
-
     setFeedbackSaving(true);
     setFeedbackError(null);
 
@@ -189,8 +184,6 @@ function Accuse() {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setFeedbackSaved(true);
-    } catch {
-      setFeedbackError('Could not save rating right now.');
     } finally {
       setFeedbackSaving(false);
     }
