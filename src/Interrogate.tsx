@@ -214,7 +214,6 @@ function Interrogate() {
   // const [recentlyLostClueName, setRecentlyLostClueName] = useState<string | null>(null);
   const previousLostCountRef = useRef(lostClueCount);
   const [newClueLost, setNewClueLost] = useState(false);
-  const [accuseUnlockedNotice, setAccuseUnlockNotice] = useState(false);
   const [stressIncreaseNotice, setStressIncreaseNotice] = useState<{
     title: string;
     bodyText: React.ReactNode;
@@ -376,22 +375,7 @@ function Interrogate() {
   }, [newClueLost]);
 
   // Accusation Notification
-  useEffect(() => {
-    const wasLocked = !previousAccusationUnlockedRef.current;
 
-    if (wasLocked && accusationUnlocked) {
-      setAccuseUnlockNotice(true);
-
-      const id = window.setTimeout(() => {
-        setAccuseUnlockNotice(false);
-      }, 10000);
-
-      previousAccusationUnlockedRef.current = accusationUnlocked;
-      return () => window.clearTimeout(id);
-    }
-
-    previousAccusationUnlockedRef.current = accusationUnlocked;
-  }, [accusationUnlocked]);
 
   // ── Save note ──────────────────────────────────────────
   const saveNote = useCallback(async () => {
@@ -618,51 +602,6 @@ function Interrogate() {
             </menu>
           </form>
         </dialog>
-
-        {!accusationUnlocked ? (
-          <Tooltip<HTMLButtonElement>
-            content={accusationLockTooltip}
-            className="item-tooltip"
-            placement="right"
-            offsetPx={8}
-          >
-            {({ ref, getReferenceProps }) => (
-              <button
-                ref={ref}
-                type="button"
-                className="disabled-button"
-                aria-label="Accuse locked"
-                {...getReferenceProps()}
-              >
-                Accuse
-              </button>
-            )}
-          </Tooltip>
-        ) : (
-          <button
-            onClick={() =>
-              (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
-            }
-          >
-            Accuse
-          </button>
-        )}
-        {accusationUnlocked && (
-          <dialog className="nes-dialog" id="accuse">
-            <form method="dialog">
-              <h3>Make Your Accusation</h3>
-              <p>Who do you think did it?</p>
-              {profiles.map(p => (
-                <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
-                  {p.name}
-                </button>
-              ))}
-              <menu className="dialog-menu">
-                <button>Cancel</button>
-              </menu>
-            </form>
-          </dialog>
-        )}
 
         {isFirstTimePlayer && (
           <button onClick={handleReopenTutorial}>Reopen Tutorial?</button>
