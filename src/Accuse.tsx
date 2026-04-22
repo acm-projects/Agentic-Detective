@@ -145,7 +145,7 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame, seed, currentSessionId, player } = useGameStore();
+  const { accusationResult, player } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
   const [gameplayRating, setGameplayRating] = useState<number | null>(null);
@@ -155,7 +155,7 @@ function Accuse() {
   const [feedbackError, setFeedbackError] = useState<string | null>(null);
   const audioRefs = useRef<HTMLAudioElement[]>([]);
 
-  const saveFeedback = async (nextRating: number, nextFeatured: boolean) => {
+  const saveFeedback = async (nextRating: number, _nextFeatured: boolean) => {
     if (feedbackSaving) return;
 
     if (nextRating === null) {
@@ -163,26 +163,12 @@ function Accuse() {
       return;
     }
 
-    const sessionId =
-      currentSessionId ||
-      localStorage.getItem('lastSessionId') ||
-      '';
-
     setFeedbackSaving(true);
     setFeedbackError(null);
 
     try {
-      const res = await fetch(`http://localhost:3000/cases/${encodeURIComponent(sessionId)}/feedback`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: seed?.userId ?? '',
-          gameplayRating: nextRating,
-          featured: nextFeatured,
-        }),
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Keep rating/featured behavior local and static.
+      await Promise.resolve(nextRating);
       setFeedbackSaved(true);
     } finally {
       setFeedbackSaving(false);
@@ -282,7 +268,15 @@ function Accuse() {
         </div>
 
         <h1 className={`accuse-verdict ${isCorrect ? 'accuse-guilty' : 'accuse-innocent'}`}>
-          {isCorrect ? `${accusedName} was guilty` : `${accusedName} was innocent`}
+          {isCorrect ? (
+            <span className="accuse-verdict-stack">
+              <span className="accuse-verdict-name">{accusedName}</span>
+              <span className="accuse-verdict-name">found</span>
+              <span className="accuse-verdict-guilty">GUILTY</span>
+            </span>
+          ) : (
+            `${accusedName} was innocent`
+          )}
         </h1>
 
         <div className="title-divider" />
@@ -314,13 +308,7 @@ function Accuse() {
                 : <img src={portraitGirl} alt={accusedName} style={{ width: 267, height: 'auto' }} />
               }
             </div>
-          </div>
 
-          {/* RIGHT COLUMN */}
-          <div className="accuse-col-right">
-            {explanation && (
-              <p className="accuse-explanation">{explanation}</p>
-            )}
 
             {caseCode && (
               <p className="accuse-case-code">
@@ -372,17 +360,18 @@ function Accuse() {
               {feedbackError && <p className="accuse-feedback-error">{feedbackError}</p>}
             </div>
 
+            
+
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="accuse-col-right">
+            {explanation && (
+              <p className="accuse-explanation">{explanation}</p>
+            )}
             <div className="accuse-buttons">
               <button
                 className="detective-button"
-                onClick={() => {
-                  audioRefs.current.forEach(a => {
-                    a.pause();
-                    a.currentTime = 0;
-                  });
-                  resetGame();
-                  navigate('/');
-                }}
               >
                 New Case
               </button>

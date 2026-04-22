@@ -1,6 +1,6 @@
 import { useAuth } from '@clerk/react-router';
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useGameStore } from './useGameStore';
 import './Community.css';
 
@@ -45,6 +45,15 @@ const HARDCODED_FEATURED_CASES: CommunityCase[] = [
         theme: 'Teen Titans Go',
         details: 'Tone: chaotic comedy mystery · Difficulty: Medium',
     },
+    {
+        caseCode: 'ACM-001',
+        title: 'The Night of the Build',
+        author: 'Community Spotlight',
+        description: 'A late-night build collapses minutes before demo day. Save the build night.',
+        gameplayRating: 4.9,
+        theme: 'ACM Projects',
+        details: 'Difficulty: Hard',
+    },
 ];
 
 function renderStars(rating: number) {
@@ -64,34 +73,6 @@ export default function Community({ onCloseModal }: CommunityProps) {
     const [caseCode, setCaseCode] = useState('');
     const [loadingCase, setLoadingCase] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [communityCases, setCommunityCases] = useState<CommunityCase[]>([]);
-    const [feedLoading, setFeedLoading] = useState(true);
-    const [feedError, setFeedError] = useState<string | null>(null);
-
-    useEffect(() => {
-        let mounted = true;
-
-        const loadFeed = async () => {
-            setFeedLoading(true);
-            setFeedError(null);
-            try {
-                const res = await fetch('http://localhost:3000/community/feed?limit=12');
-                console.log("Community feed response:", res.status, res.statusText);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                if (!mounted) return;
-                setCommunityCases(Array.isArray(data.cases) ? data.cases : []);
-            } catch {
-                if (!mounted) return;
-                setFeedError('Could not load community feed right now.');
-            } finally {
-                if (mounted) setFeedLoading(false);
-            }
-        };
-
-        loadFeed();
-        return () => { mounted = false; };
-    }, []);
 
     const handlePlayByCode = async (inputCode?: string) => {
         const trimmedCode = (inputCode ?? caseCode).trim();
@@ -148,10 +129,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
             <div className="community-section">
                 <h3>Featured Cases</h3>
                 <div className="community-grid community-featured-grid">
-                    {feedLoading && <p className="community-share-help">Loading community cases...</p>}
-                    {!feedLoading && feedError && <p className="community-share-error">{feedError}</p>}
-                    
-                    {!feedLoading && !feedError && [...HARDCODED_FEATURED_CASES, ...communityCases].map((c) => (
+                    {HARDCODED_FEATURED_CASES.map((c) => (
                         <div className="community-case-card" key={c.caseCode}>
                             <h4>{c.title}</h4>
                             <p className="case-author">By {c.author}</p>
@@ -166,6 +144,9 @@ export default function Community({ onCloseModal }: CommunityProps) {
                         </div>
                     ))}
                 </div>
+                <button type="button" className="community-featured-link-button">
+                    View all featured cases
+                </button>
             </div>
 
             <div className="community-section">

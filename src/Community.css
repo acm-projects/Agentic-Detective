@@ -55,7 +55,7 @@
 }
 
 .community-featured-grid {
-  grid-template-columns: 2fr 3fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .community-featured-grid .community-case-card {
@@ -140,6 +140,28 @@
   font-size: 0.6rem;
   margin-top: 8px;
   transform: none;
+}
+
+.community-featured-link-button {
+  margin-top: 6px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #4b0000;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.community-featured-link-button:hover {
+  color: #2f2f2f;
+}
+
+.community-featured-link-button:focus-visible {
+  outline: 2px solid #101010;
+  outline-offset: 3px;
 }
 
 .community-section .detective-button {
