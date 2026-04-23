@@ -273,7 +273,7 @@ function Accuse() {
           {isCorrect ? (
             <span className="accuse-verdict-stack">
               <span className="accuse-verdict-name">{accusedName}</span>
-              <span className="accuse-verdict-name">found</span>
+              <span className="accuse-verdict-word">found</span>
               <span className="accuse-verdict-guilty">GUILTY</span>
             </span>
           ) : (
