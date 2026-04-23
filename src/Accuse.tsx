@@ -374,6 +374,7 @@ function Accuse() {
             <div className="accuse-buttons">
               <button
                 className="detective-button"
+                onClick={() => navigate('/')}
               >
                 New Case
               </button>
