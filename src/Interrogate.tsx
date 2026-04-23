@@ -855,7 +855,7 @@ function Interrogate() {
           EVIDENCE LOCKER MODAL — draggable, independent
       ══════════════════════════════════════════════════ */}
       {cluesModalOpen && (
-        <div className="clue-modal" style={{ left: cluePos.x, top: cluePos.y }}>
+        <div className="clue-modal locker-modal" style={{ left: cluePos.x, top: cluePos.y }}>
           <div className="clue-modal-handle" onMouseDown={clueMouseDown}>
             <span className="clue-modal-title">LOCKER</span>
             <div className="clue-modal-handle-dots">
