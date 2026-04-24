@@ -282,7 +282,7 @@ Set the story at ESCW 1.315 during ACM Projects Presentation Night.`;
                 aria-haspopup="dialog"
                 aria-controls="saved-games-dialog"
               >
-                <FaSave /> Saved Games
+                <FaSave /> Archived Cases
               </button>
 
 
@@ -352,7 +352,7 @@ Set the story at ESCW 1.315 during ACM Projects Presentation Night.`;
 
           <div className="slider-container">
             <label className="label">
-              Gameplay Duration: {DURATION_OPTIONS.find((option) => option.value === timePeriod)?.label} ({DURATION_OPTIONS.find((option) => option.value === timePeriod)?.value})
+              Case Duration: {DURATION_OPTIONS.find((option) => option.value === timePeriod)?.label} ({DURATION_OPTIONS.find((option) => option.value === timePeriod)?.value})
             </label>
             <div className='duration-toggle' role="group" aria-label="Duration selector">
               {DURATION_OPTIONS.map((option) => (
