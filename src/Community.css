@@ -393,14 +393,14 @@
   margin: 0;
   padding: 0;
   border: none;
-  background: rgba(0, 0, 0, 0.95);
-  z-index: 99999;
+  background-color: rgba(16, 16, 16, 0.85);
+  z-index: 9999;
   overflow: hidden;
 }
 
 .community-modal::backdrop {
-  background: rgba(0, 0, 0, 0.95);
-  z-index: 99999;
+  background: rgba(16, 16, 16, 0.85);
+  z-index: 9999;
 }
 
 .community-modal[open] {
@@ -411,15 +411,11 @@
 
 .community-modal-content {
   position: relative;
-  background-color: #e7dcc4;
-  background-image:
-    url("https://www.transparenttextures.com/patterns/paper-fibers.png"),
-    url("https://www.transparenttextures.com/patterns/noise.png");
-  background-repeat: repeat, repeat;
-  border: 3px solid #101010;
-  border-radius: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-  max-width: 65vw;
+  background-color: rgba(0, 0, 0, 0.939);
+  border: 2px solid #8b2222;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgb(0, 0, 0);
+  width: min(940px, 94vw);
   max-height: 90vh;
   overflow-y: auto;
   padding: 20px;
@@ -451,5 +447,5 @@
 }
 
 .community-modal-close:hover {
-  color: #000;
+  color: #f51414;
 }
