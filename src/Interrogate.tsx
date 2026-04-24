@@ -312,7 +312,7 @@ function Interrogate() {
       const data: SuspectNote[] = await res.json();
       setNotesList(data);
     } catch {
-      setNotesError('Could not load notes.');
+      // setNotesError('Could not load notes.');
     } finally {
       setNotesLoading(false);
     }
@@ -397,7 +397,7 @@ function Interrogate() {
       setNoteInputOpen(false);
       await loadNotes();
     } catch {
-      setNotesError('Failed to save. Try again.');
+      // setNotesError('Failed to save. Try again.');
     } finally {
       setNoteSaving(false);
     }
@@ -1037,7 +1037,7 @@ function Interrogate() {
           NOTEBOOK / SUSPECT PROFILE — draggable, independent
       ══════════════════════════════════════════════════ */}
       {showNotebook && (
-        <div className="clue-modal notebook-drag-modal" style={{ left: notebookPos.x, top: notebookPos.y }}>
+        <div className="clue-modal notebook-drag-modal suspect-modal" style={{ left: notebookPos.x, top: notebookPos.y }}>
           <div className="clue-modal-handle" onMouseDown={notebookMouseDown}>
             <span className="clue-modal-title">SUSPECT PROFILE</span>
             <div className="clue-modal-handle-dots">
