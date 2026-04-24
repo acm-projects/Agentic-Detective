@@ -972,11 +972,7 @@ a { color: inherit; text-decoration: none; }
   border-color: #6d675c;
 }
 
-/* .locker-modal .clue-modal-close {
-  background: #f8f2e7;
-  border: 2px solid var(--ink-color);
-  color: var(--ink-color);
-} */
+
 
 .locker-modal .clue-modal-close:hover {
   background: var(--ink-color);
