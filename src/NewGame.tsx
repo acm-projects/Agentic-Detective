@@ -77,7 +77,7 @@ function NewGame() {
 
   const { userId, isSignedIn, isLoaded } = useAuth();
   const promptText = `Create a case involving Mohammad Mehrab, Adarsh Goura, Suhani Rana, Elijah Walker, and Mercedes Xiong.
-Set the story at ESCW 1.315 during ACM Projects Presentation Night.`;
+Set the story at ecsw 1.315 during ACM Projects Presentation Night.`;
 
   // Prevent body scroll when community modal is open
   useEffect(() => {

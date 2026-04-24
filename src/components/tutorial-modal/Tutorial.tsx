@@ -4,7 +4,7 @@ import { useGameStore } from '../../useGameStore';
 import './tutorial.css';
 
 interface Step {
-    route: '/desk' | '/report' | '/clues' | '/interrogate' | '/accuse';
+    route: '/interrogate';
     routeLabel: string;
     badge: string;
     title: string;
@@ -15,50 +15,6 @@ interface Step {
 }
 
 const STEPS: Step[] = [
-    {
-        route: '/desk',
-        routeLabel: 'Desk',
-        badge: 'Desk Briefing',
-        title: 'Welcome to your detective desk',
-        icon: 'DESK',
-        description: [
-            'Review your file, inspect clue materials, and move between investigation tools from here.',
-            'This board is your control center for the whole case.'
-        ],
-    },
-    {
-        route: '/report',
-        routeLabel: 'Case Report',
-        badge: 'Case File',
-        title: 'Read the case report first',
-        icon: 'REPORT',
-        description: [
-            'Open the Case File on the desk to review your official briefing and known facts.',
-            'Start with the report before moving to deeper evidence review.'
-        ]
-    },
-    {
-        route: '/desk',
-        routeLabel: 'Desk',
-        badge: 'Accusation',
-        title: 'Make your final accusation here',
-        icon: 'ACCUSE',
-        description: [
-            'Once you have enough information to make a decision, open the accusation page to arrest a suspect.',
-            'Remember, you can only accuse once. Be careful.'
-        ],
-    },
-    {
-        route: '/clues',
-        routeLabel: 'Clues',
-        badge: 'Evidence Review',
-        title: 'Use the clue board to connect evidence',
-        icon: 'CLUES',
-        description: [
-            'Examine discovered clues and track what each item can implicate.',
-            'You can then present those clues during interrogation.'
-        ]
-    },
     {
         route: '/interrogate',
         routeLabel: 'Interrogate',
@@ -126,8 +82,7 @@ const STEPS: Step[] = [
 
 const TUTORIAL_KEY = 'tutorialSeen';
 const TUTORIAL_STEP_KEY = 'tutorialStep';
-const TUTORIAL_READY_KEY = 'tutorialReadyAfterReport';
-const TUTORIAL_DESK_ENTERED_KEY = 'tutorialDeskEntered';
+const TUTORIAL_AUTO_STARTED_KEY = 'tutorialAutoStarted';
 
 const clampStep = (stepValue: number) => {
     if (!Number.isFinite(stepValue)) return 0;
@@ -160,26 +115,27 @@ function TutorialModal() {
     const [visible, setVisible] = useState(false);
     const [step, setStep] = useState(0);
     const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
-    const isSupportedRoute =
-        location.pathname === '/desk' ||
-        location.pathname === '/report' ||
-        location.pathname === '/clues' ||
-        location.pathname === '/interrogate';
+    const isSupportedRoute = location.pathname === '/interrogate';
 
     useEffect(() => {
         if (!isFirstTimePlayer) return;
+        if (location.pathname !== '/interrogate') return;
 
         const hasSeenTutorial = localStorage.getItem(TUTORIAL_KEY) === 'true';
         if (hasSeenTutorial) return;
-        const readyAfterReport = localStorage.getItem(TUTORIAL_READY_KEY) === 'true';
-        if (!readyAfterReport) return;
-        const deskEntered = localStorage.getItem(TUTORIAL_DESK_ENTERED_KEY) === 'true';
-        if (!deskEntered) return;
 
-        const savedStep = Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? 0);
+        const rawSavedStep = localStorage.getItem(TUTORIAL_STEP_KEY);
+        const hasAutoStarted = sessionStorage.getItem(TUTORIAL_AUTO_STARTED_KEY) === 'true';
+
+        if (rawSavedStep === null && hasAutoStarted) {
+            return;
+        }
+
+        const savedStep = Number(rawSavedStep ?? 0);
         setStep(clampStep(savedStep));
+        sessionStorage.setItem(TUTORIAL_AUTO_STARTED_KEY, 'true');
         setVisible(true);
-    }, [isFirstTimePlayer]);
+    }, [isFirstTimePlayer, location.pathname]);
 
     useEffect(() => {
         if (!visible) return;
@@ -222,7 +178,6 @@ function TutorialModal() {
     const dismiss = () => {
         localStorage.setItem(TUTORIAL_KEY, 'true');
         localStorage.removeItem(TUTORIAL_STEP_KEY);
-        localStorage.removeItem(TUTORIAL_READY_KEY);
         setVisible(false);
         setSpotlightRect(null);
     };
@@ -253,13 +208,6 @@ function TutorialModal() {
             return;
         }
 
-        if ((current.route === '/report' && location.pathname === '/report') ||
-            (current.route === '/clues' && location.pathname === '/clues')) {
-            next();
-            navigate('/desk');
-            return;
-        }
-
         if (isLast) {
             dismiss();
             return;
@@ -272,10 +220,6 @@ function TutorialModal() {
     const progressPercent = ((step + 1) / STEPS.length) * 100;
     const calloutStyle = spotlightRect ? getCalloutStyle(spotlightRect) : null;
     const activeSpotlight = spotlightRect;
-    const shouldDockLeftForNotes =
-        current.highlightTarget === 'tutorial-notes' &&
-        location.pathname === '/interrogate';
-
     return (
         <>
             {isHighlightStep && activeSpotlight && (
@@ -314,7 +258,7 @@ function TutorialModal() {
             )}
 
             <section
-                className={`tutorial-dock ${shouldDockLeftForNotes ? 'tutorial-dock--left' : ''}`}
+                className='tutorial-dock'
                 aria-live='polite'
             >
                 <div className='tutorial-dock-header'>

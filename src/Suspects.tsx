@@ -51,7 +51,7 @@ const dot = (x: number, y: number): React.CSSProperties => ({
 
 function Suspects() {
   const navigate = useNavigate();
-  const { player, makeAccusation, accusationUnlocked } = useGameStore();
+  const { player, makeAccusation } = useGameStore();
   const profiles = player?.characterProfiles ?? [];
 
   const cornerProfiles: Partial<Record<CornerCls, typeof profiles[number]>> = {};
@@ -160,6 +160,9 @@ function Suspects() {
               )
               : <img src={suspectavatar} alt="character" className="character-avatar" />
             }
+            <div className="polaroid-name">
+              {(profile?.name ?? 'Unknown Suspect').toUpperCase()}
+            </div>
             {arrestedCorner === cls && (
               <img src={jailHer} alt="jail" className="jailher-overlay" />
             )}

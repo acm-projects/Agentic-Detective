@@ -10,7 +10,7 @@
 
     position: fixed;
     right: 18px;
-    bottom: 18px;
+    top: 18px;
     z-index: 12020;
     width: min(460px, calc(100vw - 20px));
     padding: 12px;
@@ -22,11 +22,6 @@
     box-shadow:
         6px 6px 0 rgba(0, 0, 0, 0.45),
         inset 0 0 0 2px rgba(255, 255, 255, 0.28);
-}
-
-.tutorial-dock.tutorial-dock--left {
-    left: 18px;
-    right: auto;
 }
 
 .tutorial-dock-header {
