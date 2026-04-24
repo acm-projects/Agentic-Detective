@@ -256,6 +256,55 @@
   top: 1px;
 }
 
+.report-evidence-spotlight {
+  margin: 18px 0 8px;
+  padding: 18px 20px;
+  border: 3px solid rgba(139, 26, 26, 0.8);
+  border-left: 10px solid var(--red);
+  background: #0000000a;
+}
+
+.report-evidence-kicker {
+  margin: 0 0 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2.4px;
+  font-size: 22px;
+  color: var(--red);
+}
+
+.report-evidence-line {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 122px 1fr;
+  gap: 12px;
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink);
+  align-items: start;
+}
+
+.report-evidence-line + .report-evidence-line {
+  margin-top: 6px;
+}
+
+.report-evidence-label {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1.5px;
+  color: var(--ink-faded);
+}
+
+.report-evidence-value {
+  display: block;
+  color: var(--ink);
+}
+
+.report-evidence-key {
+  font-family: 'Special Elite', cursive;
+  font-style: italic;
+  font-weight: 700;
+  color: rgba(139, 26, 26, 0.8);
+}
+
 /* ── Divider ── */
 .report-divider {
   border: none;
@@ -372,6 +421,9 @@
     linear-gradient(135deg, rgba(200,170,80,0.5) 0%, transparent 50%, rgba(80,60,20,0.3) 100%)
     border-box;
   -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  mask:
     linear-gradient(#fff 0 0) padding-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: destination-out;
