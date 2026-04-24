@@ -712,9 +712,14 @@ a { color: inherit; text-decoration: none; }
   background: #355f8c;
   color: #e7f1ff;
 }
+.suspect-modal .clue-modal-title::before{
+  content: 'SUSPECT';
+  background: #357e51;
+  color: #e7f1ff;
+}
 
 .clue-modal-handle {
-  background: #14161e;
+  background: #f5efe2;
   border-bottom: 1px solid #23262f;
   padding: 10px 22px;
   cursor: grab;
@@ -735,7 +740,7 @@ a { color: inherit; text-decoration: none; }
 
 .clue-modal-title {
   font-size: 10px; letter-spacing: 0.2em;
-  color: #8a95aa; text-transform: uppercase;
+  color: #3f3f3f; text-transform: uppercase;
   flex: 1; display: flex; align-items: center; gap: 8px;
 }
 .clue-modal-title::before {
@@ -754,7 +759,7 @@ a { color: inherit; text-decoration: none; }
 .clue-modal-close {
   width: 20px; height: 20px; border-radius: 50%;
   background: #2e3448; border: none;
-  color: #8a95aa; font-size: 11px; cursor: pointer;
+  color: #f5efe2; font-size: 11px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   line-height: 1; flex-shrink: 0;
 }
@@ -967,11 +972,11 @@ a { color: inherit; text-decoration: none; }
   border-color: #6d675c;
 }
 
-.locker-modal .clue-modal-close {
+/* .locker-modal .clue-modal-close {
   background: #f8f2e7;
   border: 2px solid var(--ink-color);
   color: var(--ink-color);
-}
+} */
 
 .locker-modal .clue-modal-close:hover {
   background: var(--ink-color);
