@@ -705,16 +705,21 @@ a { color: inherit; text-decoration: none; }
 /* Notebook modal is a bit wider */
 .notebook-drag-modal { width: 420px; }
 
-.notes-drag-modal { width: 380px; }
+.notes-drag-modal { width: 420px; }
 
 .notes-modal .clue-modal-title::before {
   content: 'NOTES';
   background: #355f8c;
   color: #e7f1ff;
 }
+.suspect-modal .clue-modal-title::before{
+  content: 'SUSPECT';
+  background: #357e51;
+  color: #e7f1ff;
+}
 
 .clue-modal-handle {
-  background: #14161e;
+  background: #f5efe2;
   border-bottom: 1px solid #23262f;
   padding: 10px 22px;
   cursor: grab;
@@ -735,7 +740,7 @@ a { color: inherit; text-decoration: none; }
 
 .clue-modal-title {
   font-size: 10px; letter-spacing: 0.2em;
-  color: #8a95aa; text-transform: uppercase;
+  color: #3f3f3f; text-transform: uppercase;
   flex: 1; display: flex; align-items: center; gap: 8px;
 }
 .clue-modal-title::before {
@@ -754,7 +759,7 @@ a { color: inherit; text-decoration: none; }
 .clue-modal-close {
   width: 20px; height: 20px; border-radius: 50%;
   background: #2e3448; border: none;
-  color: #8a95aa; font-size: 11px; cursor: pointer;
+  color: #f5efe2; font-size: 11px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   line-height: 1; flex-shrink: 0;
 }
@@ -885,63 +890,193 @@ a { color: inherit; text-decoration: none; }
 ═══════════════════════════════════════════ */
 .notes-suspect-bar {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0.45em 0.75em;
-  border-bottom: 2px dashed rgba(255,255,255,0.15);
-  background: #0e1016; gap: 0.5em;
+  padding: 0.55em 0.75em;
+  border-bottom: 2px dashed var(--ink-color);
+  background: #f3ede2;
+  gap: 0.5em;
 }
 .notes-suspect-name {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.52rem; letter-spacing: 0.08em;
-  color: #8a95aa; flex: 1;
+  font-size: 0.5rem;
+  letter-spacing: 0.08em;
+  color: var(--ink-color);
+  flex: 1;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .notes-reload-btn {
-  background: transparent; border: 1px solid #3a4358;
-  color: #6a7a9a; font-size: 1.1rem; line-height: 1;
-  padding: 0.05em 0.35em; cursor: pointer;
+  background: var(--white);
+  border: 2px solid var(--ink-color);
+  color: var(--ink-color);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.05em 0.35em;
+  cursor: pointer;
   font-family: 'VT323', monospace;
-  transition: background 0.1s, color 0.1s; flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+  flex-shrink: 0;
 }
-.notes-reload-btn:hover { background: #1e2235; color: #aab8cc; }
+.notes-reload-btn:hover { background: var(--ink-color); color: var(--white); }
 
 .notes-modal-body {
-  display: flex; flex-direction: column; gap: 5px;
-  background: #13151c;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--bg-paper);
+  max-height: min(72vh, 560px);
+  overflow-y: auto;
+  padding: clamp(0.55rem, 1.3vw, 0.9rem);
 }
 
 .notes-modal .clue-modal-footer {
+  background: #ece4d5;
+  border-top: 2px solid var(--ink-color);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  color: #3f3f3f;
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
 }
 
+.notes-modal .clue-modal-footer b {
+  color: var(--ink-color);
+}
+
+.locker-modal {
+  background: var(--bg-paper);
+  border: 3px solid var(--ink-color);
+  border-top-width: 3px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.7);
+  border-radius: 0;
+}
+
+.locker-modal .clue-modal-handle {
+  background: #ece4d5;
+  border-bottom: 2px solid var(--ink-color);
+}
+
+.locker-modal .clue-modal-title {
+  color: #3f3f3f;
+}
+
+.locker-modal .clue-modal-title::before {
+  background: #7f1a1a;
+  color: #fff0d8;
+}
+
+.locker-modal .clue-modal-handle::before,
+.locker-modal .clue-modal-handle::after,
+.locker-modal .clue-modal-handle-dots span {
+  background: #8f8b80;
+  border-color: #6d675c;
+}
+
+
+
+.locker-modal .clue-modal-close:hover {
+  background: var(--ink-color);
+  color: var(--white);
+}
+
+.locker-modal .clue-modal-hint {
+  color: #4a463d;
+  border-bottom: 2px dashed #7a7467;
+  background: repeating-linear-gradient(
+    90deg,
+    #efe7d7 0px,
+    #efe7d7 6px,
+    #e5dcc9 6px,
+    #e5dcc9 8px
+  );
+}
+
+.locker-modal .clue-modal-body {
+  background: #f5efe2;
+}
+
+.locker-modal .clue-modal-body::-webkit-scrollbar-track {
+  background: #e2d8c4;
+}
+
+.locker-modal .clue-modal-body::-webkit-scrollbar-thumb {
+  background: #8d7e64;
+}
+
+.locker-modal .clue-modal-empty {
+  color: #5e5648;
+}
+
+.locker-modal .clue-modal-footer {
+  background: #ece4d5;
+  border-top: 2px solid var(--ink-color);
+  color: #4a463d;
+}
+
+.locker-modal .clue-modal-footer b {
+  color: var(--ink-color);
+}
+
+.locker-modal .clue-modal-button {
+  border: 2px solid var(--ink-color);
+  border-top: 2px solid var(--ink-color);
+  background: #f8f2e7;
+  color: var(--ink-color);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.65);
+}
+
+.locker-modal .clue-modal-button:hover {
+  background: var(--ink-color);
+  border-color: var(--ink-color);
+  color: var(--white);
+}
+
 .notes-entry {
-  background: #1e2235; border-left: 3px solid #4a6a9a;
-  padding: 7px 10px; display: flex; flex-direction: column; gap: 4px;
+  background: var(--white);
+  border: 3px solid var(--ink-color);
+  box-shadow: 4px 4px 0 var(--ink-color);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 .notes-entry-text {
   font-family: 'VT323', monospace;
   font-size: 1.15rem;          /* bumped up */
   margin: 0; line-height: 1.45;
-  color: #c8d0e0; white-space: pre-wrap; word-break: break-word;
+  color: var(--ink-color);
+  white-space: pre-wrap;
+  word-break: break-word;
   user-select: text;
 }
 .notes-entry-time {
-  font-size: 0.85rem; color: #3a4560; align-self: flex-end;
+  font-size: 0.85rem;
+  color: #5a5a5a;
+  align-self: flex-end;
   font-family: 'Courier New', monospace;
 }
 
 .notes-input-panel {
-  padding: 8px 10px; border-top: 1px solid #1e2130;
-  background: #14161e; display: flex; flex-direction: column; gap: 6px;
+  padding: 8px 10px;
+  border-top: 2px solid var(--ink-color);
+  background: #ece4d5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .notes-textarea {
-  width: 100%; box-sizing: border-box;
-  background: #0e1016; border: 1px solid #2a3448;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--white);
+  border: 2px solid var(--ink-color);
   padding: 7px 9px;
-  font-family: 'VT323', monospace; font-size: 1.15rem;
-  line-height: 1.5; resize: vertical; color: #c8d0e0;
+  font-family: 'VT323', monospace;
+  font-size: 1.15rem;
+  line-height: 1.5;
+  resize: vertical;
+  color: var(--ink-color);
 }
-.notes-textarea:focus { outline: none; border-color: #4a6a9a; }
+.notes-textarea:focus { outline: none; border-color: #7a2f2f; }
 
 .notes-error {
   font-family: 'Press Start 2P', cursive; font-size: 0.4rem;
@@ -950,30 +1085,43 @@ a { color: inherit; text-decoration: none; }
 
 .notes-input-actions { display: flex; align-items: center; gap: 6px; }
 .notes-hint {
-  font-family: 'Courier New', monospace; font-size: 0.85rem;
-  color: #3a4560; flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #555;
+  flex: 1;
 }
 .notes-cancel-btn,
 .notes-save-btn {
-  font-family: 'Press Start 2P', cursive; font-size: 0.42rem;
-  text-transform: uppercase; padding: 5px 9px;
-  border: 1px solid #3a4358; cursor: pointer;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.42rem;
+  text-transform: uppercase;
+  padding: 5px 9px;
+  border: 2px solid var(--ink-color);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink-color);
   transition: background 0.1s, color 0.1s;
 }
-.notes-cancel-btn { background: #1e2235; color: #8a95aa; }
-.notes-cancel-btn:hover { background: #2e3448; color: #c8d0e0; }
-.notes-save-btn { background: #4a6a9a; color: #fff; border-color: #4a6a9a; }
-.notes-save-btn:hover:not(:disabled) { background: #1e7e34; border-color: #1e7e34; }
+.notes-cancel-btn { background: #f8f2e7; color: #111; }
+.notes-cancel-btn:hover { background: #e8dcc8; }
+.notes-save-btn { background: #2d4c82; color: #fff; }
+.notes-save-btn:hover:not(:disabled) { background: #1e7e34; }
 .notes-save-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .notes-add-btn {
-  font-family: 'Press Start 2P', cursive; font-size: 0.44rem;
-  text-transform: uppercase; padding: 7px 11px;
-  background: #1e2235; border: 1px solid #3a4358;
-  color: #6a8aaa; cursor: pointer; margin-left: auto;
-  letter-spacing: 0.04em; transition: background 0.1s, color 0.1s;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.44rem;
+  text-transform: uppercase;
+  padding: 7px 11px;
+  background: #f8f2e7;
+  border: 2px solid var(--ink-color);
+  color: var(--ink-color);
+  cursor: pointer;
+  margin-left: auto;
+  letter-spacing: 0.04em;
+  box-shadow: 2px 2px 0 var(--ink-color);
+  transition: background 0.1s, color 0.1s;
 }
-.notes-add-btn:hover { background: #2e3a52; color: #aac0e0; }
+.notes-add-btn:hover { background: var(--ink-color); color: var(--white); }
 
 /* ═══════════════════════════════════════════
    NOTEBOOK (SUSPECT PROFILE) draggable modal

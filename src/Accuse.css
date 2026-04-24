@@ -6,9 +6,12 @@
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
+  height: 100vh;
   padding: 0;
   box-sizing: border-box;
   transition: background-color 2.5s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .accuse-flash {
@@ -39,22 +42,59 @@
 }
 
 .accuse-verdict {
-  font-size: clamp(2.2rem, 4vw, 2.6rem);
+  font-size: clamp(2rem, 5vw, 3.2rem);
   font-family: 'Press Start 2P', cursive;
   letter-spacing: -1px;
   text-transform: uppercase;
-  margin: 2px 0;
+  margin: 4px 0 8px;
   width: 100%;
   text-align: center;
   white-space: normal;
   overflow-wrap: break-word;
   word-break: break-word;
   text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+  line-height: 1.1;
 }
 
 .accuse-guilty {
   /* color: #004f0d; */
   color: #7a1f1f;
+}
+
+.accuse-verdict-name {
+  display: block;
+  font-size: clamp(0.95rem, 2.2vw, 1.6rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin: 0 0 0.4rem 0;
+}
+
+.accuse-verdict-word{
+  display: block;
+  font-size: clamp(0.6rem, 1.1vw, 0.85rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  margin: 0 0 0.4rem 0;
+}
+
+.accuse-verdict-stack {
+  display: grid;
+  grid-auto-flow: row;
+  justify-items: center;
+  align-items: start;
+  row-gap: 0.35rem;
+}
+
+.accuse-verdict-guilty {
+  display: block;
+  font-size: clamp(4rem, 15vw, 8rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  margin: 0;
+  color: #7a1f1f;
+  text-shadow:
+    3px 3px 0 rgba(0, 0, 0, 0.12),
+    1px 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .accuse-innocent {

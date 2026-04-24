@@ -145,7 +145,7 @@ function PoliceSiren() {
 
 function Accuse() {
   const navigate = useNavigate();
-  const { accusationResult, resetGame, player } = useGameStore();
+  const { accusationResult, player } = useGameStore();
 
   const [phase, setPhase] = useState<'flash' | 'dark' | 'reveal'>('flash');
   const [gameplayRating, setGameplayRating] = useState<number | null>(null);
@@ -170,8 +170,6 @@ function Accuse() {
       // Keep rating/featured behavior local and static.
       await Promise.resolve(nextRating);
       setFeedbackSaved(true);
-    } catch {
-      setFeedbackError('Could not save rating right now.');
     } finally {
       setFeedbackSaving(false);
     }
@@ -270,7 +268,15 @@ function Accuse() {
         </div>
 
         <h1 className={`accuse-verdict ${isCorrect ? 'accuse-guilty' : 'accuse-innocent'}`}>
-          {isCorrect ? `${accusedName} was guilty` : `${accusedName} was innocent`}
+          {isCorrect ? (
+            <span className="accuse-verdict-stack">
+              <span className="accuse-verdict-name">{accusedName}</span>
+              <span className="accuse-verdict-word">found</span>
+              <span className="accuse-verdict-guilty">GUILTY</span>
+            </span>
+          ) : (
+            `${accusedName} was innocent`
+          )}
         </h1>
 
         <div className="title-divider" />
@@ -366,6 +372,7 @@ function Accuse() {
             <div className="accuse-buttons">
               <button
                 className="detective-button"
+                onClick={() => navigate('/')}
               >
                 New Case
               </button>

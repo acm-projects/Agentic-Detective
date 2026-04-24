@@ -100,10 +100,10 @@ function Message() {
   const handleClueBookClick = () => { clearFirstClueDiscovery(); navigate('/clues'); };
   const handleCaseFileClick = () => navigate('/report');
   const handleAccuseClick = () => {
-    if (!accusationUnlocked) {
-      alert('You need to discover at least 2 clues before making an accusation.');
-      return;
-    }
+    // if (!accusationUnlocked) {
+    //   alert('You need to discover at least 2 clues before making an accusation.');
+    //   return;
+    // }
 
     navigate('/suspects');
   };
