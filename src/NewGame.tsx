@@ -74,9 +74,10 @@ function NewGame() {
   const [showCommunity, setShowCommunity] = useState(false);
   const [promptExampleShown, setPromptExampleShown] = useState(false);
   const [promptExample, setPromptExample] = useState("");
-  const [tipExample, setTipExample] = useState("");
 
   const { userId, isSignedIn, isLoaded } = useAuth();
+  const promptText = `Create a case involving Mohammad Mehrab, Adarsh Goura, Suhani Rana, Elijah Walker, and Mercedes Xiong.
+Set the story at ESCW 1.315 during ACM Projects Presentation Night.`;
 
   // Prevent body scroll when community modal is open
   useEffect(() => {
@@ -93,12 +94,6 @@ function NewGame() {
   useEffect(() => {
     clearLoadedCase();
   }, [clearLoadedCase]);
-
-    // Add code to assign prompt example to a variable
-        useEffect(() => {
-          const randomTipIndex = Math.floor(Math.random() * TIP_EXAMPLES.length);
-          setTipExample(TIP_EXAMPLES[randomTipIndex]);
-        }, []);
 
     useEffect(() => {
       if (promptExampleShown) return;
@@ -328,6 +323,16 @@ function NewGame() {
                 src={loadingImage}
                 alt="Loading"
                 className="layered-photo chat-layered-photo"
+                role="button"
+                tabIndex={0}
+                aria-label="Use prompt example"
+                onClick={() => setPersonalization(promptText)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setPersonalization(promptText);
+                  }
+                }}
               />
             </div>
 
