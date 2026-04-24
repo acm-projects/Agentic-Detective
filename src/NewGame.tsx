@@ -456,7 +456,7 @@ function NewGame() {
         </div>
       </div>
 
-      {!showSavedGames && (
+      {/* {!showSavedGames && (
         <div className='tip-section'>
         <div className='tip-title'>
           Gameplay Tip:
@@ -465,7 +465,7 @@ function NewGame() {
           <h6>{tipExample}</h6>
         </div>
       </div>
-      )}
+      )} */}
       
 
       <div className="footer-strip">
