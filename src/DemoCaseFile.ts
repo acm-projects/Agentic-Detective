@@ -39,16 +39,16 @@ export const DEMO_GAME_DOC = {
         "During ACM Projects’ Presentation Night, PM Mohammad Mehrab was found unconscious after being struck from behind. Driven by a competitive grudge, co-Director Adarsh Goura committed the assault using a heavy History textbook belonging to VP Mercedes. Adarsh borrowed the book from co-Director Suhani Rana under the guise of killing a bug, used it to attack Mohammad in a hallway, and returned it to their prep room unnoticed. Despite his feigned shock, forensic analysis later uncovered Adarsh’s large foot prints, placing him at the scene of the crime.",
       murdererName: "Adarsh Goura",
       murderWeapon: "History textbook",
-      murderLocation: "Hallway outside ESCW 1.315",
+      murderLocation: "Hallway outside ECSW 1.315",
       murderTime: "7:42 PM",
       hiddenBackstory:
         "As co-Director of ACM Projects, Adarsh had a hand in selecting which teams competed and which PMs got resources. He had quietly underfunded Mohammad's team mid-semester hoping they'd fall behind — but the Agentic Detective team pushed through anyway and built something genuinely impressive. When it became clear Mohammad was going to win, Adarsh realized his sabotage had failed. Winning Presentation Night as a PM would elevate Mohammad's standing in ACM above Adarsh's own. He couldn't allow that.",
       contradictions: [
         {
           suspectName: "Adarsh Goura",
-          theirClaim: "I was in ESCW 1.315 the whole evening getting things ready. I barely left the room.",
+          theirClaim: "I was in ECSW 1.315 the whole evening getting things ready. I barely left the room.",
           actualTruth:
-            "Adarsh was absent from ESCW 1.315 for over fifteen minutes starting at approximately 7:38 PM — long enough to find Mohammad in the hallway, commit the murder, wipe the book, and return.",
+            "Adarsh was absent from ECSW 1.315 for over fifteen minutes starting at approximately 7:38 PM — long enough to find Mohammad in the hallway, commit the murder, wipe the book, and return.",
           exposedByClueId: "clue_6",
           exposedByDialogue:
             "Adarsh insists he never really left the room, but both Suhani and Elijah recall him being gone for an unusually long time before returning with the book.",
@@ -80,7 +80,7 @@ export const DEMO_GAME_DOC = {
           "Long black hair with curtain bangs framing her face. Medium build, usually in a hoodie. Tends to fidget with her sleeves.",
         avatarId: "avatar_01",
         trueAlibi:
-          "Was in ESCW 1.315 the entire evening doing pre-event setup alongside Elijah and Mercedes. She lent the History textbook to Adarsh without a second thought and didn't realize how long he was actually gone.",
+          "Was in ECSW 1.315 the entire evening doing pre-event setup alongside Elijah and Mercedes. She lent the History textbook to Adarsh without a second thought and didn't realize how long he was actually gone.",
         claimedAlibi:
           "Says she was in the room all evening working on final logistics for Presentation Night. Admits she lent Adarsh the book but insists it was only for a minute or two.",
         trueMotive: null,
@@ -119,9 +119,9 @@ export const DEMO_GAME_DOC = {
           "Medium build with hair styled up and slightly gelled. Sharp eyes. Usually in a fitted t-shirt. Has a habit of crossing his arms when standing.",
         avatarId: "avatar_03",
         trueAlibi:
-          "Was absent from ESCW 1.315 for roughly fifteen minutes starting at 7:38 PM. Used that window to find Mohammad alone in the hallway and strike him with the textbook, then wiped the book and returned.",
+          "Was absent from ECSW 1.315 for roughly fifteen minutes starting at 7:38 PM. Used that window to find Mohammad alone in the hallway and strike him with the textbook, then wiped the book and returned.",
         claimedAlibi:
-          "Claims he was in ESCW 1.315 all evening helping coordinate the event. Says he borrowed the book from Suhani as a joke — to 'kill a bug' — and returned it almost immediately.",
+          "Claims he was in ECSW 1.315 all evening helping coordinate the event. Says he borrowed the book from Suhani as a joke — to 'kill a bug' — and returned it almost immediately.",
         trueMotive:
           "As co-Director of ACM Projects, Adarsh had tried to quietly underfund Mohammad's team mid-semester to stall their progress. When the Agentic Detective team pushed through anyway and became the clear favorite to win Presentation Night, Adarsh realized his sabotage had failed. He couldn't let a PM he'd tried to sideline win the biggest night of the semester.",
         isGuilty: true,
@@ -160,7 +160,7 @@ export const DEMO_GAME_DOC = {
           "Short curly hair, tall frame, often in joggers and a plain t-shirt. Relaxed posture. Has a large shoe size — size 13.",
         avatarId: "avatar_02",
         trueAlibi:
-          "Was in ESCW 1.315 the entire evening handling logistics for Presentation Night alongside Suhani and Mercedes. Did notice Adarsh was gone for longer than expected but assumed he'd stepped out to handle something.",
+          "Was in ECSW 1.315 the entire evening handling logistics for Presentation Night alongside Suhani and Mercedes. Did notice Adarsh was gone for longer than expected but assumed he'd stepped out to handle something.",
         claimedAlibi:
           "Was in the room all evening. Can confirm Suhani was there too. Remembers Adarsh leaving and coming back — though he's fuzzy on exactly how long he was out.",
         trueMotive: null,
@@ -198,7 +198,7 @@ export const DEMO_GAME_DOC = {
           "Black hair in a ponytail with curtain bangs. Small frame, usually in a cardigan. Tends to speak in short, precise sentences.",
         avatarId: "avatar_04",
         trueAlibi:
-          "Was not present in ESCW 1.315 the night of the murder — she had lent Suhani the History textbook earlier that afternoon after their shared class and left campus by 6:30 PM for a family dinner.",
+          "Was not present in ECSW 1.315 the night of the murder — she had lent Suhani the History textbook earlier that afternoon after their shared class and left campus by 6:30 PM for a family dinner.",
         claimedAlibi:
           "Says she wasn't there that evening. She lent Suhani the book after class and went home.",
         trueMotive: null,
@@ -262,7 +262,7 @@ export const DEMO_GAME_DOC = {
         personalityBlurb:
           "Outwardly chill and self-deprecating, but brittle under pressure.",
         claimedAlibi:
-          "Claims he was in ESCW 1.315 all evening. Says he borrowed the book just to squash a bug — a joke — and returned it almost immediately.",
+          "Claims he was in ECSW 1.315 all evening. Says he borrowed the book just to squash a bug — a joke — and returned it almost immediately.",
         physicalDescription:
           "Medium build with hair styled up and slightly gelled. Sharp eyes.",
         avatarId: "avatar_03",
@@ -340,7 +340,7 @@ export const DEMO_GAME_DOC = {
       caseTitle: "The Night of the Build",
       caseId: "DEMO-001",
       setting:
-        "ESCW 1.315, a student collaboration room at the University of Texas at Dallas, on the night of Projects Presentation Night.",
+        "ECSW 1.315, a student collaboration room at the University of Texas at Dallas, on the night of Projects Presentation Night.",
       date: "April 1st, 2025 — 7:42 PM",
       victim: {
         name: "Mohammad Mehrab",
@@ -348,21 +348,21 @@ export const DEMO_GAME_DOC = {
         occupation: "Project Manager in ACM Projects — led the 'Agentic Detective' team",
         background:
           "A driven and well-liked junior who had earned the PM role in ACM Projects after a strong application cycle. He led the 'Agentic Detective' team through a full semester build and had been receiving glowing feedback from advisors. His team was widely considered the frontrunner to win Presentation Night — a distinction that put him in the crosshairs of someone with more to lose.",
-        causeOfDeath: "Blunt force trauma to the back of the head.",
+        causeOfDeath: "Blunt force trauma to the back of the head with a textbook.",
         bodyFoundAt:
-          "The hallway just outside ESCW 1.315, discovered by a passing student at approximately 8:05 PM.",
+          "The hallway just outside ECSW 1.315, discovered by a passing student at approximately 8:05 PM.",
       },
       officialBriefing:
-        "Mohammad Mehrab, Project Manager of the 'Agentic Detective' team in ACM Projects, was found unconscious in the hallway outside ESCW 1.315 minutes before ACM Projects Presentation Night was set to begin. He was transported to the hospital but did not survive. The blow came from behind and was delivered by a History text book. The four ACM leadership members present in the building at the time — Suhani Rana and Adarsh Goura (co-Directors of ACM Projects), Elijah Walker (President of ACM), and Mercedes Xiong (VP of ACM) — are the only individuals with access to that hallway during the relevant window. You have been brought in to find out who did it.",
+        "Mohammad Mehrab, Project Manager of the 'Agentic Detective' team in ACM Projects, was found unconscious in the hallway outside ECSW 1.315 minutes before ACM Projects Presentation Night was set to begin. He was transported to the hospital but did not survive. The blow came from behind and was delivered by a History text book. The four ACM leadership members present in the building at the time — Suhani Rana and Adarsh Goura (co-Directors of ACM Projects), Elijah Walker (President of ACM), and Mercedes Xiong (VP of ACM) — are the only individuals with access to that hallway during the relevant window. You have been brought in to find out who did it.",
       knownFacts: [
         "Mohammad Mehrab was the PM of the 'Agentic Detective' team, the frontrunner to win ACM Projects Presentation Night.",
-        "He was struck from behind with a History textbook between 7:38 and 7:50 PM in the hallway outside ESCW 1.315.",
-        "Four ACM leadership members were in or near ESCW 1.315 during that window: Suhani Rana, Adarsh Goura, Elijah Walker, and Mercedes Xiong.",
+        "He was struck from behind with a History textbook between 7:38 and 7:50 PM in the hallway outside ECSW 1.315.",
+        "Four ACM leadership members were in or near ECSW 1.315 during that window: Suhani Rana, Adarsh Goura, Elijah Walker, and Mercedes Xiong.",
         "No external parties had access to the hallway during the relevant window.",
         "The History textbook was owned by Mercedes",
       ],
       openQuestions: [
-        "Which ACM leadership member was absent from ESCW 1.315 during the estimated time of death?",
+        "Which ACM leadership member was absent from ECSW 1.315 during the estimated time of death?",
         "Did anyone in ACM leadership have a reason to prevent Mohammad's team from winning?",
         "Why does the book appear deliberately wiped if it was just borrowed casually?",
         "Who had access to the History textbook in the hour before the murder?",
@@ -375,7 +375,7 @@ export const DEMO_GAME_DOC = {
         name: "The Large Footprint",
         description:
           "A single large shoe impression was found in a dusty patch of floor near Mohammad's body. Campus security estimated it at a men's size 12–13. Of the four suspects, only Elijah Walker wears a size 13 — but Elijah was corroborated inside the room at that time. Adarsh wears a size 12.",
-        location: "Hallway floor outside ESCW 1.315, approximately two meters from the body",
+        location: "Hallway floor outside ECSW 1.315, approximately two meters from the body",
         couldImplicateSuspects: ["Elijah Walker", "Adarsh Goura"],
         severity: "medium",
         isDecisive: false,
@@ -387,7 +387,7 @@ export const DEMO_GAME_DOC = {
         name: "The Large Footprint",
         description:
           "A single large shoe impression was found in a dusty patch of floor near Mohammad's body. Campus security estimated it at a men's size 12–13. Of the four suspects, only Elijah Walker wears a size 13 — but Elijah was corroborated inside the room at that time. Adarsh wears a size 12.",
-        location: "Hallway floor outside ESCW 1.315, approximately two meters from the body",
+        location: "Hallway floor outside ECSW 1.315, approximately two meters from the body",
         couldImplicateSuspects: ["Elijah Walker", "Adarsh Goura"],
         severity: "medium",
         isDecisive: false,
@@ -399,7 +399,7 @@ export const DEMO_GAME_DOC = {
         name: "The Large Footprint",
         description:
           "A single large shoe impression was found in a dusty patch of floor near Mohammad's body. Campus security estimated it at a men's size 12–13. Of the four suspects, only Elijah Walker wears a size 13 — but Elijah was corroborated inside the room at that time. Adarsh wears a size 12.",
-        location: "Hallway floor outside ESCW 1.315, approximately two meters from the body",
+        location: "Hallway floor outside ECSW 1.315, approximately two meters from the body",
         couldImplicateSuspects: ["Elijah Walker", "Adarsh Goura"],
         severity: "medium",
         isDecisive: false,
@@ -411,7 +411,7 @@ export const DEMO_GAME_DOC = {
         name: "The Large Footprint",
         description:
           "A single large shoe impression was found in a dusty patch of floor near Mohammad's body. Campus security estimated it at a men's size 12–13. Of the four suspects, only Elijah Walker wears a size 13 — but Elijah was corroborated inside the room at that time. Adarsh wears a size 12.",
-        location: "Hallway floor outside ESCW 1.315, approximately two meters from the body",
+        location: "Hallway floor outside ECSW 1.315, approximately two meters from the body",
         couldImplicateSuspects: ["Elijah Walker", "Adarsh Goura"],
         severity: "medium",
         isDecisive: false,
@@ -423,7 +423,7 @@ export const DEMO_GAME_DOC = {
         name: "The Large Footprint",
         description:
           "A single large shoe impression was found in a dusty patch of floor near Mohammad's body. Campus security estimated it at a men's size 12–13. Of the four suspects, only Elijah Walker wears a size 13 — but Elijah was corroborated inside the room at that time. Adarsh wears a size 12.",
-        location: "Hallway floor outside ESCW 1.315, approximately two meters from the body",
+        location: "Hallway floor outside ECSW 1.315, approximately two meters from the body",
         couldImplicateSuspects: ["Elijah Walker", "Adarsh Goura"],
         severity: "medium",
         isDecisive: false,
@@ -435,7 +435,7 @@ export const DEMO_GAME_DOC = {
         name: "The Large Footprint",
         description:
           "A single large shoe impression was found in a dusty patch of floor near Mohammad's body. Campus security estimated it at a men's size 12–13. Of the four suspects, only Elijah Walker wears a size 13 — but Elijah was corroborated inside the room at that time. Adarsh wears a size 12.",
-        location: "Hallway floor outside ESCW 1.315, approximately two meters from the body",
+        location: "Hallway floor outside ECSW 1.315, approximately two meters from the body",
         couldImplicateSuspects: ["Elijah Walker", "Adarsh Goura"],
         severity: "medium",
         isDecisive: false,
