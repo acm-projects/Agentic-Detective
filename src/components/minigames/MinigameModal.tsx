@@ -2,6 +2,7 @@ import { useNotificationStore, selectOpenMinigame } from '../../store/useNotific
 import { WordleMinigame } from './wordle/Wordle';
 import { ImageUnshuffleMinigame } from './unshuffle/ImageUnshuffleMinigame';
 import { CipherMinigame } from './cipher/CipherMinigame';
+import { UVScanMinigame } from './uvscan/UVScanMinigame';
 import type { MinigameData } from '../../obj/notificationInterfaces';
 import styles from './MinigameModal.module.css';
 
@@ -13,6 +14,7 @@ const MINIGAME_TITLES: Record<string, string> = {
   wordle: 'Identify the Keyword',
   'image-unshuffle': 'Reconstruct the Evidence',
   cipher: 'Decipher the Message',
+  'uv-scan': 'Scan the Crime Scene',
 };
 
 function MinigameRenderer({
@@ -31,6 +33,8 @@ function MinigameRenderer({
       return <ImageUnshuffleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
     case 'cipher':
       return <CipherMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
+    case 'uv-scan':
+      return <UVScanMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
     default:
       return null;
   }

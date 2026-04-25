@@ -1,0 +1,95 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  user-select: none;
+}
+
+.instruction {
+  font-size: 0.78rem;
+  color: #b0a090;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Scene container ─────────────────────────────────────────────────────── */
+.scene {
+  position: relative;
+  width: 512px;
+  height: 512px;
+  overflow: hidden;
+  border: 2px solid #5a4a38;
+  border-radius: 4px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+  image-rendering: pixelated; /* keeps the pixel art crisp when scaled up */
+  cursor: none;
+}
+
+/* ── Background image layers ─────────────────────────────────────────────── */
+.bgLayer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+
+/* ── UV layer: clipped to lens circle ────────────────────────────────────── */
+.uvLayer {
+  position: absolute;
+  inset: 0;
+  /* clip to a circle at the cursor position */
+  clip-path: circle(var(--lr) at var(--lx) var(--ly));
+  pointer-events: none;
+  /* slight UV glow bleed */
+  filter: brightness(1.08) saturate(1.25);
+}
+
+/* ── Footprint (only inside UV layer) ───────────────────────────────────── */
+.footprint {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 6px rgba(0, 229, 255, 0.75))
+          drop-shadow(0 0 14px rgba(0, 180, 255, 0.4));
+}
+
+/* ── Magnifying glass SVG overlay ────────────────────────────────────────── */
+.lensSvg {
+  position: absolute;
+  pointer-events: none;
+  /* the SVG is positioned via inline style (left/top) */
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+}
+
+/* ── Invisible overlay that keeps cursor: none working ───────────────────── */
+.cursorHide {
+  position: absolute;
+  inset: 0;
+  cursor: none;
+}
+
+/* ── Hint row ─────────────────────────────────────────────────────────────── */
+.hint {
+  font-size: 0.72rem;
+  color: #8a7a68;
+  margin: 0;
+  text-align: center;
+}
+
+.hintLabel {
+  color: #c8a96e;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 4px;
+}
