@@ -13,7 +13,6 @@ import plantImg from './assets/muchbetterthemedplant.png';
 import deskBgImg from './assets/extranewdesk.png';
 import LoadingScreen from '../LoadingScreen';
 import phoneImg from './assets/2themedcellphone.png';
-import TutorialModal from '../components/tutorial-modal/Tutorial';
 import './desk.css';
 import ScrabbleImg from './assets/newscrabble.png'; 
 
@@ -56,7 +55,7 @@ function Message() {
 
   const { phase, player } = useGameStore();
   const navigate = useNavigate();
-  const { isFirstClueDiscovery, clearFirstClueDiscovery, accusationUnlocked } = useGameStore();
+  const { isFirstClueDiscovery, clearFirstClueDiscovery } = useGameStore();
 
   const [tutorialStep, setTutorialStep] = useState<number>(() => Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? -1));
   const [tutorialSeen, setTutorialSeen] = useState<boolean>(() => localStorage.getItem(TUTORIAL_KEY) === 'true');
@@ -110,7 +109,6 @@ function Message() {
 
   return (
     <>
-      <TutorialModal />
       <div style={{ width: '100vw', height: '100vh', position: 'relative', backgroundImage: `url(${deskBgImg})`, backgroundSize: 'cover' }}>
         {caseCode && (
           <div style={{

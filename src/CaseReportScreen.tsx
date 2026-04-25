@@ -2,7 +2,6 @@ import { useGameStore } from "./useGameStore";
 import "./CaseReportScreen.css";
 import { useNavigate } from "react-router";
 import { useState, useRef, useCallback, useEffect } from "react";
-import TutorialModal from './components/tutorial-modal/Tutorial';
 
 const LENS_SIZE = 350;   // diameter in px
 const ZOOM = 1.3;        // zoom level
@@ -13,12 +12,60 @@ import type { CaseFilePlayer } from "./caseFile";
 
 type CaseReport = CaseFilePlayer["caseReport"];
 
+function VictimSection({ report }: { report: CaseReport }) {
+  return (
+    <div className="report-section">
+      <div className="report-section-title">Victim</div>
+      <div className="victim-block">
+        <p className="victim-name">{report.victim.name}</p>
+        <p className="victim-details">
+          {report.victim.age} years old &nbsp;·&nbsp; {report.victim.occupation}
+        </p>
+        <p className="cause-of-death">✦ {report.victim.causeOfDeath}</p>
+        <p style={{ fontSize: 18, lineHeight: 1.6, margin: '0 0 10px', color: 'var(--ink)' }}>
+          {report.victim.background}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function KeyEvidenceSnapshot() {
+  return (
+    <div className="report-evidence-spotlight" role="note" aria-label="Key evidence snapshot">
+      <p className="report-evidence-kicker">KEY EVIDENCE SNAPSHOT</p>
+      <p className="report-evidence-line">
+        <span className="report-evidence-label">Weapon</span>
+        <span className="report-evidence-value">
+          Struck from behind with a <strong className="report-evidence-key">History textbook</strong>.
+        </span>
+      </p>
+      <p className="report-evidence-line">
+        <span className="report-evidence-label">Timing</span>
+        <span className="report-evidence-value">
+          Between <strong className="report-evidence-key">7:38 PM</strong> and <strong className="report-evidence-key">7:50 PM</strong>.
+        </span>
+      </p>
+      <p className="report-evidence-line">
+        <span className="report-evidence-label">Location</span>
+        <span className="report-evidence-value">
+          Hallway outside <strong className="report-evidence-key">ESCW 1.315</strong>.
+        </span>
+      </p>
+      <p className="report-evidence-line">
+        <span className="report-evidence-label">Tied To</span>
+        <span className="report-evidence-value">
+          The textbook belongs to <strong className="report-evidence-key">Mercedes</strong>.
+        </span>
+      </p>
+    </div>
+  );
+}
+
 export default function CaseReportScreen() {
   const navigate = useNavigate();
   const { player } = useGameStore();
   const report = player?.caseReport;
-  const TUTORIAL_READY_KEY = 'tutorialReadyAfterReport'; // keeps track of whether case report has been viewed or not
-  const TUTORIAL_DESK_ENTERED_KEY = 'tutorialDeskEntered';
 
   const overlayRef = useRef<HTMLDivElement>(null);
   const docRef = useRef<HTMLDivElement>(null);
@@ -34,10 +81,6 @@ export default function CaseReportScreen() {
     return () => window.removeEventListener("resize", update);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem(TUTORIAL_READY_KEY, 'true');
-  }, []);
-
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const overlay = overlayRef.current;
     if (!overlay) return;
@@ -51,7 +94,6 @@ export default function CaseReportScreen() {
 
   const handleMouseLeave = useCallback(() => setLens(null), []);
   const handleGoToDesk = () => {
-    localStorage.setItem(TUTORIAL_DESK_ENTERED_KEY, 'true');
     navigate('/desk');
   };
 
@@ -72,7 +114,6 @@ export default function CaseReportScreen() {
 
   return (
     <>
-      <TutorialModal />
       <div
         className="report-overlay"
         ref={overlayRef}
@@ -117,22 +158,11 @@ export default function CaseReportScreen() {
             <div className="stamp">Confidential</div>
           </div>
 
-        <div className="report-section">
-          <div className="report-section-title">Victim</div>
-          <div className="victim-block">
-            <p className="victim-name">{report.victim.name}</p>
-            <p className="victim-details">
-              {report.victim.age} years old &nbsp;·&nbsp; {report.victim.occupation}
-            </p>
-            <p style={{ fontSize: 18, lineHeight: 1.6, margin: '0 0 10px', color: 'var(--ink)' }}>
-              {report.victim.background}
-            </p>
-            <p className="cause-of-death">✦ {report.victim.causeOfDeath}</p>
-            <p className="body-found">Found at: {report.victim.bodyFoundAt}</p>
-          </div>
-        </div>
+        <VictimSection report={report} />
+        <KeyEvidenceSnapshot />
 
         <hr className="report-divider" />
+
 
         <div className="report-section">
           <div className="report-section-title">Detective Briefing</div>
@@ -176,6 +206,7 @@ export default function CaseReportScreen() {
 
 function MagnifiedDocContent({ report }: { report: CaseReport }) {
   if (!report) return null;
+
   return (
     <div className="report-document magnifier-clone" aria-hidden="true">
       <div className="report-agency">
@@ -187,20 +218,8 @@ function MagnifiedDocContent({ report }: { report: CaseReport }) {
         <p className="report-meta">{report.date} &nbsp;—&nbsp; {report.setting}</p>
         <div className="stamp">Confidential</div>
       </div>
-      <div className="report-section">
-        <div className="report-section-title">Victim</div>
-        <div className="victim-block">
-          <p className="victim-name">{report.victim.name}</p>
-          <p className="victim-details">
-            {report.victim.age} years old &nbsp;·&nbsp; {report.victim.occupation}
-          </p>
-          <p style={{ fontSize: 18, lineHeight: 1.6, margin: '0 0 10px', color: 'var(--ink)' }}>
-            {report.victim.background}
-          </p>
-          <p className="cause-of-death">✦ {report.victim.causeOfDeath}</p>
-          <p className="body-found">Found at: {report.victim.bodyFoundAt}</p>
-        </div>
-      </div>
+      <VictimSection report={report} />
+      <KeyEvidenceSnapshot />
       <hr className="report-divider" />
       <div className="report-section">
         <div className="report-section-title">Detective Briefing</div>

@@ -14,26 +14,25 @@ import jewelImg from './assets/jewel.png';
 import yellowstickyImg from './assets/yellowsticky.png';
 import { useNotificationStore } from './store/useNotificationStore';
 import { useGameStore } from "./useGameStore";
-import TutorialModal from './components/tutorial-modal/Tutorial';
 
 const CLUE_PROPS = [
-  { src: printsclueImg,      width: '220px', bottom: '8%',  left: '55%',  transform: 'translateX(-50%) rotate(15deg)' },
+  { src: printsclueImg, width: '220px', bottom: '15%',  left: '55%',  transform: 'translateX(-50%) rotate(15deg)' },
   { src: weappolImg,    width: '220px', bottom: '45%', right: '42%', transform: 'translateX(50%) rotate(10deg)' },
   { src: artImg,        width: '300px', top: '5%',     left: '3%',   transform: 'rotate(-4deg)' },
   { src: letterImg,     width: '290px', bottom: '40%', left: '38%',  transform: 'translateX(-50%) rotate(15deg)' },
-  { src: ciphpolImg,    width: '300px', top: '63%',    left: '26%',  transform: 'rotate(4deg)' },
+  { src: ciphpolImg,    width: '300px', top: '63%',    left: '24%',  transform: 'rotate(4deg)' },
   { src: jewelImg, width: '300px', bottom: '12%', left: '15%',  transform: 'translateX(-50%) rotate(-10deg)' },
 ];
 
 export default function ClueBook() {
   const allClues = useNotificationStore(s => s.clues);
   const clues = useMemo(() => allClues.filter(clue => clue.discovered), [allClues]);
+  const difficulty = useGameStore(s => s.seed?.difficulty ?? 5);
+  const totalConversationCount = useGameStore(s => s.totalConversationCount);
+  const isFirstTimePlayer = totalConversationCount <= 2;
   const [selected, setSelected] = useState<Clue | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
-  const difficulty = useGameStore.getState().seed?.difficulty;
-  const totalConversationCount = useGameStore.getState().totalConversationCount;
-  const isFirstTimePlayer = totalConversationCount <= 2;
 
   useEffect(() => {
     const clueIds = new Set(clues.map(clue => clue.id));
@@ -65,7 +64,6 @@ export default function ClueBook() {
 
   return (
     <>
-      <TutorialModal />
       <div className="main-container" style={{
         width: '100%',
         height: '100dvh',
@@ -87,7 +85,7 @@ export default function ClueBook() {
 
       <div>
         <img src={stickyImg}       alt="" style={{ ...decor, width: '150px', bottom: '71%', left: '23%', transform: 'translateX(-50%) rotate(-10deg)' }} />
-        <img src={bluestickyImg}   alt="" style={{ ...decor, width: '150px', bottom: '6%',  left: '6%',  transform: 'translateX(-50%) rotate(15deg)' }} />
+        <img src={bluestickyImg}   alt="" style={{ ...decor, width: '150px', bottom: '12%',  left: '6%',  transform: 'translateX(-50%) rotate(15deg)' }} />
         <img src={yellowstickyImg} alt="" style={{ ...decor, width: '150px', bottom: '6%',  left: '60%', transform: 'translateX(-50%) rotate(-15deg)' }} />
 
         <div className="clue-board-grid">

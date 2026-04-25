@@ -11,7 +11,6 @@ import { streamSpeech } from "./services/ttsService";
 import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
 console.log(import.meta.env.VITE_GEMINI_API_KEY)
 import { callModel, fastModel } from "./services/ai";
-import { DEMO_GAME_DOC } from "./DemoCaseFile.ts";
 // ─────────────────────────────────────────────
 //  CHAT TYPES
 // ─────────────────────────────────────────────
@@ -185,7 +184,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues);
-        navigate("/report");           // ← instead of set({ phase: "briefing" })
+        navigate("/report");
         return false;
       } catch (err) {
         set({ error: "Failed to generate case.", phase: "setup" });

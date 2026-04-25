@@ -341,13 +341,13 @@ export const DEMO_GAME_DOC = {
       caseId: "DEMO-001",
       setting:
         "ECSW 1.315, a student collaboration room at the University of Texas at Dallas, on the night of Projects Presentation Night.",
-      date: "April 1st, 2025 — 7:42 PM",
+      date: "April 29th, 2025 — 7:42 PM",
       victim: {
         name: "Mohammad Mehrab",
         age: 21,
         occupation: "Project Manager in ACM Projects — led the 'Agentic Detective' team",
         background:
-          "A driven and well-liked junior who had earned the PM role in ACM Projects after a strong application cycle. He led the 'Agentic Detective' team through a full semester build and had been receiving glowing feedback from advisors. His team was widely considered the frontrunner to win Presentation Night — a distinction that put him in the crosshairs of someone with more to lose.",
+          "A driven and well-liked junior who had earned the PM role in ACM Projects. He led the 'Agentic Detective' team through a full semester build and had been receiving glowing feedback from advisors. His team was widely considered the frontrunner to win Presentation Night — a distinction that put him in the crosshairs of someone with more to lose.",
         causeOfDeath: "Blunt force trauma to the back of the head with a textbook.",
         bodyFoundAt:
           "The hallway just outside ECSW 1.315, discovered by a passing student at approximately 8:05 PM.",

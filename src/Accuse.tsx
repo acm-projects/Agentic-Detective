@@ -271,7 +271,7 @@ function Accuse() {
           {isCorrect ? (
             <span className="accuse-verdict-stack">
               <span className="accuse-verdict-name">{accusedName}</span>
-              <span className="accuse-verdict-name">found</span>
+              <span className="accuse-verdict-word">found</span>
               <span className="accuse-verdict-guilty">GUILTY</span>
             </span>
           ) : (
@@ -372,6 +372,7 @@ function Accuse() {
             <div className="accuse-buttons">
               <button
                 className="detective-button"
+                onClick={() => navigate('/')}
               >
                 New Case
               </button>

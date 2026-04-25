@@ -292,6 +292,11 @@ body {
   top: -25%;
   left: 60%; 
   filter: grayscale(80%) contrast(.8);
+  cursor: pointer;
+}
+
+.chat-photo-placeholder {
+  position: relative;
 }
 
 .photo-placeholder {

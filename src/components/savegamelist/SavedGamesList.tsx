@@ -1,6 +1,5 @@
 // IMPORTANT: create a filtering feature to: filter based on isStarred, and phase; include sort mechanism
-import { useAuth } from "@clerk/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import "./savegamelist.css";
 import { useGameStore } from "../../useGameStore";
 import { CiStar } from "react-icons/ci";
@@ -25,33 +24,261 @@ type SavedGamesListProps = {
   onSolveCase?: (game: SavedCase) => void | Promise<void>;
 };
 
-async function fetchCasesFromUserId(userId: string): Promise<SavedCase[]> {
-  const response = await fetch(`http://localhost:3000/cases/user/${userId}`);
+const HARD_CODED_SAVED_GAMES: SavedCase[] = [
+  {
+    sessionId: "CASE-0047",
+    status: "resolved",
+    lastAutosavedAt: "2026-04-17T01:55:18.000Z",
+    game: { phase: "resolved" },
+    caseData: { caseReport: { caseTitle: "The Closing Argument" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0046",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-14T02:55:57.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Perestroika Incident" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0045",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-13T17:17:27.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Radiator Springs Mystery" } },
+    isStarred: true,
+  },
+  {
+    sessionId: "CASE-0044",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-13T02:17:06.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Critic's Canvas" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0043",
+    status: "briefing",
+    lastAutosavedAt: "2026-04-12T17:22:43.000Z",
+    game: { phase: "briefing" },
+    caseData: { caseReport: { caseTitle: "The Leftorium Incident" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0042",
+    status: "briefing",
+    lastAutosavedAt: "2026-04-12T17:20:40.000Z",
+    game: { phase: "briefing" },
+    caseData: { caseReport: { caseTitle: "The Freezer Incident" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0041",
+    status: "briefing",
+    lastAutosavedAt: "2026-04-12T16:46:00.000Z",
+    game: { phase: "briefing" },
+    caseData: { caseReport: { caseTitle: "The Silence in Studio 4" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0040",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-12T02:22:50.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Garage Hangar Incident" } },
+    isStarred: true,
+  },
+  {
+    sessionId: "CASE-0039",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-08T13:23:52.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Acheron Depressurization" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0038",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-08T13:16:14.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Silence of Hangar 4" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0037",
+    status: "briefing",
+    lastAutosavedAt: "2026-04-08T01:08:22.000Z",
+    game: { phase: "briefing" },
+    caseData: { caseReport: { caseTitle: "The Short-Circuit Scandal" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0036",
+    status: "resolved",
+    lastAutosavedAt: "2026-04-08T00:37:39.000Z",
+    game: { phase: "resolved" },
+    caseData: { caseReport: { caseTitle: "The Final Verdict" } },
+    isStarred: true,
+  },
+  {
+    sessionId: "CASE-0035",
+    status: "resolved",
+    lastAutosavedAt: "2026-04-07T23:44:49.000Z",
+    game: { phase: "resolved" },
+    caseData: { caseReport: { caseTitle: "The Last Lecture" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0034",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-07T02:59:16.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Leftorium Tragedy" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0033",
+    status: "briefing",
+    lastAutosavedAt: "2026-04-07T02:11:27.000Z",
+    game: { phase: "briefing" },
+    caseData: { caseReport: { caseTitle: "The Tailor's Silence" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0032",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-07T01:59:39.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Radiator Springs Sabotage" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0031",
+    status: "resolved",
+    lastAutosavedAt: "2026-04-07T01:57:38.000Z",
+    game: { phase: "resolved" },
+    caseData: { caseReport: { caseTitle: "The Royal Poisoning" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0030",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-07T01:36:32.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Purrfect Sip Tragedy" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0029",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-06T16:35:30.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Radioactive Glaze Incident" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0028",
+    status: "briefing",
+    lastAutosavedAt: "2026-04-06T16:27:14.000Z",
+    game: { phase: "briefing" },
+    caseData: { caseReport: { caseTitle: "The Hutt's Last Breath" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0027",
+    status: "briefing",
+    lastAutosavedAt: "2026-04-06T01:42:55.000Z",
+    game: { phase: "briefing" },
+    caseData: { caseReport: { caseTitle: "The Abyss Silence" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0026",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-06T00:27:54.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Abyssal Silence" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0025",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-05T14:33:34.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Critic's Demise" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0024",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-05T13:50:08.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Case of the Silent Engine" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0023",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-05T13:48:58.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Case of the Fallen Champion" } },
+    isStarred: true,
+  },
+  {
+    sessionId: "CASE-0022",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-05T02:53:35.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Case of the Purr-loined Fortune" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0021",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-05T00:24:09.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Case of the Poisoned Purr" } },
+    isStarred: false,
+  },
+  {
+    sessionId: "CASE-0020",
+    status: "interrogation",
+    lastAutosavedAt: "2026-04-04T18:12:10.000Z",
+    game: { phase: "interrogation" },
+    caseData: { caseReport: { caseTitle: "The Case of the Canine Calamity" } },
+    isStarred: false,
+  },
+];
 
-  if (!response.ok) {
-    throw new Error(`Request failed with status ${response.status}`);
-  }
-
-  const data = (await response.json()) as SavedCase[];
-
-  return Array.isArray(data) ? data : [];
+function cloneHardcodedSavedGames(): SavedCase[] {
+  return HARD_CODED_SAVED_GAMES.map((game) => ({
+    ...game,
+    game: game.game ? { ...game.game } : undefined,
+    caseData: game.caseData
+      ? {
+          ...game.caseData,
+          caseReport: game.caseData.caseReport ? { ...game.caseData.caseReport } : undefined,
+        }
+      : undefined,
+  }));
 }
 
 function SavedGameCard({
   game,
-  userId,
   onSelect,
   onSolve,
+  onStarChange,
 }: {
   game: SavedCase;
-  userId: string;
   onSelect: (game: SavedCase) => void;
   onSolve: (game: SavedCase) => void | Promise<void>;
+  onStarChange: (sessionId: string, isStarred: boolean) => void;
 }) {
   const currentSessionId = useGameStore((s) => s.currentSessionId);
   const isSelected = currentSessionId === game.sessionId;
-  const [isStarred, setIsStarred] = useState(game.isStarred ?? false);
   const [isStarring, setIsStarring] = useState(false);
+  const isStarred = game.isStarred ?? false;
 
   const title = game.caseData?.caseReport?.caseTitle ?? "Untitled Case";
   const phase = game.status === "resolved" ? "resolved" : game.game?.phase ?? "unknown";
@@ -62,24 +289,9 @@ function SavedGameCard({
   const handleStarClick = async (game: SavedCase) => {
     if (isStarring) return;
     const newStarred = !isStarred;
-    setIsStarred(newStarred); // optimistic update
     setIsStarring(true);
-    try {
-      const response = await fetch(`http://localhost:3000/cases/${game.sessionId}/star`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, isStarred: newStarred }),
-      });
-      if (!response.ok) {
-        throw new Error(`Star request failed: ${response.status}`);
-      }
-      game.isStarred = newStarred;
-    } catch (err) {
-      console.error("Failed to persist star:", err);
-      setIsStarred(!newStarred); // roll back on failure
-    } finally {
-      setIsStarring(false);
-    }
+    onStarChange(game.sessionId, newStarred);
+    setIsStarring(false);
   };
 
 
@@ -142,49 +354,28 @@ function SavedGameCard({
 }
 
 function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
-  const { userId, isSignedIn, isLoaded } = useAuth();
   const setCurrentSessionId = useGameStore((s) => s.setCurrentSessionId);
   const setCurrentCaseDoc = useGameStore((s) => s.setSelectedCase);
 
-  const [cases, setCases] = useState<SavedCase[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [cases, setCases] = useState<SavedCase[]>(() => cloneHardcodedSavedGames());
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterPhase, setFilterPhase] = useState<string>("all");
   const [filterStarred, setFilterStarred] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("lastPlayed-desc");
 
-  const loadCases = useCallback(async () => {
-    if (!isLoaded) return;
-
-    if (!isSignedIn || !userId) {
-      setCases([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
+  const loadCases = useCallback(() => {
     setLoading(true);
     setError(null);
+    setCases(cloneHardcodedSavedGames());
+    setLoading(false);
+  }, []);
 
-    try {
-      const fetchedCases = await fetchCasesFromUserId(userId);
-      const sortedCases = [...fetchedCases].sort((a, b) => {
-        const aTime = a.lastAutosavedAt ? new Date(a.lastAutosavedAt).getTime() : 0;
-        const bTime = b.lastAutosavedAt ? new Date(b.lastAutosavedAt).getTime() : 0;
-        return bTime - aTime;
-      });
-      setCases(sortedCases);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load saved games. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }, [isLoaded, isSignedIn, userId]);
-
-  useEffect(() => {
-    loadCases();
-  }, [loadCases]);
+  const handleStarChange = useCallback((sessionId: string, isStarred: boolean) => {
+    setCases((currentCases) =>
+      currentCases.map((game) => (game.sessionId === sessionId ? { ...game, isStarred } : game)),
+    );
+  }, []);
 
   const handleSelectCase = (game: SavedCase) => {
     setCurrentSessionId(game.sessionId);
@@ -197,7 +388,7 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
     onCaseSelected?.();
   };
 
-  const filterAndSortCases = useCallback(() => {
+  const filteredAndSortedCases = useMemo(() => {
     let filtered = [...cases];
 
     // Apply phase filter
@@ -259,26 +450,18 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
           type="button"
           className="saved-games-refresh"
           onClick={loadCases}
-          disabled={loading || !isSignedIn}
+          disabled={loading}
           aria-label="Refresh saved games"
         >
           {loading ? "Refreshing..." : "Refresh"}
         </button>
       </div>
 
-      {!isSignedIn && (
-        <p className="saved-games-message" role="status">
-          Sign in to view and load your saved games.
-        </p>
-      )}
+      <p className="saved-games-count" role="status" aria-live="polite">
+        {loading ? "Loading saved games..." : `You have ${cases.length} saved games on record.`}
+      </p>
 
-      {isSignedIn && (
-        <p className="saved-games-count" role="status" aria-live="polite">
-          {loading ? "Loading saved games..." : `You have ${cases.length} saved games on record.`}
-        </p>
-      )}
-
-      {isSignedIn && cases.length > 0 && (
+      {cases.length > 0 && (
         <div className="filter-sort-section">
           <div className="filter-sort-group">
             <label className="filter-sort-label">Phase:</label>
@@ -348,26 +531,26 @@ function SavedGamesList({ onCaseSelected, onSolveCase }: SavedGamesListProps) {
         </p>
       )}
 
-      {isSignedIn && !loading && !error && cases.length === 0 && (
+      {!loading && !error && cases.length === 0 && (
         <p className="saved-games-message" role="status">
           No saved games found yet.
         </p>
       )}
-      {isSignedIn && cases.length > 0 && (
+      {cases.length > 0 && (
         <>
-          {filterAndSortCases().length === 0 ? (
+          {filteredAndSortedCases.length === 0 ? (
             <p className="saved-games-message" role="status">
               No games match your filters.
             </p>
           ) : (
             <ul className="saved-games-list" aria-label="Saved game files">
-              {filterAndSortCases().map((game) => (
+              {filteredAndSortedCases.map((game) => (
                 <SavedGameCard
                   key={game.sessionId}
                   game={game}
-                  userId={userId ?? ""}
                   onSelect={handleSelectCase}
                   onSolve={handleSolveCase}
+                  onStarChange={handleStarChange}
                 />
               ))}
             </ul>
