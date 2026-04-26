@@ -605,6 +605,10 @@ a { color: inherit; text-decoration: none; }
   padding: 4px; grid-column: 1 / -1; border-top: 1px dashed #9b2020;
 }
 
+.question-box {
+  display: flex; flex-direction: row;
+}
+
 .question-box { min-height: clamp(54px, 8vh, 68px); }
 .question-box input {
   width: 100%; height: 100%; padding: 0 1.05em;

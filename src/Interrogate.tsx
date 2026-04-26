@@ -801,13 +801,6 @@ function Interrogate() {
                   )}
                   {isDraggingClue && <div className="drop-hint">Drop clue to present evidence</div>}
                   <div className='question-box'>
-                    <input
-                      type="text"
-                      placeholder={attachedClues.length > 0 ? 'Add a question, or send silently…' : 'Ask questions here...'}
-                      value={input}
-                      disabled={isResponding}
-                      onChange={e => setInput(e.target.value)}
-                    />
                     <button
                       type="button"
                       onClick={toggleSpeech}
@@ -817,6 +810,13 @@ function Interrogate() {
                     >
                       {isListening ? '🔴' : '🎙️'}
                     </button>
+                    <input
+                      type="text"
+                      placeholder={attachedClues.length > 0 ? 'Add a question, or send silently…' : 'Ask questions here...'}
+                      value={input}
+                      disabled={isResponding}
+                      onChange={e => setInput(e.target.value)}
+                    />
                   </div>
                   <div className='submit-button'>
                     <button

@@ -101,6 +101,7 @@ interface GameState {
   setSelectedCase: (caseDoc: any) => void;
   setSessions: (sessions: Record<string, SuspectSession>) => void;
   loadSharedCaseTemplate: (template: any, caseCode: string, navigate: (path: string) => void) => Promise<void>;
+loadDemoCase: (navigate: (path: string) => void) => Promise<void>;
 }
 
 const DEFAULT_SEED: PlayerSeed = {
@@ -472,33 +473,63 @@ if (isDemoHardcoded) {
     },
   }));
 
-  const voiceId = get().voiceIds[activeSuspectName];
-  if (hardcodedText) {
-    streamSpeech(
-      hardcodedText,
-      voiceId ?? null,
-      (speaking) => set({ isSpeaking: speaking }),
-      (revealedText) => {
-        set(state => {
-          const s = state.sessions[activeSuspectName];
-          if (!s) return state;
-          const history = [...s.history];
-          const lastIdx = history.length - 1;
-          if (history[lastIdx]?.role === "suspect") {
-            history[lastIdx] = { ...history[lastIdx], displayText: revealedText };
-          }
-          return {
-            sessions: {
-              ...state.sessions,
-              [activeSuspectName]: { ...s, history },
-            },
-          };
-        });
-      }
-    ).catch(err => console.error("[tts] demo playback failed:", err));
-  }
-  return;
+  const demoAudioFiles: Record<string, string> = {
+  "Adarsh Goura":   "/audio/Adarsh.mp3",
+  "Suhani Rana":    "/audio/Suhani.mp3",
+  "Elijah Walker":  "/audio/Elijah.mp3",
+  "Mercedes Xiong": "/audio/Mercedes.mp3",
+};
+
+const audioFile = demoAudioFiles[activeSuspectName];
+if (audioFile && hardcodedText) {
+  const audio = new Audio(audioFile);
+  const words = hardcodedText.split(" ");
+
+  audio.addEventListener("loadedmetadata", () => {
+    const msPerWord = (audio.duration * 1000) / words.length;
+    let i = 0;
+    set({ isSpeaking: true });
+
+    const interval = setInterval(() => {
+      i++;
+      const revealed = words.slice(0, i).join(" ");
+      set(state => {
+        const s = state.sessions[activeSuspectName];
+        if (!s) return state;
+        const history = [...s.history];
+        const lastIdx = history.length - 1;
+        if (history[lastIdx]?.role === "suspect") {
+          history[lastIdx] = { ...history[lastIdx], displayText: revealed };
+        }
+        return {
+          sessions: { ...state.sessions, [activeSuspectName]: { ...s, history } },
+        };
+      });
+      if (i >= words.length) clearInterval(interval);
+    }, msPerWord);
+
+    audio.onended = () => {
+      clearInterval(interval);
+      set(state => {
+        const s = state.sessions[activeSuspectName];
+        if (!s) return state;
+        const history = [...s.history];
+        const lastIdx = history.length - 1;
+        if (history[lastIdx]?.role === "suspect") {
+          history[lastIdx] = { ...history[lastIdx], displayText: hardcodedText };
+        }
+        return {
+          isSpeaking: false,
+          sessions: { ...state.sessions, [activeSuspectName]: { ...s, history } },
+        };
+      });
+    };
+  });
+
+  audio.play().catch(err => console.error("[tts] demo audio failed:", err));
 }
+return; // ✅ this is inside the if (isDemoHardcoded) block — move the closing brace
+}        // ← closes if (isDemoHardcoded)
 
 const raw = await callModel({
   model: fastModel,
@@ -581,12 +612,8 @@ const raw = await callModel({
 
 const suspectMessage: ChatMessage = {
   role: "suspect",
-  text: isDemoConfession
-    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry."
-    : responseText,
-  displayText: isDemoConfession
-    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry."
-    : "",
+  text: responseText,
+  displayText: "",
   timestamp: Date.now(),
 };
 
@@ -836,6 +863,54 @@ set({ isResponding: false });
   setSelectedCase: (caseDoc) => set({ selectedCase: caseDoc }), // stores caseDoc from mongo in zustand
 
   setSessions: (sessions) => set({ sessions }),
+
+loadDemoCase: async (navigate) => {
+    try {
+      set({ phase: "generating", error: null });
+      navigate("/loading");
+
+      const { DEMO_GAME_DOC } = await import("./DemoCaseFile");
+      const { backend, player, restoredSessions } = await feedCaseFile(DEMO_GAME_DOC);
+
+      const voiceIds: Record<string, string> = {
+        "Suhani Rana":    "cG2STrgPqih9Cw8EwnaA",
+        "Adarsh Goura":   "UgBBYS2sOqTuMpoF3BR0",
+        "Elijah Walker":  "7EzWGsX10sAS4c9m9cPf",
+        "Mercedes Xiong": "exsUS4vynmxd379XN4yO",
+      };
+
+      set({
+        backend,
+        player,
+        sessions: restoredSessions as unknown as Record<string, SuspectSession>,
+        phase: "briefing",
+        elapsed: 0,
+        numDiscoveredClues: 0,
+        isFirstClueDiscovery: false,
+        accusationUnlocked: false,
+        accusationResult: null,
+        voiceIds,
+        currentSessionId: "DEMO-001",
+        selectedCase: null,
+        seed: {
+          freeText: "A murder at a university hackathon presentation night",
+          difficulty: 1,
+          duration: 15,
+          intensity: 4,
+          userId: "",
+          isSignedIn: false,
+        },
+      });
+
+      const { useNotificationStore } = await import("./store/useNotificationStore");
+      useNotificationStore.getState().initClues(player.clues);
+
+      navigate("/report");
+    } catch (err) {
+      console.error("[Demo] Failed to load demo case:", err);
+      set({ error: "Failed to load demo case.", phase: "setup" });
+    }
+  },
 
   loadSharedCaseTemplate: async (template, caseCode, navigate) => {
     try {
