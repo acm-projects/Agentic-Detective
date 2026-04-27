@@ -31,14 +31,13 @@ const STEPS: Step[] = [
     {
         route: '/desk',
         routeLabel: 'Desk',
-        badge: 'Desk Option',
-        title: 'Case File',
-        icon: 'CASE',
+        badge: 'Desk Overview',
+        title: 'This is your investigation desk',
+        icon: 'DESK',
         description: [
-            'Use Case File to reopen the official report at any time.'
-        ],
-        highlightTarget: 'tutorial-desk-case-file',
-        highlightTitle: 'Case File'
+            'Everything is fully visible here so you can orient yourself first.',
+            'Next we will walk through Accuse, Clues, and Interrogation.'
+        ]
     },
     {
         route: '/desk',
@@ -75,19 +74,6 @@ const STEPS: Step[] = [
         ],
         highlightTarget: 'tutorial-desk-phone',
         highlightTitle: 'Interrogation Phone'
-    },
-    {
-        route: '/interrogate',
-        routeLabel: 'Interrogate',
-        badge: 'Tool Highlight',
-        title: 'The Suspects',
-        icon: 'SUSPECTS',
-        description: [
-            'Switch between suspects through the Suspect Switcher.',
-            'Interrogate everyone to extract as much information as you can.',
-        ],
-        highlightTarget: 'tutorial-suspect-picker',
-        highlightTitle: 'The Suspect Switcher'
     },
     {
         route: '/interrogate',
