@@ -4,7 +4,7 @@ import { useGameStore } from '../../useGameStore';
 import './tutorial.css';
 
 interface Step {
-    route: '/interrogate';
+    route: '/report' | '/desk' | '/interrogate';
     routeLabel: string;
     badge: string;
     title: string;
@@ -16,15 +16,65 @@ interface Step {
 
 const STEPS: Step[] = [
     {
-        route: '/interrogate',
-        routeLabel: 'Interrogate',
-        badge: 'Interrogation Room',
-        title: 'Question suspects and watch for pressure points',
-        icon: 'CHAT',
+        route: '/report',
+        routeLabel: 'Case Report',
+        badge: 'Case Report',
+        title: 'Review the case file first',
+        icon: 'REPORT',
         description: [
-            'Interrogations are where contradictions and stress become useful.',
-            'Next, I will spotlight the key tools you need during questioning.'
-        ]
+            'This report gives your timeline, victim context, and initial leads.',
+            'When you are ready, continue to your desk.'
+        ],
+        highlightTarget: 'tutorial-case-report-main',
+        highlightTitle: 'Case Report'
+    },
+    {
+        route: '/desk',
+        routeLabel: 'Desk',
+        badge: 'Desk Option',
+        title: 'Case File',
+        icon: 'CASE',
+        description: [
+            'Use Case File to reopen the official report at any time.'
+        ],
+        highlightTarget: 'tutorial-desk-case-file',
+        highlightTitle: 'Case File'
+    },
+    {
+        route: '/desk',
+        routeLabel: 'Desk',
+        badge: 'Desk Option',
+        title: 'Accusation',
+        icon: 'ACCUSE',
+        description: [
+            'Use this option to choose and accuse your final suspect.'
+        ],
+        highlightTarget: 'tutorial-desk-accusation',
+        highlightTitle: 'Accusation'
+    },
+    {
+        route: '/desk',
+        routeLabel: 'Desk',
+        badge: 'Desk Option',
+        title: 'Clue Book',
+        icon: 'CLUES',
+        description: [
+            'Use the Clue Book to review discovered evidence.'
+        ],
+        highlightTarget: 'tutorial-desk-clue-book',
+        highlightTitle: 'Clue Book'
+    },
+    {
+        route: '/desk',
+        routeLabel: 'Desk',
+        badge: 'Desk Option',
+        title: 'Interrogation Phone',
+        icon: 'PHONE',
+        description: [
+            'Use the phone to enter the interrogation room.'
+        ],
+        highlightTarget: 'tutorial-desk-phone',
+        highlightTitle: 'Interrogation Phone'
     },
     {
         route: '/interrogate',
@@ -43,14 +93,14 @@ const STEPS: Step[] = [
         route: '/interrogate',
         routeLabel: 'Interrogate',
         badge: 'Tool Highlight',
-        title: 'Evidence Locker',
-        icon: 'LOCKER',
+        title: 'Suspect Details',
+        icon: 'PROFILE',
         description: [
-            'Open the locker to view discovered clues and drag them into chat as evidence.',
-            'Use evidence drops to corner suspects at the right moment.'
+            'Open this panel to review profile traits, alibi details, and suspicion tracking.',
+            'Cross-check what they say against this card before accusing.'
         ],
-        highlightTarget: 'tutorial-evidence-locker',
-        highlightTitle: 'Your Evidence Locker'
+        highlightTarget: 'tutorial-suspect-details',
+        highlightTitle: 'The Suspect Details'
     },
     {
         route: '/interrogate',
@@ -64,25 +114,11 @@ const STEPS: Step[] = [
         ],
         highlightTarget: 'tutorial-notes',
         highlightTitle: 'Your Field Notes'
-    },
-    {
-        route: '/interrogate',
-        routeLabel: 'Interrogate',
-        badge: 'Tool Highlight',
-        title: 'Suspect Details',
-        icon: 'PROFILE',
-        description: [
-            'Open this panel to review profile traits, alibi details, and suspicion tracking.',
-            'Cross-check what they say against this card before accusing.'
-        ],
-        highlightTarget: 'tutorial-suspect-details',
-        highlightTitle: 'The Suspect Details'
     }
 ];
 
 const TUTORIAL_KEY = 'tutorialSeen';
 const TUTORIAL_STEP_KEY = 'tutorialStep';
-const TUTORIAL_AUTO_STARTED_KEY = 'tutorialAutoStarted';
 
 const clampStep = (stepValue: number) => {
     if (!Number.isFinite(stepValue)) return 0;
@@ -115,27 +151,22 @@ function TutorialModal() {
     const [visible, setVisible] = useState(false);
     const [step, setStep] = useState(0);
     const [spotlightRect, setSpotlightRect] = useState<DOMRect | null>(null);
-    const isSupportedRoute = location.pathname === '/interrogate';
+    const isSupportedRoute =
+        location.pathname === '/report' ||
+        location.pathname === '/desk' ||
+        location.pathname === '/interrogate';
 
     useEffect(() => {
         if (!isFirstTimePlayer) return;
-        if (location.pathname !== '/interrogate') return;
+        if (!isSupportedRoute) return;
 
         const hasSeenTutorial = localStorage.getItem(TUTORIAL_KEY) === 'true';
         if (hasSeenTutorial) return;
 
-        const rawSavedStep = localStorage.getItem(TUTORIAL_STEP_KEY);
-        const hasAutoStarted = sessionStorage.getItem(TUTORIAL_AUTO_STARTED_KEY) === 'true';
-
-        if (rawSavedStep === null && hasAutoStarted) {
-            return;
-        }
-
-        const savedStep = Number(rawSavedStep ?? 0);
+        const savedStep = Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? 0);
         setStep(clampStep(savedStep));
-        sessionStorage.setItem(TUTORIAL_AUTO_STARTED_KEY, 'true');
         setVisible(true);
-    }, [isFirstTimePlayer, location.pathname]);
+    }, [isFirstTimePlayer, isSupportedRoute, location.pathname]);
 
     useEffect(() => {
         if (!visible) return;
@@ -212,7 +243,14 @@ function TutorialModal() {
             dismiss();
             return;
         }
+
+        const nextStep = Math.min(step + 1, STEPS.length - 1);
+        const nextRoute = STEPS[nextStep].route;
         next();
+
+        if (nextRoute !== location.pathname) {
+            navigate(nextRoute);
+        }
     };
 
     if (!visible || !isSupportedRoute) return null;
@@ -262,38 +300,25 @@ function TutorialModal() {
                 aria-live='polite'
             >
                 <div className='tutorial-dock-header'>
-                    <span className='tutorial-step-chip'>{current.badge}</span>
+                    <div className='tutorial-dock-progress'>
+                        <span>{current.badge} · Step {step + 1} / {STEPS.length}</span>
+                        <div className='tutorial-progress-track'>
+                            <span
+                                className='tutorial-progress-fill'
+                                style={{ width: `${progressPercent}%` }}
+                            />
+                        </div>
+                    </div>
                     <button className='tutorial-skip-link' onClick={dismiss}>Skip</button>
                 </div>
 
-                <div className='tutorial-dock-progress'>
-                    <span>Step {step + 1} / {STEPS.length}</span>
-                    <div className='tutorial-progress-track'>
-                        <span
-                            className='tutorial-progress-fill'
-                            style={{ width: `${progressPercent}%` }}
-                        />
-                    </div>
-                </div>
-
-                <div className='tutorial-card' key={step}>
-                    <div className='tutorial-card-icon'>{current.icon}</div>
+                <div
+                    className='tutorial-card'
+                    key={step}
+                >
                     <h2>{current.title}</h2>
                     {current.description.map((line, i) => (
                         <p key={i}>{line}</p>
-                    ))}
-                </div>
-
-                <div className='tutorial-step-dots'>
-                    {STEPS.map((_, i) => (
-                        <button
-                            key={i}
-                            className={i === step ? 'active' : ''}
-                            onClick={() => updateStep(i)}
-                            aria-label={`Jump to step ${i + 1}`}
-                        >
-                            {i + 1}
-                        </button>
                     ))}
                 </div>
 

@@ -26,24 +26,9 @@
 
 .tutorial-dock-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 8px;
-}
-
-.tutorial-step-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 0.5rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #fff5db;
-    background: #8a1515;
-    border: 2px solid #1a1a1a;
-    border-radius: 0;
-    padding: 6px 10px;
 }
 
 .tutorial-skip-link {
@@ -65,7 +50,9 @@
 }
 
 .tutorial-dock-progress {
-    margin-top: 9px;
+    margin-top: 0;
+    flex: 1;
+    min-width: 0;
     display: grid;
     gap: 5px;
 }
@@ -102,21 +89,6 @@
     box-shadow: 3px 3px 0 rgba(26, 26, 26, 0.65);
 }
 
-.tutorial-card-icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 7px;
-    padding: 5px 8px;
-    border-radius: 0;
-    border: 2px solid #1a1a1a;
-    font-family: 'Press Start 2P', cursive;
-    font-size: 0.45rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    background: #e3d5a5;
-}
-
 .tutorial-card h2 {
     margin: 0;
     font-family: 'Press Start 2P', cursive;
@@ -130,39 +102,6 @@
     font-size: 1.18rem;
     line-height: 1.2;
     color: #16120b;
-}
-
-.tutorial-step-dots {
-    margin-top: 10px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.tutorial-step-dots button {
-    min-width: 30px;
-    height: 30px;
-    font-family: 'Press Start 2P', cursive;
-    border: 2px solid #1a1a1a;
-    border-radius: 0;
-    background: #f2e4c2;
-    color: #2b2117;
-    cursor: pointer;
-    font-size: 0.44rem;
-    box-shadow: 2px 2px 0 #1a1a1a;
-    transition: transform 120ms ease, background-color 120ms ease;
-}
-
-.tutorial-step-dots button:hover {
-    transform: translateY(-1px);
-    background: #111111;
-    color: #ffffff;
-}
-
-.tutorial-step-dots button.active {
-    background: #8a1515;
-    border-color: #1a1a1a;
-    color: #fff5db;
 }
 
 .tutorial-actions {
