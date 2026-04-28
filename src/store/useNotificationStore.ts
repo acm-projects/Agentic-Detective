@@ -44,7 +44,6 @@ function pickRandom<T>(arr: T[]) {
 }
 
 const NOTIFICATION_TYPES: NotificationType[] = ["mail"];
-const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle", "cipher", "uv-scan"];
 
 
 const HEADLINES: Record<NotificationType, string[]> = {
@@ -304,7 +303,7 @@ export const useNotificationStore = create<NotificationState>()(
     // Removed as might cause bugs
     //   const remaining = totalGameDuration - elapsed;
     //   if (remaining < MESSAGE_SCHEDULE_CONFIG.minGameTimeRemaining) return;
-
+      
       const nowMessageCount = messageCount;
       console.log("message count: " + messageCount);
       console.log("next fire at: " + state.nextFireAt);
@@ -321,6 +320,9 @@ export const useNotificationStore = create<NotificationState>()(
 
       if (nowMessageCount < state.nextFireAt) return;
 
+      // Do not schedule further notifications after the first notification
+      // has been fired. This ensures only a single clue notification appears.
+      if (state.lastFiredAt !== null) return;
       const pendingClueIds = new Set(
         state.notifications.filter((n) => !n.dismissed).map((n) => n.clueId)
       );
@@ -349,16 +351,21 @@ export const useNotificationStore = create<NotificationState>()(
         dismissed: false,
       };
 
+      // Reserve the first notification immediately so the scheduler does not
+      // re-enter this branch before the delayed toast is pushed.
+      set((s) => {
+        const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
+        if (idx >= 0) s.clues[idx].notificationId = notification.id;
+
+        s.lastFiredAt = nowMessageCount;
+        s.nextFireAt = Number.POSITIVE_INFINITY;
+      });
+
       setTimeout(() => {
         set((s) => {
-          const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
-          if (idx >= 0) s.clues[idx].notificationId = notification.id;
-          
           s.notifications.push(notification);
-          s.lastFiredAt = nowMessageCount;
-          s.nextFireAt = nowMessageCount + 2000;
         });
-      }, 9000);
+      }, 5000);
 
       saveClueProgress(get);
     },
@@ -471,8 +478,11 @@ export const useNotificationStore = create<NotificationState>()(
         s.notifications.forEach(
           (n: { opened: boolean; dismissed: boolean; expiresAt: number; clueId: string }) => {
             if (!n.opened && !n.dismissed && now > n.expiresAt) {
+              // Mark auto-expired notifications dismissed but do NOT clear
+              // the clue.notificationId here. Clearing it allowed the same
+              // clue to be re-scheduled repeatedly. Manual dismiss/resolve
+              // still clear the mapping.
               n.dismissed = true;
-              clearClueNotification(s.clues, n.clueId);
             }
           }
         );
