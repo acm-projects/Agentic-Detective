@@ -13,6 +13,23 @@
   --px-gray:      #888070;
   --px-border:    #3a2f14;
   --px-gold:      #c8a000;
+
+  /* Enhanced palette */
+  --sidebar-bg:       #3b3f45;
+  --sidebar-border:   #1a1a1a;
+  --sidebar-accent:   #e3d5a5;
+  --chat-bg:          #f2ead8;
+  --chat-border:      #1a1a1a;
+  --bot-bubble:       #cfc8b0;
+  --player-bubble:    #1c1c1c;
+  --notif-bg-from:    #161726;
+  --notif-bg-to:      #1e2038;
+  --notif-border:     rgba(200, 160, 0, 0.28);
+  --notif-glow:       rgba(200, 160, 0, 0.10);
+  --red-dark:         #8a1515;
+  --red-mid:          #9b2020;
+  --gold:             #c8a000;
+  --gold-light:       #e3d5a5;
 }
 
 html, body {
@@ -77,9 +94,12 @@ a { color: inherit; text-decoration: none; }
 ═══════════════════════════════════════════ */
 .navigate {
   display: flex; flex-direction: column;
-  gap: 12px; padding: 16px 10px;
-  background-color: #475257;
-  border-right: 4px solid var(--ink-color);
+  gap: 10px; padding: 14px 10px;
+  background-color: var(--sidebar-bg);
+  background-image:
+    linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.10) 100%);
+  border-right: 4px solid var(--sidebar-border);
+  box-shadow: inset -2px 0 0 rgba(255,255,255,0.04);
   width: 16vw; min-width: 160px;
   height: 100vh;
   overflow-y: auto;
@@ -89,20 +109,21 @@ a { color: inherit; text-decoration: none; }
 .navigate > button {
   font-family: 'Press Start 2P', cursive;
   font-size: 0.65rem;
-  background-color: #e3d5a5;
+  background-color: var(--gold-light);
   border: 3px solid #1a1a1a;
-  box-shadow: 3px 3px 0px #1a1a1a;
+  box-shadow: 3px 3px 0px rgba(0,0,0,0.55);
   color: #1a1a1a;
   text-transform: uppercase;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   width: 100%; height: 52px; padding: 0 10px; margin: 0;
   transition: transform 0.1s, box-shadow 0.1s, background 0.1s, color 0.1s;
+  letter-spacing: 0.04em;
 }
 .navigate > button:hover {
-  background: var(--ink-color); color: var(--white);
-  border-color: var(--white);
-  transform: translate(2px, 2px); box-shadow: 1px 1px 0px #1a1a1a;
+  background: #1c1c1c; color: var(--gold-light);
+  border-color: var(--gold-light);
+  transform: translate(2px, 2px); box-shadow: 1px 1px 0px rgba(0,0,0,0.55);
 }
 .navigate > button:active {
   transform: translate(4px, 4px); box-shadow: none;
@@ -144,15 +165,18 @@ a { color: inherit; text-decoration: none; }
 }
 
 .navigate > button.disabled-button {
-  background-color: #464646;
+  background-color: #4a4a4a;
+  color: #7a7a7a;
+  border-color: #3a3a3a;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
 }
 
 .navigate > button.disabled-button:hover {
-  border: 3px solid #1a1a1a;
-  color: var(--ink-color);
+  border: 3px solid #3a3a3a;
+  color: #7a7a7a;
+  background-color: #4a4a4a;
   transform: none;
-  box-shadow: 3px 3px 0px #1a1a1a;
-  transform: none;
+  box-shadow: 2px 2px 0 rgba(0,0,0,0.4);
   cursor: not-allowed;
 }
 
@@ -166,13 +190,35 @@ a { color: inherit; text-decoration: none; }
   margin-top: auto;
   width: 100%;
   min-height: 132px;
-  padding: 0.45rem;
-  border: 2px solid rgba(20, 20, 20, 0.75);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.08);
+  padding: 0.5rem;
+  border: 2px solid var(--notif-border);
+  border-top: 3px solid rgba(200, 160, 0, 0.4);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(200, 160, 0, 0.15);
   background:
-    linear-gradient(180deg, #1a1b2c 0%, #212338 100%);
+    linear-gradient(180deg, var(--notif-bg-from) 0%, var(--notif-bg-to) 100%);
   display: flex;
   align-items: stretch;
+  position: relative;
+}
+
+.notification-board::before {
+  content: 'DISPATCH';
+  position: absolute;
+  top: -1px;
+  left: 8px;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.35rem;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  opacity: 0.7;
+  line-height: 1;
+  transform: translateY(-100%);
+  padding: 2px 4px;
+  background: var(--notif-bg-from);
+  border: 1px solid var(--notif-border);
+  border-bottom: none;
 }
 
 .notification-board:empty::before {
@@ -183,13 +229,18 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   text-align: center;
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.43rem;
-  line-height: 1.5;
-  letter-spacing: 0.05em;
+  font-size: 0.38rem;
+  line-height: 1.7;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(233, 231, 206, 0.78);
-  border: 2px dashed rgba(233, 231, 206, 0.28);
-  background: rgba(255, 255, 255, 0.03);
+  color: rgba(200, 160, 0, 0.45);
+  border: 1px dashed rgba(200, 160, 0, 0.22);
+  background: rgba(200, 160, 0, 0.04);
+  position: static;
+  transform: none;
+  padding: 0;
+  padding-left: 0;
+  border-bottom: none;
 }
 
 .notification-board .first-clue-guide {
@@ -239,19 +290,22 @@ a { color: inherit; text-decoration: none; }
 
 .suspect-picker-label {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.45rem;
-  color: var(--bg-dark);
-  letter-spacing: 0.12em;
+  font-size: 0.42rem;
+  color: var(--gold-light);
+  letter-spacing: 0.14em;
   text-align: center;
-  padding-bottom: 4px;
-  border-bottom: 2px solid rgba(255,255,255,0.15);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(227, 213, 165, 0.22);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  opacity: 0.85;
 }
 
 .suspect-avatar-btn {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  width: 100%; padding: 6px 4px;
-  background: rgba(255,255,255,0.08);
+  width: 100%; padding: 7px 4px;
+  background: rgba(255,255,255,0.06);
   border: 2px solid transparent;
+  border-left: 3px solid transparent;
   cursor: pointer;
   transition: background 0.12s, border-color 0.12s, transform 0.08s;
   overflow: hidden;
@@ -260,13 +314,14 @@ a { color: inherit; text-decoration: none; }
   width: 65px; height: 56px;
   object-fit: cover;
   image-rendering: pixelated;
-  border: 2px solid #333;
+  border: 2px solid rgba(60,55,45,0.7);
+  transition: border-color 0.12s;
 }
 
 .suspect-picker-portrait {
   width: clamp(62px, 7.2vw, 86px) !important;
   height: auto !important;
-  border: 2px solid #333;
+  border: 2px solid rgba(60,55,45,0.7);
   background: transparent;
 }
 
@@ -274,14 +329,18 @@ a { color: inherit; text-decoration: none; }
 .suspect-avatar-btn .suspect-avatar-name {
   font-family: 'VT323', monospace;
   font-size: 0.9rem;
-  color: var(--bg-paper);
+  color: rgba(224, 220, 211, 0.82);
   text-align: center;
   line-height: 1.1;
   word-break: break-word;
 }
 .suspect-avatar-btn:hover {
-  background: rgba(255,255,255,0.16);
+  background: rgba(227, 213, 165, 0.12);
+  border-left-color: rgba(227, 213, 165, 0.5);
   transform: translateX(3px);
+}
+.suspect-avatar-btn:hover .suspect-avatar-name {
+  color: var(--gold-light);
 }
 /* Can remove the stuff below here (until .suspect-avatar-btn:focus-visible */
 /* Purpose was to remove the default blue "selected" ring that showed up upon clicking */
@@ -291,26 +350,29 @@ a { color: inherit; text-decoration: none; }
 
 .suspect-avatar-btn:focus-visible {
   outline: none;
-  border-color: #e3d5a5;
-  box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px #e3d5a5;
-  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px #1a1a1a, 0 0 0 4px var(--gold);
+  background: rgba(200, 160, 0, 0.14);
 }
 
 .suspect-avatar-btn:focus-visible .suspect-picker-portrait {
-  border-color: #e3d5a5;
+  border-color: var(--gold);
 }
 .suspect-avatar-btn.active {
-  background: rgba(255,255,255,0.22);
-  border-color: #e3d5a5;
+  background: rgba(227, 213, 165, 0.16);
+  border-color: rgba(200, 160, 0, 0.5);
+  border-left-color: var(--gold);
+  box-shadow: inset 3px 0 0 rgba(200, 160, 0, 0.35);
 }
 .suspect-avatar-btn.active img {
-  border-color: #e3d5a5;
-  box-shadow: 0 0 0 2px #e3d5a5;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(200, 160, 0, 0.6), 0 0 6px rgba(200, 160, 0, 0.25);
 }
 .suspect-avatar-btn.active .suspect-avatar-name {
-  color: #e3d5a5;
+  color: var(--gold-light);
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.45rem;
+  font-size: 0.42rem;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
 /* ═══════════════════════════════════════════
@@ -529,45 +591,130 @@ a { color: inherit; text-decoration: none; }
 .message-form { display: flex; flex-direction: column; height: 100%; }
 
 .chat-history {
-  flex: 1; border: 4px solid var(--ink-color);
-  background-color: var(--white);
-  box-shadow: 4px 4px 0 var(--ink-color);
-  padding: 1rem; overflow-y: auto; margin-bottom: 1.1rem;
+  flex: 1;
+  border: 4px solid var(--chat-border);
+  background: var(--chat-bg);
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 27px,
+      rgba(17, 17, 17, 0.07) 27px,
+      rgba(17, 17, 17, 0.07) 28px
+    );
+  box-shadow:
+    4px 4px 0 var(--chat-border),
+    inset 0 0 0 1px rgba(20, 20, 20, 0.08),
+    inset 0 12px 24px rgba(0,0,0,0.05);
+  padding: 0.95rem;
+  overflow-y: auto;
+  margin-bottom: 1.1rem;
+  position: relative;
 }
 
-.chat-message { display: flex; margin-bottom: 0.85rem; }
+.chat-history::before {
+  content: none;
+}
+
+.chat-history::-webkit-scrollbar { width: 8px; }
+.chat-history::-webkit-scrollbar-track { background: #c8bfa4; }
+.chat-history::-webkit-scrollbar-thumb {
+  background: #7a6040;
+  border: 1px solid #2c2314;
+  border-radius: 1px;
+}
+.chat-history::-webkit-scrollbar-thumb:hover { background: #5a4020; }
+
+.chat-message {
+  display: flex;
+  margin-bottom: 0.95rem;
+  position: relative;
+  z-index: 1;
+}
 .chat-message:last-child { margin-bottom: 0; }
 
 .bot-message, .player-message {
-  padding: 0.7em 1em; max-width: 75%;
+  padding: 0.7em 1em;
+  max-width: 75%;
   border: 3px solid var(--ink-color);
-  /* bumped up — was unreadably small */
-  font-size: 1.15rem;
-  line-height: 1.45;
+  box-shadow: 3px 3px 0 rgba(17, 17, 17, 0.7);
+  font-family: 'VT323', monospace;
+  font-size: clamp(1.2rem, 1.65vw, 1.45rem);
+  line-height: 1.38;
+  letter-spacing: 0.01em;
+  border-radius: 2px;
+  position: relative;
+  overflow-wrap: anywhere;
 }
 
 .bot-message {
-  margin: 0; margin-right: auto; text-align: left;
-  background: var(--bg-dark); color: var(--ink-color);
-  border-radius: 8px;
+  margin: 0;
+  margin-right: auto;
+  text-align: left;
+  background: #d4c9af;
+  color: var(--ink-color);
+}
+
+.bot-message::before {
+  content: '';
+  position: absolute;
+  left: -11px;
+  top: 14px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 8px solid var(--ink-color);
 }
 
 .player-message {
-  margin: 0; margin-left: auto; text-align: left;
-  background: var(--ink-color); color: var(--white);
-  padding: 0.8em 1em; border-radius: 8px;
+  margin: 0;
+  margin-left: auto;
+  text-align: left;
+  background: #1e1612;
+  color: var(--white);
+  padding: 0.8em 1em;
+  border-color: #0d0d0d;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.player-message::after {
+  content: '';
+  position: absolute;
+  right: -11px;
+  top: 14px;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 8px solid #0d0d0d;
 }
 .player-message, .player-message * { color: var(--white); }
 .player-message .you-text { color: var(--white); }
-.you-text { color: var(--ink-color); }
+.you-text {
+  color: #8a1515;
+  font-family: 'VT323', monospace;
+  font-size: 1.24rem;
+  letter-spacing: 0.02em;
+}
 
 /* clue chips in history */
-.chat-clue-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.chat-clue-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 7px;
+}
 .chat-clue-chip {
-  font-family: 'Courier New', monospace; font-size: 0.9rem;
-  background: #f0e2be; color: #1e0e04;
-  border-left: 3px solid #9b2020;
-  border-radius: 0 2px 2px 0; padding: 2px 8px;
+  font-family: 'VT323', monospace;
+  font-size: 1.08rem;
+  background: #e8d49a;
+  color: #1e0e04;
+  border: 2px solid #6a4a18;
+  border-left: 4px solid var(--red-dark);
+  border-radius: 2px;
+  padding: 3px 8px;
+  letter-spacing: 0.02em;
 }
 
 /* ── Input box ── */
@@ -576,10 +723,12 @@ a { color: inherit; text-decoration: none; }
   align-items: stretch; gap: 0;
   border: 4px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
-  background: var(--white); transition: border-color 0.15s;
+  background: #f4edd8;
+  transition: border-color 0.15s, background 0.15s;
 }
 .question-submit-box.drag-over {
-  border-color: #9b2020; background: #fdf5e8;
+  border-color: var(--red-dark);
+  background: #fff5e0;
 }
 
 .clue-chips-bar {
@@ -605,34 +754,98 @@ a { color: inherit; text-decoration: none; }
   padding: 4px; grid-column: 1 / -1; border-top: 1px dashed #9b2020;
 }
 
-.question-box { min-height: clamp(54px, 8vh, 68px); }
-.question-box input {
-  width: 100%; height: 100%; padding: 0 1.05em;
-  border: none; border-top: 2px solid var(--ink-color);
+.question-box {
+  min-height: clamp(54px, 8vh, 68px);
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.75);
+  border-top: 2px solid var(--ink-color);
   border-right: 2px solid var(--ink-color);
-  font-family: 'VT323', monospace;
-  font-size: clamp(1.4rem, 2.2vw, 1.9rem);
-  outline: none; background: var(--white);
 }
-.question-box input:focus { background: #fdfceb; }
+.question-box input {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 0.95rem 0 1rem;
+  border: none;
+  font-family: 'VT323', monospace;
+  font-size: clamp(1.35rem, 2.1vw, 1.8rem);
+  line-height: 1.1;
+  color: #111111;
+  outline: none;
+  background: transparent;
+}
+.question-box input::placeholder {
+  color: #6e6454;
+  opacity: 1;
+  font-size: clamp(1.2rem, 1.9vw, 1.6rem);
+}
+.question-box input:focus { background: rgba(255, 247, 224, 0.6); }
+
+.mic-btn {
+  width: clamp(52px, 5vw, 62px);
+  min-width: clamp(52px, 5vw, 62px);
+  appearance: none;
+  -webkit-appearance: none;
+  border-top: none;
+  border-bottom: none;
+  border-right: 2px solid var(--ink-color);
+  border-left: 2px solid var(--ink-color);
+  background: #c8bfa2;
+  color: #1a1a1a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, transform 0.08s ease;
+}
+
+.mic-btn:hover:not(:disabled) {
+  background: #1c1c1c;
+  border-left-color: var(--ink-color);
+  border-right-color: var(--ink-color);
+  color: var(--gold-light);
+}
+
+.mic-btn:active:not(:disabled) {
+  transform: translate(1px, 1px);
+}
+
+.mic-btn.mic-btn--active {
+  background: var(--red-dark);
+  color: #ffe4cf;
+  box-shadow: inset 0 0 8px rgba(0,0,0,0.4);
+}
+
+.mic-btn:disabled {
+  background: #888;
+  color: #c0c0c0;
+  cursor: not-allowed;
+}
 
 .submit-button { min-width: clamp(110px, 12vw, 148px); }
 .submit-button button {
   width: 100%; height: 100%; min-height: clamp(54px, 8vh, 68px);
   padding: 0 1rem;
   font-family: 'Press Start 2P', cursive;
-  font-size: clamp(0.58rem, 0.9vw, 0.7rem);
-  background: var(--ink-color); color: var(--white);
+  font-size: clamp(0.62rem, 0.95vw, 0.75rem);
+  letter-spacing: 0.06em;
+  background: #1c1612; color: var(--gold-light);
   border: none; border-top: 2px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
   cursor: pointer; text-transform: uppercase;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.1s, box-shadow 0.1s, background 0.1s;
 }
 .submit-button button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink-color); }
 .submit-button button:hover:not(:disabled),
-.submit-button button:active:not(:disabled) { background: #5f2400; }
+.submit-button button:active:not(:disabled) { background: #6e2800; color: var(--gold-light); }
 .submit-button button:disabled {
-  background: #555; box-shadow: none; transform: none; cursor: not-allowed;
+  background: #555; color: #888; box-shadow: none; transform: none; cursor: not-allowed;
 }
 
 
@@ -791,17 +1004,18 @@ a { color: inherit; text-decoration: none; }
 
 /* clue cards */
 .clue-modal-card {
-  background: #f0e2be; border-left: 3px solid #9b2020;
+  background: #ede0ba; border-left: 4px solid var(--red-dark);
   border-radius: 0 2px 2px 0; padding: 9px 10px;
   display: flex; align-items: center; gap: 8px;
   cursor: grab; transition: background 0.1s, transform 0.1s;
   animation: card-in 0.2s ease both;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.45);
 }
 @keyframes card-in {
   from { opacity: 0; transform: translateX(8px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-.clue-modal-card:hover { background: #f7eccf; }
+.clue-modal-card:hover { background: #f5eacc; }
 .clue-modal-card:active { cursor: grabbing; transform: rotate(1deg) scale(1.02); }
 
 .clue-modal-card-icon {
@@ -1138,7 +1352,7 @@ a { color: inherit; text-decoration: none; }
   border: 3px solid var(--ink-color);
   box-shadow: 4px 4px 0 var(--ink-color);
   padding: clamp(0.7rem, 1.4vw, 1rem);
-  overflow: hidden;
+  overflow: visible;
 }
 .notebook-suspect-header {
   display: flex;
@@ -1415,7 +1629,7 @@ a { color: inherit; text-decoration: none; }
   }
   .chatbot { left: 0; transform: translateX(clamp(8px, 1.6vw, 16px)); width: clamp(300px, 86%, 620px); }
   .question-submit-box { grid-template-columns: 1fr; }
-  .question-box input { border-right: none; }
+  .question-box { border-right: none; }
   .submit-button { min-width: 0; }
   .submit-button button { border-top: 2px solid var(--ink-color); }
 }
