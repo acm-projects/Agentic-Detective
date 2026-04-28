@@ -2,6 +2,7 @@ import { useGameStore } from "./useGameStore";
 import "./CaseReportScreen.css";
 import { useNavigate } from "react-router";
 import { useState, useRef, useCallback, useEffect } from "react";
+import TutorialModal from "./components/tutorial-modal/Tutorial";
 
 const LENS_SIZE = 350;   // diameter in px
 const ZOOM = 1.3;        // zoom level
@@ -114,6 +115,7 @@ export default function CaseReportScreen() {
 
   return (
     <>
+      <TutorialModal />
       <div
         className="report-overlay"
         ref={overlayRef}
@@ -147,7 +149,7 @@ export default function CaseReportScreen() {
           </div>
         )}
 
-        <div className="report-document" ref={docRef}>
+        <div className="report-document" ref={docRef} data-tutorial-id="tutorial-case-report-main">
           <div className="report-agency">
             Agentic Detective Bureau &nbsp;·&nbsp; Homicide Division
           </div>
