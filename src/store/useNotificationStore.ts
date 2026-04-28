@@ -235,7 +235,6 @@ function saveClueProgress(get: any) {
 }
 
 
-
 // ─────────────────────────────────────────────
 //  Notification Store
 // ─────────────────────────────────────────────
@@ -349,13 +348,16 @@ export const useNotificationStore = create<NotificationState>()(
         dismissed: false,
       };
 
-      set((s) => {
-        const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
-        if (idx >= 0) s.clues[idx].notificationId = notification.id;
-        s.notifications.push(notification);
-        s.lastFiredAt = nowMessageCount;
-        s.nextFireAt = nowMessageCount + 2000;
-      });
+      setTimeout(() => {
+        set((s) => {
+          const idx = s.clues.findIndex((c: { id: string }) => c.id === clue.id);
+          if (idx >= 0) s.clues[idx].notificationId = notification.id;
+          
+          s.notifications.push(notification);
+          s.lastFiredAt = nowMessageCount;
+          s.nextFireAt = nowMessageCount + 2000;
+        });
+      }, 9000);
 
       saveClueProgress(get);
     },
