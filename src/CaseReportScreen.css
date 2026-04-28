@@ -35,7 +35,7 @@
     /* subtle vignette */
     radial-gradient(ellipse at center, transparent 60%, rgba(80,60,20,0.18) 100%);
   color: var(--ink);
-  max-width: 740px;
+  max-width: 1000px;
   width: 100%;
   padding: 64px 72px;
   border-radius: 1px;
@@ -100,11 +100,11 @@
   text-align: center;
   margin-bottom: 8px;
   letter-spacing: 6px;
-  font-size: 10px;
+  font-size: 15px;
   text-transform: uppercase;
   color: var(--ink-faded);
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 13px;
+  font-size: 18px;
   letter-spacing: 8px;
 }
 
@@ -121,7 +121,7 @@
 .case-id {
   display: block;
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 12px;
+  font-size: 17px;
   letter-spacing: 5px;
   color: var(--ink-faded);
   margin-bottom: 8px;
@@ -129,7 +129,7 @@
 
 .report-title {
   font-family: 'Special Elite', cursive;
-  font-size: 32px;
+  font-size: 37px;
   line-height: 1.15;
   color: var(--ink);
   margin: 0 0 10px;
@@ -137,7 +137,7 @@
 }
 
 .report-meta {
-  font-size: 12px;
+  font-size: 17px;
   color: var(--ink-faded);
   letter-spacing: 1px;
   font-style: italic;
@@ -152,7 +152,7 @@
   border: 3px solid var(--red-stamp);
   color: var(--red-stamp);
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
+  font-size: 23px;
   letter-spacing: 4px;
   padding: 4px 10px;
   opacity: 0.75;
@@ -167,7 +167,7 @@
 
 .report-section-title {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 15px;
+  font-size: 20px;
   letter-spacing: 4px;
   color: var(--ink-faded);
   text-transform: uppercase;
@@ -186,19 +186,19 @@
 
 .victim-name {
   font-family: 'Special Elite', cursive;
-  font-size: 20px;
+  font-size: 25px;
   margin: 0 0 4px;
 }
 
 .victim-details {
-  font-size: 13px;
+  font-size: 18px;
   color: var(--ink-faded);
   margin: 0 0 10px;
   font-style: italic;
 }
 
 .cause-of-death {
-  font-size: 13px;
+  font-size: 18px;
   color: var(--red);
   font-weight: 700;
   font-family: 'Courier Prime', monospace;
@@ -206,14 +206,14 @@
 }
 
 .body-found {
-  font-size: 13px;
+  font-size: 18px;
   color: var(--ink-faded);
   margin-top: 4px;
 }
 
 /* ── Briefing ── */
 .briefing-text {
-  font-size: 15px;
+  font-size: 17px;
   line-height: 1.85;
   color: var(--ink);
   font-style: italic;
@@ -232,7 +232,7 @@
 }
 
 .report-list li {
-  font-size: 13.5px;
+  font-size: 18.5px;
   line-height: 1.6;
   padding-left: 20px;
   position: relative;
@@ -244,16 +244,65 @@
   position: absolute;
   left: 0;
   color: var(--red);
-  font-size: 11px;
+  font-size: 16px;
   top: 3px;
 }
 
 .questions-list li::before {
   content: '?';
   font-family: 'Special Elite', cursive;
-  font-size: 14px;
+  font-size: 19px;
   color: var(--ink-faded);
   top: 1px;
+}
+
+.report-evidence-spotlight {
+  margin: 18px 0 8px;
+  padding: 18px 20px;
+  border: 3px solid rgba(139, 26, 26, 0.8);
+  border-left: 10px solid var(--red);
+  background: #0000000a;
+}
+
+.report-evidence-kicker {
+  margin: 0 0 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2.4px;
+  font-size: 22px;
+  color: var(--red);
+}
+
+.report-evidence-line {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 122px 1fr;
+  gap: 12px;
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--ink);
+  align-items: start;
+}
+
+.report-evidence-line + .report-evidence-line {
+  margin-top: 6px;
+}
+
+.report-evidence-label {
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 1.5px;
+  color: var(--ink-faded);
+}
+
+.report-evidence-value {
+  display: block;
+  color: var(--ink);
+}
+
+.report-evidence-key {
+  font-family: 'Special Elite', cursive;
+  font-style: italic;
+  font-weight: 700;
+  color: rgba(139, 26, 26, 0.8);
 }
 
 /* ── Divider ── */
@@ -272,7 +321,7 @@
   margin-top: 40px;
   padding-top: 16px;
   border-top: 1px solid var(--ink-faded);
-  font-size: 11px;
+  font-size: 16px;
   color: var(--ink-faded);
   font-style: italic;
 }
@@ -281,7 +330,7 @@
   border-bottom: 1px solid var(--ink-faded);
   width: 160px;
   margin-top: 24px;
-  font-size: 10px;
+  font-size: 15px;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -295,7 +344,7 @@
   background: var(--ink);
   color: var(--paper);
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
+  font-size: 23px;
   letter-spacing: 6px;
   text-transform: uppercase;
   border: none;
@@ -372,6 +421,9 @@
     linear-gradient(135deg, rgba(200,170,80,0.5) 0%, transparent 50%, rgba(80,60,20,0.3) 100%)
     border-box;
   -webkit-mask:
+    linear-gradient(#fff 0 0) padding-box,
+    linear-gradient(#fff 0 0);
+  mask:
     linear-gradient(#fff 0 0) padding-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: destination-out;

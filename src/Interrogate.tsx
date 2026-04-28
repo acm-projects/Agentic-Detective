@@ -160,8 +160,7 @@ function PopulateNotificationBoard({
 function Interrogate() {
   const TUTORIAL_KEY = 'tutorialSeen';
   const TUTORIAL_STEP_KEY = 'tutorialStep';
-  const TUTORIAL_READY_KEY = 'tutorialReadyAfterReport';
-  const TUTORIAL_DESK_ENTERED_KEY = 'tutorialDeskEntered';
+  const TUTORIAL_AUTO_STARTED_KEY = 'tutorialAutoStarted';
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const {
@@ -174,11 +173,9 @@ function Interrogate() {
     isFirstClueDiscovery,
     isResponding,
     elapsed,
-    accusationUnlocked,
     totalConversationCount,
     startInterrogation,
     sendMessage,
-    makeAccusation,
     tickElapsed,
     setSuspicionLevelForSuspect,
   } = useGameStore();
@@ -203,18 +200,12 @@ function Interrogate() {
   const discoveredClues = allClues.filter(c => c.discovered);
   const lostClueCount = useNotificationStore(s => s.clues.reduce((count, clue) => count + (clue.clueLost ? 1 : 0), 0));
   const hasLostClues = lostClueCount > 0;
-  const ACCUSATION_MIN_CLUES = 2;
-  const cluesRemainingForAccusation = Math.max(0, ACCUSATION_MIN_CLUES - discoveredClues.length);
-  const accusationLockTooltip = cluesRemainingForAccusation === 1
-    ? 'Unlock 1 more clue to use this feature.'
-    : `Unlock ${cluesRemainingForAccusation} more clues to use this feature.`;
   const [attachedClues, setAttachedClues] = useState<AttachedClue[]>([]);
   const [isDraggingClue, setIsDraggingClue] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   // const [recentlyLostClueName, setRecentlyLostClueName] = useState<string | null>(null);
   const previousLostCountRef = useRef(lostClueCount);
   const [newClueLost, setNewClueLost] = useState(false);
-  const [accuseUnlockedNotice, setAccuseUnlockNotice] = useState(false);
   const [stressIncreaseNotice, setStressIncreaseNotice] = useState<{
     title: string;
     bodyText: React.ReactNode;
@@ -234,8 +225,6 @@ function Interrogate() {
   const [noteDraft, setNoteDraft] = useState('');
   const [noteSaving, setNoteSaving] = useState(false);
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
-  const previousAccusationUnlockedRef = useRef(accusationUnlocked);
-
   const timerPaused = useNotificationStore(s => s.timerPaused);
   const sessionId = currentSessionId || player?.caseReport?.caseId || '';
   const storedSuspicionLevel = useGameStore(s =>
@@ -313,7 +302,7 @@ function Interrogate() {
       const data: SuspectNote[] = await res.json();
       setNotesList(data);
     } catch {
-      setNotesError('Could not load notes.');
+      // setNotesError('Could not load notes.');
     } finally {
       setNotesLoading(false);
     }
@@ -376,22 +365,7 @@ function Interrogate() {
   }, [newClueLost]);
 
   // Accusation Notification
-  useEffect(() => {
-    const wasLocked = !previousAccusationUnlockedRef.current;
 
-    if (wasLocked && accusationUnlocked) {
-      setAccuseUnlockNotice(true);
-
-      const id = window.setTimeout(() => {
-        setAccuseUnlockNotice(false);
-      }, 10000);
-
-      previousAccusationUnlockedRef.current = accusationUnlocked;
-      return () => window.clearTimeout(id);
-    }
-
-    previousAccusationUnlockedRef.current = accusationUnlocked;
-  }, [accusationUnlocked]);
 
   // ── Save note ──────────────────────────────────────────
   const saveNote = useCallback(async () => {
@@ -413,7 +387,7 @@ function Interrogate() {
       setNoteInputOpen(false);
       await loadNotes();
     } catch {
-      setNotesError('Failed to save. Try again.');
+      // setNotesError('Failed to save. Try again.');
     } finally {
       setNoteSaving(false);
     }
@@ -507,8 +481,7 @@ function Interrogate() {
   const handleReopenTutorial = () => {
     localStorage.removeItem(TUTORIAL_KEY);
     localStorage.removeItem(TUTORIAL_STEP_KEY);
-    localStorage.setItem(TUTORIAL_READY_KEY, 'true');
-    localStorage.setItem(TUTORIAL_DESK_ENTERED_KEY, 'true');
+    sessionStorage.removeItem(TUTORIAL_AUTO_STARTED_KEY);
     setTutorialVersion(prev => prev + 1);
   };
 
@@ -619,51 +592,6 @@ function Interrogate() {
           </form>
         </dialog>
 
-        {!accusationUnlocked ? (
-          <Tooltip<HTMLButtonElement>
-            content={accusationLockTooltip}
-            className="item-tooltip"
-            placement="right"
-            offsetPx={8}
-          >
-            {({ ref, getReferenceProps }) => (
-              <button
-                ref={ref}
-                type="button"
-                className="disabled-button"
-                aria-label="Accuse locked"
-                {...getReferenceProps()}
-              >
-                Accuse
-              </button>
-            )}
-          </Tooltip>
-        ) : (
-          <button
-            onClick={() =>
-              (document.getElementById('accuse') as HTMLDialogElement)?.showModal()
-            }
-          >
-            Accuse
-          </button>
-        )}
-        {accusationUnlocked && (
-          <dialog className="nes-dialog" id="accuse">
-            <form method="dialog">
-              <h3>Make Your Accusation</h3>
-              <p>Who do you think did it?</p>
-              {profiles.map(p => (
-                <button key={p.name} onClick={() => makeAccusation(p.name, navigate)}>
-                  {p.name}
-                </button>
-              ))}
-              <menu className="dialog-menu">
-                <button>Cancel</button>
-              </menu>
-            </form>
-          </dialog>
-        )}
-
         {isFirstTimePlayer && (
           <button onClick={handleReopenTutorial}>Reopen Tutorial?</button>
         )}
@@ -701,11 +629,11 @@ function Interrogate() {
             title="Clue Lost"
             bodyText="You failed the minigame, and have lost a key clue for your investigation."
           />
-          <PopulateNotificationBoard
+          {/* <PopulateNotificationBoard
             condition={accuseUnlockedNotice}
             title="Accusation Unlocked"
             bodyText="You can now make your accusation."
-          />
+          /> */}
           <PopulateNotificationBoard
             condition={Boolean(stressIncreaseNotice)}
             title={stressIncreaseNotice?.title ?? ''}
@@ -916,7 +844,7 @@ function Interrogate() {
           EVIDENCE LOCKER MODAL — draggable, independent
       ══════════════════════════════════════════════════ */}
       {cluesModalOpen && (
-        <div className="clue-modal" style={{ left: cluePos.x, top: cluePos.y }}>
+        <div className="clue-modal locker-modal" style={{ left: cluePos.x, top: cluePos.y }}>
           <div className="clue-modal-handle" onMouseDown={clueMouseDown}>
             <span className="clue-modal-title">LOCKER</span>
             <div className="clue-modal-handle-dots">
@@ -1098,7 +1026,7 @@ function Interrogate() {
           NOTEBOOK / SUSPECT PROFILE — draggable, independent
       ══════════════════════════════════════════════════ */}
       {showNotebook && (
-        <div className="clue-modal notebook-drag-modal" style={{ left: notebookPos.x, top: notebookPos.y }}>
+        <div className="clue-modal notebook-drag-modal suspect-modal" style={{ left: notebookPos.x, top: notebookPos.y }}>
           <div className="clue-modal-handle" onMouseDown={notebookMouseDown}>
             <span className="clue-modal-title">SUSPECT PROFILE</span>
             <div className="clue-modal-handle-dots">

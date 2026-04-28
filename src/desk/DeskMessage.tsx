@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react'
 import { useGameStore } from '../useGameStore';
 import { Tooltip } from '../components/tooltip/Tooltip';
 import cluebookImg from './assets/themedcluebook.png';
@@ -13,9 +12,9 @@ import plantImg from './assets/muchbetterthemedplant.png';
 import deskBgImg from './assets/extranewdesk.png';
 import LoadingScreen from '../LoadingScreen';
 import phoneImg from './assets/2themedcellphone.png';
-import TutorialModal from '../components/tutorial-modal/Tutorial';
 import './desk.css';
 import ScrabbleImg from './assets/newscrabble.png'; 
+import TutorialModal from '../components/tutorial-modal/Tutorial';
 
 interface DeskItemProps {
   src: string;
@@ -47,39 +46,9 @@ function DeskItemWithTooltip({ src, alt, tooltip, className, style, onClick, tut
 }
 
 function Message() {
-  const TUTORIAL_KEY = 'tutorialSeen';
-  const TUTORIAL_STEP_KEY = 'tutorialStep';
-  const CASE_REPORT_STEP = 1;
-  const ACCUSATION_STEP = 2;
-  const EVIDENCE_REVIEW_STEP = 3;
-  const INTERROGATION_STEP = 4;
-
   const { phase, player } = useGameStore();
   const navigate = useNavigate();
-  const { isFirstClueDiscovery, clearFirstClueDiscovery, accusationUnlocked } = useGameStore();
-
-  const [tutorialStep, setTutorialStep] = useState<number>(() => Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? -1));
-  const [tutorialSeen, setTutorialSeen] = useState<boolean>(() => localStorage.getItem(TUTORIAL_KEY) === 'true');
-
-  useEffect(() => {
-    const syncTutorialState = () => {
-      const nextStep = Number(localStorage.getItem(TUTORIAL_STEP_KEY) ?? -1);
-      const nextSeen = localStorage.getItem(TUTORIAL_KEY) === 'true';
-
-      setTutorialStep(prev => (prev !== nextStep ? nextStep : prev));
-      setTutorialSeen(prev => (prev !== nextSeen ? nextSeen : prev));
-    };
-
-    syncTutorialState();
-    const id = window.setInterval(syncTutorialState, 180);
-    return () => window.clearInterval(id);
-  }, []);
-
-  const tutorialActiveOnDesk = !tutorialSeen;
-  const highlightClueBookForTutorial = tutorialActiveOnDesk && tutorialStep === EVIDENCE_REVIEW_STEP;
-  const highlightCaseFileForTutorial = tutorialActiveOnDesk && tutorialStep === CASE_REPORT_STEP;
-  const highlightAccusationForTutorial = tutorialActiveOnDesk && tutorialStep === ACCUSATION_STEP;
-  const highlightPhoneForTutorial = tutorialActiveOnDesk && tutorialStep === INTERROGATION_STEP;
+  const { isFirstClueDiscovery, clearFirstClueDiscovery } = useGameStore();
   const tutorialHighlightClass = 'evidence-item-first-discovery';
   const baseItemClass = 'evidence-item';
 
@@ -100,10 +69,10 @@ function Message() {
   const handleClueBookClick = () => { clearFirstClueDiscovery(); navigate('/clues'); };
   const handleCaseFileClick = () => navigate('/report');
   const handleAccuseClick = () => {
-    if (!accusationUnlocked) {
-      alert('You need to discover at least 2 clues before making an accusation.');
-      return;
-    }
+    // if (!accusationUnlocked) {
+    //   alert('You need to discover at least 2 clues before making an accusation.');
+    //   return;
+    // }
 
     navigate('/suspects');
   };
@@ -133,12 +102,13 @@ function Message() {
         <div className='icons'>
           {/* 1. CLUE BOOK */}
           <DeskItemWithTooltip
-            className={(isFirstClueDiscovery || highlightClueBookForTutorial) ? tutorialHighlightClass : baseItemClass}
+            className={isFirstClueDiscovery ? tutorialHighlightClass : baseItemClass}
             src={cluebookImg} 
             alt="Clue Book" 
             tooltip="Clue Book: review discovered evidence."
             style={{ ...itemStyle, width: '390px', top: '150px', left: '53%', transform: 'rotate(-20deg)' }}
             onClick={handleClueBookClick}
+            tutorialId='tutorial-desk-clue-book'
           />
 
           {/* 2. CIGARETTE */}
@@ -157,13 +127,13 @@ function Message() {
 
           {/* 4. CASE FILE */}
           <DeskItemWithTooltip
-            className={highlightCaseFileForTutorial ? tutorialHighlightClass : baseItemClass}
+            className={baseItemClass}
             src={caseFileImg} 
             alt="Case File" 
             tooltip="Case File: open your report and briefing."
             style={{ ...itemStyle, width: '490px', top: '270px', left: '5%', transform: 'rotate(-25deg)', zIndex: 10 }}
             onClick={handleCaseFileClick}
-            tutorialId='tutorial-case-file'
+            tutorialId='tutorial-desk-case-file'
           />
 
           {/* 5. GUN */}
@@ -175,13 +145,13 @@ function Message() {
 
           {/* 5. HANDCUFFS */}
           <DeskItemWithTooltip
-            className={highlightAccusationForTutorial ? 'evidence-item-first-discovery' : 'evidence-item'}
+            className='evidence-item'
             src={handcuffs} 
             alt="Accusation" 
             tooltip="Make your accusation here."
             style={{ ...itemStyle, width: '370px', top: '230px', left: '27%', transform: 'rotate(220deg)', zIndex: 10 }} 
             onClick={handleAccuseClick}
-            tutorialId='tutorial-accusation'
+            tutorialId='tutorial-desk-accusation'
           />
 
           {/* 7. PENCIL */}
@@ -200,12 +170,13 @@ function Message() {
 
           {/* 12. PHONE */}
         <DeskItemWithTooltip
-          className={highlightPhoneForTutorial ? tutorialHighlightClass : baseItemClass}
+          className={baseItemClass}
             src={phoneImg} 
             alt="Cellphone" 
             tooltip="Cellphone: answer and continue interrogation."
             style={{ ...itemStyle, width: '360px', top: '310px', left: '70%', transform: 'rotate(40deg)', zIndex: 10 }}
             onClick={handlePhoneClick}
+            tutorialId='tutorial-desk-phone'
           />
         </div>
 

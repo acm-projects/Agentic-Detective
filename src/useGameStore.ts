@@ -112,7 +112,7 @@ const DEFAULT_SEED: PlayerSeed = {
   isSignedIn: false,
 };
 
-const ACCUSATION_MIN_CLUES = 2;
+const ACCUSATION_MIN_CLUES = 1;
 
 export const useGameStore = create<GameState>((set, get) => ({
   phase: "setup",
@@ -167,12 +167,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       try {
         const { backend, player } = await generateCaseFile(seed);
 
-        let voiceIds: Record<string, string> = {};
-        try {
-          voiceIds = await selectVoicesForCase(backend.suspects, seed.freeText);
-        } catch (err) {
-          console.warn("[VoiceSelector] Failed, continuing without voices:", err);
-        }
+        const voiceIds: Record<string, string> = {
+          "Suhani Rana": "cG2STrgPqih9Cw8EwnaA",
+          "Adarsh Goura": "UgBBYS2sOqTuMpoF3BR0",
+          "Elijah Walker": "7EzWGsX10sAS4c9m9cPf",
+          "Mercedes Xiong": "exsUS4vynmxd379XN4yO",
+        };
         set({
           backend,
           player,
@@ -184,7 +184,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues);
-        navigate("/report");           // ← instead of set({ phase: "briefing" })
+        navigate("/report");
         return false;
       } catch (err) {
         set({ error: "Failed to generate case.", phase: "setup" });
@@ -277,20 +277,28 @@ export const useGameStore = create<GameState>((set, get) => ({
   }
 
   // Fresh session
-  set(state => ({
-    phase: "interrogation",
-    activeSuspectName: suspectName,
-    sessions: {
-      ...state.sessions,
-      [suspectName]: {
-        suspectName,
-        history: [],
-        conversationCount: 0,
-        stressLevel: 0,
-        suspicionLevel: null,
-      },
+  const isDemoAdarsh = false; // confession now triggered after first message instead
+set(state => ({
+  phase: "interrogation",
+  activeSuspectName: suspectName,
+  sessions: {
+    ...state.sessions,
+    [suspectName]: {
+      suspectName,
+      history: isDemoAdarsh ? [
+        {
+          role: "suspect" as const,
+          text: "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry.",
+          displayText: "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was win everyone and I just... I panicked. I pretended nothing happened. I'm so sorry.",
+          timestamp: Date.now(),
+        }
+      ] : [],
+      conversationCount: 0,
+      stressLevel: isDemoAdarsh ? 100 : 0,
+      suspicionLevel: null,
     },
-  }));
+  },
+}));
 },
 
   setSuspicionLevelForSuspect: (suspectName, level) => {
@@ -426,6 +434,72 @@ export const useGameStore = create<GameState>((set, get) => ({
 const suspect = backend.suspects.find(s => s.name === activeSuspectName)!;
 const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport, player.clues);
 
+const isDemoHardcoded =
+  get().player?.caseReport?.caseId === "DEMO-001" &&
+  session.conversationCount === 0;
+
+const demoResponses: Record<string, string> = {
+  "Adarsh Goura": "I can't hide it. I took Suhani's book, found Mohammad, and hit him. I panicked — I couldn't let his team win. I'm sorry.",
+"Suhani Rana": "Mercedes and I have history. I borrowed her book to study, but Adarsh asked for it mid-prep and disappeared.",
+"Elijah Walker": "Adarsh was gone longer than a bathroom break. I didn't say anything, but when I heard about Mohammad, it didn't sit right.",
+"Mercedes Xiong": "I wasn't there. I gave Suhani the book after History class and went home. She said it was to study.",
+};
+
+const isDemoConfession = isDemoHardcoded && activeSuspectName === "Adarsh Goura";
+
+if (isDemoHardcoded) {
+  const hardcodedText = demoResponses[activeSuspectName] ?? "";
+
+  await new Promise(resolve => setTimeout(resolve, 750));
+
+  const hardcodedMessage: ChatMessage = {
+    role: "suspect",
+    text: hardcodedText,
+    displayText: "",
+    timestamp: Date.now(),
+  };
+  set(state => ({
+    totalConversationCount: state.totalConversationCount + 1,
+    isResponding: false,
+    sessions: {
+      ...state.sessions,
+      [activeSuspectName]: {
+        ...state.sessions[activeSuspectName],
+        history: [...state.sessions[activeSuspectName].history, hardcodedMessage],
+        conversationCount: state.sessions[activeSuspectName].conversationCount + 1,
+        stressLevel: isDemoConfession ? 100 : 30,
+      },
+    },
+  }));
+
+  const voiceId = get().voiceIds[activeSuspectName];
+  if (hardcodedText) {
+    streamSpeech(
+      hardcodedText,
+      voiceId ?? null,
+      (speaking) => set({ isSpeaking: speaking }),
+      (revealedText) => {
+        set(state => {
+          const s = state.sessions[activeSuspectName];
+          if (!s) return state;
+          const history = [...s.history];
+          const lastIdx = history.length - 1;
+          if (history[lastIdx]?.role === "suspect") {
+            history[lastIdx] = { ...history[lastIdx], displayText: revealedText };
+          }
+          return {
+            sessions: {
+              ...state.sessions,
+              [activeSuspectName]: { ...s, history },
+            },
+          };
+        });
+      }
+    ).catch(err => console.error("[tts] demo playback failed:", err));
+  }
+  return;
+}
+
 const raw = await callModel({
   model: fastModel,
   system: systemPrompt,
@@ -504,12 +578,17 @@ const raw = await callModel({
         responseText = raw.replace(/["\s]*stressLevel["\s]*:[\s\d]+\}?\s*$/i, "").trim();
       }
 
-      const suspectMessage: ChatMessage = {
-        role: "suspect",
-        text: responseText,
-        displayText: "",  // suspects have no separate display text
-        timestamp: Date.now(),
-      };
+
+const suspectMessage: ChatMessage = {
+  role: "suspect",
+  text: isDemoConfession
+    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry."
+    : responseText,
+  displayText: isDemoConfession
+    ? "Okay — okay. I can't do this. I did it. I took the book from Suhani, and I went and found Mohammad in the hallway. I hit him. I just couldn't let him win. His team was going to win and I just... I panicked. I pretended nothing happened. I'm so sorry."
+    : "",
+  timestamp: Date.now(),
+};
 
       // Add message to history first
       set(state => ({

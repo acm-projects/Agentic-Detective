@@ -1,44 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Oswald:wght@400;700&display=swap');
+
 :root {
-  /* Modal base colors */
-  --modal-bg: #ffefd3;
-  --modal-border: #000000;
-  --modal-text: #6f5f40;
-  --modal-text-muted: #8a7f6e;
+  --modal-bg: #f1eadb;
+  --modal-border: #111111;
+  --modal-text: #1a120a;
+  --modal-text-muted: #7a6a52;
   --modal-text-muted-alt: #5a4e3a;
-  --modal-text-highlight: #292012;
+  --modal-text-highlight: #1a120a;
   --modal-text-hover: #e8d5b0;
-
-  /* Interactive elements */
   --btn-hover-bg: #2a2318;
-  --btn-border: #5a4e3a;
-  --btn-text: #c8b89a;
-
-  /* Status colors */
   --status-error: #c0392b;
-  --status-success: #7aac6e;
-
-  /* Tile/Keyboard */
-  --tile-bg: #f8e5b6;
-  --tile-bg-muted: #b7a189;
-  --tile-border: #000000;
-  --keyboard-bg: #c9b597;
-
-  /* Wordle states */
+  --status-success: #4a7a43;
+  --tile-bg: #e8ddc8;
+  --tile-bg-muted: #c9b89e;
+  --tile-border: #111111;
+  --keyboard-bg: #d6c9b0;
   --wordle-correct-bg: #386732;
   --wordle-correct-border: #4a7a43;
-  --wordle-correct-text: #a8d4a0;
+  --wordle-correct-text: #d4eecf;
   --wordle-present-bg: #826214;
   --wordle-present-border: #b5891b;
-  --wordle-present-text: #d4a830;
-  --wordle-absent-bg: #979797;
-  --wordle-absent-border: #000000;
-  --wordle-absent-text: #000000;
-
-  /* Shadows and overlays */
-  --shadow-dark: rgba(0, 0, 0, 0.75);
-  --overlay-bg: rgba(9, 8, 7, 0.72);
+  --wordle-present-text: #f5d98a;
+  --wordle-absent-bg: #b0a494;
+  --wordle-absent-border: #111111;
+  --wordle-absent-text: #2a2010;
+  --overlay-bg: rgba(9, 8, 7, 0.8);
 }
 
+/* ── Overlay ─────────────────────────────────────────────────────── */
 .overlay {
   position: fixed;
   inset: 0;
@@ -49,35 +38,81 @@
   backdrop-filter: blur(2px);
 }
 
-.modal {
-  width: min(760px, calc(100vw - 32px));
+/* ── Outer black newspaper border frame ──────────────────────────── */
+.modalFrame {
+  width: min(680px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
-  overflow: auto;
-  background: var(--modal-bg);
-  border: 1px solid var(--modal-border);
-  box-shadow: 0 18px 60px var(--shadow-dark);
-  padding: 16px 18px;
-  color: var(--modal-text);
+  background: #111111;
+  padding: 3px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.9);
+  border: 1px solid #111111; /* was 6px */
 }
 
+/* ── Inner parchment modal ───────────────────────────────────────── */
+.modal {
+  width: 100%;
+  max-height: calc(100vh - 32px - 10px);
+  overflow-y: auto;
+  background: var(--modal-bg);
+  border: 2px solid #111111;
+  padding: 16px 20px 20px;
+  color: var(--modal-text);
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Paper texture */
+.modal::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("https://www.transparenttextures.com/patterns/paper-fibers.png");
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.modal > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Newspaper masthead strip ────────────────────────────────────── */
+.masthead {
+  text-align: center;
+  border-top: 3px double #111111;
+  border-bottom: 3px double #111111;
+  padding: 6px 0 5px;
+  margin-bottom: 12px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  color: #111111;
+}
+
+/* ── Header ──────────────────────────────────────────────────────── */
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  margin-bottom: 10px;
 }
 
 .headerMeta {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--modal-text-muted);
 }
 
 .notifType {
-  color: var(--wordle-present-border);
+  color: #8b1a10;
 }
 
 .separator {
@@ -86,35 +121,58 @@
 
 .minigameTitle {
   color: var(--modal-text-highlight);
+  font-weight: bold;
 }
 
 .closeBtn {
   background: transparent;
-  border: 1px solid var(--modal-border);
-  color: var(--modal-text-muted);
+  border: 2px solid #111111;
+  color: var(--modal-text);
   width: 28px;
   height: 28px;
   cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
+  box-shadow: 2px 2px 0 #111111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.closeBtn:hover {
+  background: #111111;
+  color: var(--modal-bg);
+}
+
+/* ── Dividers ────────────────────────────────────────────────────── */
 .ruledLine {
-  margin: 12px 0;
-  border-top: 1px dashed var(--modal-border);
+  margin: 10px 0;
+  border: none;
+  border-top: 2px solid #111111;
 }
 
-.flavour {
-  margin: 0;
-  color: var(--modal-text-muted);
-  font-style: italic;
-  line-height: 1.5;
+.ruledLineThin {
+  margin: 6px 0;
+  border: none;
+  border-top: 1px solid #111111;
+}
+
+/* ── Minigame area ───────────────────────────────────────────────── */
+.minigameBox {
+  border: 2px solid #111111;
+  display: flex;
+  justify-content: center;
+  padding: 12px 8px;
+  margin: 10px 0;
 }
 
 .minigameArea {
   display: flex;
   justify-content: center;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
+/* ── Footer ──────────────────────────────────────────────────────── */
 .footer {
   display: flex;
   align-items: center;
@@ -123,81 +181,99 @@
 }
 
 .footerNote {
-  font-size: 12px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.65rem;
   color: var(--modal-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .skipBtn {
   background: transparent;
-  border: 1px solid var(--modal-text-muted-alt);
+  border: 2px solid #111111;
   color: var(--modal-text);
-  padding: 6px 12px;
+  padding: 6px 14px;
   cursor: pointer;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: 2px 2px 0 #111111;
 }
 
 .skipBtn:hover {
-  background: var(--btn-hover-bg);
+  background: #111111;
+  color: var(--modal-bg);
 }
 
-/* ── Shared minigame wrapper ─────────────────────────────────────── */
+/* ── Shared minigame inner wrapper ───────────────────────────────── */
 .minigameInner {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 18px;
-  padding: 4px 0 8px;
-  font-family: 'IM Fell English', 'Palatino Linotype', Georgia, serif;
+  gap: 14px;
+  padding: 4px 0 6px;
 }
 
 .hint {
-  font-size: 13px;
-  color: var(--modal-text-muted);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.95rem;
+  color: #8b1a10;
   text-align: center;
-  font-style: italic;
-  max-width: 380px;
-  line-height: 1.6;
+  text-transform: uppercase;
+  max-width: 420px;
+  line-height: 1.5;
   margin: 0;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.06em;
+  border: 2px solid #111111;
+  padding: 8px 16px;
 }
 
 .errorMsg {
-  font-size: 13px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
   color: var(--status-error);
   text-align: center;
   margin: 0;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .successMsg {
-  font-size: 14px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.9rem;
   color: var(--status-success);
   text-align: center;
   margin: 0;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 .submitBtn {
   background: transparent;
-  border: 1px solid var(--modal-text-muted-alt);
+  border: 2px solid #111111;
   color: var(--modal-text);
   padding: 9px 28px;
-  font-family: inherit;
-  font-size: 13px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.8rem;
   letter-spacing: 0.08em;
+  text-transform: uppercase;
   cursor: pointer;
+  box-shadow: 2px 2px 0 #111111;
   transition: background 0.15s, color 0.15s;
 }
+
 .submitBtn:hover {
-  background: var(--btn-hover-bg);
-  color: var(--modal-text-hover);
+  background: #111111;
+  color: var(--modal-bg);
 }
+
 .submitBtn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: default;
 }
 
-/* ── Wordle ──────────────────────────────────────────────────────── */
+/* ── Wordle grid ─────────────────────────────────────────────────── */
 .wordleGrid {
   display: flex;
   flex-direction: column;
@@ -227,19 +303,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'IM Fell English', Georgia, serif;
+  font-family: 'Oswald', sans-serif;
   font-size: 22px;
   font-weight: 700;
-  border: 1px solid var(--tile-border);
+  border: 2px solid var(--tile-border);
   background: var(--tile-bg);
   color: var(--modal-text);
-  letter-spacing: 0.05em;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.45);
   transition: background 0.25s, border-color 0.25s, color 0.25s;
 }
 
-.wordle_tbd {
+.wordle_empty {
+  background: var(--tile-bg);
   border-color: var(--modal-text-muted-alt);
+}
+
+.wordle_tbd {
   background: var(--tile-bg-muted);
+  border-color: #111111;
 }
 
 .wordle_correct {
@@ -269,7 +350,7 @@
   100% { transform: rotateX(0deg); }
 }
 
-/* Keyboard */
+/* ── Keyboard ────────────────────────────────────────────────────── */
 .wordleKeyboard {
   display: flex;
   flex-direction: column;
@@ -284,36 +365,38 @@
 }
 
 .wordleKey {
-  min-width: 32px;
+  min-width: 34px;
   height: 44px;
   background: var(--keyboard-bg);
-  border: 1px solid var(--tile-border);
+  border: 2px solid #111111;
   color: var(--modal-text);
-  font-family: 'IM Fell English', Georgia, serif;
-  font-size: 13px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 6px;
-  transition: background 0.15s, color 0.15s;
-  letter-spacing: 0.02em;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4);
+  transition: background 0.12s, color 0.12s;
 }
 
 .wordleKey:hover {
-  background: var(--btn-hover-bg);
+  background: #111111;
+  color: var(--modal-bg);
 }
 
 .wordleKeyActive {
-  background: var(--btn-hover-bg);
-  border-color: var(--modal-text-highlight);
-  transform: scale(0.95);
+  background: #111111;
+  color: var(--modal-bg);
+  transform: scale(0.93);
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
 }
 
 .wordleKeyWide {
-  min-width: 52px;
+  min-width: 56px;
   font-size: 11px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.03em;
 }
 
 .wordleKey.wordle_correct {
@@ -336,4 +419,3 @@
   color: var(--wordle-absent-text);
   animation: none;
 }
-

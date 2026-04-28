@@ -6,6 +6,7 @@ import type {
   WordleData,
   ImageUnshuffleData,
   CaesarCipherData,
+  UVScanData,
   NotificationType,
   MinigameData,
   MinigameType,
@@ -22,8 +23,8 @@ const SCHEDULE_CONFIG = {
 */
 
 const MESSAGE_SCHEDULE_CONFIG = {
-  firstNotificationWindowMessageCount: [1, 2] as [number, number], // originally 5, 10
-  cooldownMessageCount: [1, 2] as [number, number], // originally 5, 10
+  firstNotificationWindowMessageCount: [2] as [number], // originally 5, 10
+  cooldownMessageCount: [2] as [number], // originally 5, 10
   toastLifetime: 40_000,
 };
 
@@ -43,7 +44,8 @@ function pickRandom<T>(arr: T[]) {
 }
 
 const NOTIFICATION_TYPES: NotificationType[] = ["mail"];
-const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle", "cipher"];
+const MINIGAME_TYPES: MinigameType[] = ["wordle", "image-unshuffle", "cipher", "uv-scan"];
+
 
 const HEADLINES: Record<NotificationType, string[]> = {
   mail: [
@@ -66,31 +68,7 @@ const FLAVOR_TEXTS: Record<NotificationType, string[]> = {
 // ─────────────────────────────────────────────
 
 const WORDLE_DETECTIVE_WORDS = [
-  { answer: "KNIFE", hint: "The murder weapon may be closer than you think." },
-  { answer: "ALIBI", hint: "Someone's story doesn't quite add up." },
-  { answer: "BLOOD", hint: "The forensics report holds a grim detail." },
-  { answer: "VAULT", hint: "Something was locked away the night of the murder." },
-  { answer: "CLOAK", hint: "A witness described what the figure was wearing." },
-  { answer: "FORGE", hint: "A document in the study may not be authentic." },
-  { answer: "DECOY", hint: "Not everything found at the scene was accidental." },
-  { answer: "GUEST", hint: "An unexpected visitor arrived that evening." },
-  { answer: "LYING", hint: "One suspect's testimony contradicts another." },
-  { answer: "MOTIVE", hint: "Follow the money." },
-  { answer: "TRACE", hint: "A tiny piece of evidence was left behind." },
-  { answer: "STAIN", hint: "Something spilled during the struggle." },
-  { answer: "PRINT", hint: "A mark on the glass could identify the culprit." },
-  { answer: "SCENE", hint: "Reconstruct what happened where the body was found." },
-  { answer: "CHASE", hint: "Someone was seen running shortly after the crime." },
-  { answer: "RIVAL", hint: "The victim had a bitter competitor." },
-  { answer: "MONEY", hint: "A suspicious transfer happened before the murder." },
-  { answer: "RUMOR", hint: "Whispers around town hint at a dark secret." },
-  { answer: "STEAL", hint: "Was the killing tied to a theft?" },
-  { answer: "ENTRY", hint: "How did the killer get inside?" },
-  { answer: "NOTES", hint: "The victim wrote something important before dying." },
-  { answer: "CLOCK", hint: "The stopped time may reveal when it happened." },
-  { answer: "DOORS", hint: "One of them was left unlocked that night." },
-  { answer: "PANEL", hint: "A hidden compartment may conceal evidence." },
-  { answer: "DRINK", hint: "What the victim consumed might hold a clue." },
+  { answer: "PRINT", hint: "They didn't leave without a trace" },
 ];
 
 function generateWordleData(): WordleData {
@@ -169,6 +147,30 @@ function generateImageUnshuffleData(): ImageUnshuffleData {
     };
 };
 
+//----------------------------------------------
+const UV_SCAN_HINTS = [
+  "Something was dragged across the floor near the east wall.",
+  "The intruder came in from the garden — check near the doorway.",
+  "A partial print was left in a hurry.",
+  "The victim wasn't alone. Someone else was here.",
+  "They tried to clean it up, but UV doesn't lie.",
+];
+
+const UV_SCAN_FOOTPRINT_POSITIONS = [
+  { x: 0.30, y: 0.40 },
+  { x: 0.55, y: 0.48 },
+  { x: 0.70, y: 0.35 },
+  { x: 0.42, y: 0.62 },
+  { x: 0.65, y: 0.60 },
+];
+function generateUVScanData(): UVScanData {
+  return {
+    kind: 'uv-scan',
+    footprintPos: pickRandom(UV_SCAN_FOOTPRINT_POSITIONS),
+    hint: pickRandom(UV_SCAN_HINTS),
+  };
+}
+
 // ─────────────────────────────────────────────
 //  Minigame Dispatcher
 // ─────────────────────────────────────────────
@@ -181,10 +183,13 @@ function generateMinigameData(type: MinigameType): MinigameData {
       return generateImageUnshuffleData();
     case "cipher":
       return generateCipherData();
+    case "uv-scan":
+      return generateUVScanData();
     default:
       throw new Error(`Unknown minigame type: ${type}`);
   }
 }
+ 
 
 function saveClueProgress(get: any) {
   void import("../useGameStore").then(({ useGameStore }) => {
@@ -306,7 +311,7 @@ export const useNotificationStore = create<NotificationState>()(
       console.log("last fired at: " + state.lastFiredAt);
 
       if (state.nextFireAt === null) {
-        const delay = randBetween(...MESSAGE_SCHEDULE_CONFIG.firstNotificationWindowMessageCount);
+        const delay = 2;
         set((s) => {
           s.nextFireAt = nowMessageCount + delay;
         });
@@ -328,7 +333,7 @@ export const useNotificationStore = create<NotificationState>()(
 
       const clue = pickRandom(available);
       const type = pickRandom(NOTIFICATION_TYPES);
-      const minigameType = pickRandom(MINIGAME_TYPES);
+      const minigameType: MinigameType = "uv-scan";
 
       const notification: NotificationPayload = {
         id: crypto.randomUUID(),
@@ -349,7 +354,7 @@ export const useNotificationStore = create<NotificationState>()(
         if (idx >= 0) s.clues[idx].notificationId = notification.id;
         s.notifications.push(notification);
         s.lastFiredAt = nowMessageCount;
-        s.nextFireAt = nowMessageCount + randBetween(...MESSAGE_SCHEDULE_CONFIG.cooldownMessageCount);
+        s.nextFireAt = nowMessageCount + 2000;
       });
 
       saveClueProgress(get);

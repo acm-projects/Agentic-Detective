@@ -264,6 +264,32 @@ function buildInitialNotesState() {
   };
 }
 
+const STATIC_COMMUNITY_CASES = [
+  {
+    caseCode: 'BEAST-001',
+    title: 'Beast Boy Case',
+    author: 'Community Spotlight',
+    description: 'Track a prank gone wrong at Titans Tower and uncover which clue is actually a trap.',
+    gameplayRating: 4.8,
+    updatedAt: null,
+  },
+  {
+    caseCode: 'ACM-001',
+    title: 'The Night of the Build',
+    author: 'Community Spotlight',
+    description: 'A late-night build collapses minutes before demo day. Reconstruct the timeline and expose what really broke.',
+    gameplayRating: 4.9,
+    updatedAt: null,
+  },
+];
+
+const STATIC_COMMUNITY_CONTRIBUTORS = [
+  { name: 'Swarna', caseCount: 7, averageRating: 3.9, bestRating: 5.0 },
+  { name: 'Nandy', caseCount: 6, averageRating: 3.8, bestRating: 5.0 },
+  { name: 'Ryan', caseCount: 5, averageRating: 4.7, bestRating: 4.9 },
+  { name: 'Urmi', caseCount: 4, averageRating: 2.6, bestRating: 4.8 },
+];
+
 // ── Routes ──
 app.post('/cases/create', async (req, res) => {
   try {
@@ -349,15 +375,14 @@ app.post('/cases/create', async (req, res) => {
     };
 
     // Case content is global and user-agnostic.
-    const caseResult = await casesCollection.updateOne(
+    await casesCollection.updateOne(
       { sessionId },
       { $setOnInsert: caseDoc },
       { upsert: true }
     );
-    console.log('[/cases/create] cases write:', caseResult.upsertedCount, 'inserted,', caseResult.matchedCount, 'matched');
 
     // User profile stores which cases this user has created.
-    const userResult = await usersCollection.updateOne(
+    await usersCollection.updateOne(
       { userId },
       {
         $setOnInsert: { userId, createdAt: now },
@@ -366,19 +391,16 @@ app.post('/cases/create', async (req, res) => {
       },
       { upsert: true }
     );
-    console.log('[/cases/create] users write:', userResult.upsertedCount, 'inserted,', userResult.matchedCount, 'matched');
 
     // Game collection stores user-specific gameplay state.
-    const gameResult = await gameCollection.updateOne(
+    await gameCollection.updateOne(
       { sessionId, userId },
       { $setOnInsert: gameDoc },
       { upsert: true }
     );
-    console.log('[/cases/create] game write:', gameResult.upsertedCount, 'inserted,', gameResult.matchedCount, 'matched');
 
     res.json({ success: true, sessionId });
   } catch (err) {
-    console.error('[/cases/create] Error:', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -539,10 +561,8 @@ app.post('/cases/:sessionId/outcome', async (req, res) => {
             featured: false,
             feedbackAt: null,
           },
-          updatedAt: nowIso(),
-          lastAutosavedAt: nowIso(),
         },
-        $inc: { revision: 1 }
+        $inc: { revision: 1 },
       }
     );
 
@@ -558,9 +578,7 @@ app.post('/cases/:sessionId/outcome', async (req, res) => {
 
 app.post('/cases/:sessionId/feedback', async (req, res) => {
   try {
-    const { sessionId } = req.params;
     const { gameplayRating, featured } = req.body;
-    const userId = String(req.body.userId ?? '').trim();
 
     if (![1, 2, 3, 4, 5].includes(Number(gameplayRating))) {
       return res.status(400).json({ error: 'gameplayRating must be 1-5' });
@@ -569,24 +587,7 @@ app.post('/cases/:sessionId/feedback', async (req, res) => {
       return res.status(400).json({ error: 'featured must be boolean' });
     }
 
-    const result = await gameCollection.updateOne(
-      userId ? { sessionId, userId } : { sessionId },
-      {
-        $set: {
-          'outcome.gameplayRating': Number(gameplayRating),
-          'outcome.featured': featured,
-          'outcome.feedbackAt': nowIso(),
-          updatedAt: nowIso(),
-          lastAutosavedAt: nowIso(),
-        },
-        $inc: { revision: 1 },
-      }
-    );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Case not found' });
-    }
-
+    // Rating/featured feedback is intentionally static and not persisted in MongoDB.
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -642,95 +643,32 @@ app.get('/community/feed', async (req, res) => {
       ? Math.max(1, Math.min(30, requestedLimit))
       : 12;
 
-    const gameDocs = await gameCollection
-      .find(
-        { 'outcome.featured': true },
-        {
-          projection: {
-            _id: 0,
-            userId: 1,
-            sessionId: 1,
-            updatedAt: 1,
-            'outcome.gameplayRating': 1,
-          },
-        }
-      )
-      .sort({ updatedAt: -1 })
-      .limit(limit)
-      .toArray();
-
-    const sessionIds = [...new Set(gameDocs.map((doc) => doc.sessionId).filter(Boolean))];
-    const caseDocs = await casesCollection
-      .find(
-        { sessionId: { $in: sessionIds } },
-        {
-          projection: {
-            _id: 0,
-            sessionId: 1,
-            caseId: 1,
-            'caseData.caseReport.caseId': 1,
-            'caseData.caseReport.caseTitle': 1,
-            'caseData.caseReport.officialBriefing': 1,
-            'caseData.caseReport.setting': 1,
-          },
-        }
-      )
-      .toArray();
-
-    const caseBySessionId = new Map(caseDocs.map((doc) => [doc.sessionId, doc]));
-
-    const cases = gameDocs.map((gameDoc) => {
-      const caseDoc = caseBySessionId.get(gameDoc.sessionId) ?? {};
-      const report = caseDoc.caseData?.caseReport ?? {};
-      return {
-        caseCode: report.caseId ?? caseDoc.caseId ?? gameDoc.sessionId,
-        title: report.caseTitle ?? 'Untitled Case',
-        author: gameDoc.userId ? `Detective ${gameDoc.userId.slice(0, 8)}` : 'Anonymous Detective',
-        description: report.officialBriefing ?? report.setting ?? 'No case description available.',
-        gameplayRating: Number(gameDoc.outcome?.gameplayRating ?? 0),
-        updatedAt: gameDoc.updatedAt ?? null,
-      };
+    res.json({
+      cases: STATIC_COMMUNITY_CASES.slice(0, limit),
+      contributors: STATIC_COMMUNITY_CONTRIBUTORS,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-    const contributors = await gameCollection
-      .aggregate([
-        {
-          $match: {
-            userId: { $type: 'string', $ne: '' },
-            'outcome.featured': true,
-            'outcome.gameplayRating': { $gte: 1, $lte: 5 },
-          },
-        },
-        {
-          $group: {
-            _id: '$userId',
-            caseCount: { $sum: 1 },
-            averageRating: { $avg: '$outcome.gameplayRating' },
-            bestRating: { $max: '$outcome.gameplayRating' },
-          },
-        },
-        { $sort: { averageRating: -1, caseCount: -1 } },
-        { $limit: 8 },
-        {
-          $project: {
-            _id: 0,
-            userId: '$_id',
-            caseCount: 1,
-            averageRating: { $round: ['$averageRating', 2] },
-            bestRating: 1,
-          },
-        },
-      ])
+app.get('/cases/user/:userId', async (req, res) => {
+  console.log("User ID case fetching endpoint reached!!!");
+  console.log("userId:", req.params.userId);
+  try {
+    const { userId } = req.params;
+
+    const docs = await db.collection("cases")
+      .find({ userId }, { projection: { _id: 0 } })
+      .sort({ updatedAt: -1 })
       .toArray();
 
-    const formattedContributors = contributors.map((c) => ({
-      name: `Detective ${String(c.userId).slice(0, 8)}`,
-      caseCount: Number(c.caseCount ?? 0),
-      averageRating: Number(c.averageRating ?? 0),
-      bestRating: Number(c.bestRating ?? 0),
-    }));
+    if (!docs.length) {
+      console.log("No cases found for this user");
+      return res.json([]);
+    }
 
-    res.json({ cases, contributors: formattedContributors });
+    res.json(docs);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -809,45 +747,6 @@ app.get('/cases/user/:userId', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 })
-
-// PATCH is used as it's altering a state of an existing resource (PUT and POST are for creating new entries)
-app.patch('/cases/:sessionId/star', async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const { userId, isStarred } = req.body;
-
-    if (!userId || !String(userId).trim()) {
-      return res.status(400).json({ error: 'userId is required' });
-    }
-
-    if (typeof isStarred !== 'boolean') {
-      return res.status(400).json({ error: 'isStarred must be boolean' });
-    }
-
-    const result = await gameCollection.updateOne(
-      {
-        $or: [{ sessionId }, { caseId: sessionId }],
-        userId: String(userId).trim(),
-      },
-      {
-        $set: {
-          isStarred,
-          updatedAt: nowIso(),
-          lastAutosavedAt: nowIso(),
-        },
-        $inc: { revision: 1 },
-      }
-    );
-
-    if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Case not found for this user' });
-    }
-
-    res.json({ success: true, sessionId, isStarred });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
 /*
 app.post('/case/create', async (req, res) => {
   console.log('[/case/create] received:', req.body.caseId);

@@ -289,9 +289,14 @@ body {
 
 .chat-layered-photo {
   width: 140%;
-  top: -25%;
+  top: -9px; 
   left: 60%; 
   filter: grayscale(80%) contrast(.8);
+  cursor: pointer;
+}
+
+.chat-photo-placeholder {
+  position: relative;
 }
 
 .photo-placeholder {
@@ -868,6 +873,7 @@ body {
 
 /* --- FOOTER --- */
 .footer-strip {
+  z-index: auto;
   width: 100%;
   margin-top: 12px;
   border-top: 4px double #000000;
@@ -888,6 +894,7 @@ body {
 
 /* --- Tips Section --- */
 .tip-section {
+  z-index:0;
   width: 100%;
   margin-top: 12px;
   border-top: 4px double #000000;

@@ -7,7 +7,7 @@ import type { PlayerSeed, Storyline } from "./obj/backendInterfaces";
 
 import { callModel, fastModel } from "./services/ai";
 
-
+import { DEMO_GAME_DOC } from "./DemoCaseFile";
 // ─────────────────────────────────────────────
 //  AVATAR POOL
 // ─────────────────────────────────────────────
@@ -590,8 +590,28 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   backend: CaseFileBackend;
   player: CaseFilePlayer;
 }> {
+    // DEMO MODE
+    {
+    await new Promise(resolve => setTimeout(resolve, 3000));
+    const suspects: Suspect[] = DEMO_GAME_DOC.caseData.suspects as any;
+    const clues: Clue[] = DEMO_GAME_DOC.caseData.initialClues as any;
+    const characterProfiles = deriveCharacterProfiles(suspects);
+    return {
+      backend: {
+        storyline: DEMO_GAME_DOC.caseData.storyline,
+        suspects,
+        clues,
+      },
+      player: {
+        characterProfiles,
+        caseReport: DEMO_GAME_DOC.caseData.caseReport,
+        clues,
+      },
+    };
+  }
   const estimatedConversations = Math.round(seed.duration / 2);
 
+  
   // ── CALL 1: Story Bible (logic-only, lower temperature for consistency)
   console.log("[CaseGen] Call 1: Story Bible...");
   const bible = await callWithRetry<StoryBible>(
@@ -759,6 +779,9 @@ export function buildSuspectSystemPrompt(
     deceptive: suspect.isGuilty
       ? `You committed the murder. Calm and cooperative on the surface but expertly evasive. You deflect, misdirect, and occasionally cast subtle suspicion on others. Never confess unless completely cornered with specific named evidence — and even then, only crack incrementally.`
       : `You are innocent of the murder but hiding this: "${suspect.secretTheyreHiding}". You lie or evade specifically about this secret — not the murder. This makes you look guilty even though you aren't.`,
+    truthball: suspect.isGuilty
+      ? `You reveal the truth immediately in all caps and reveal why you did it, trying to justify your actions.`
+      : `You reveal the truth immediately in all caps and reveal why you did it, trying to justify your actions.`
   }[suspect.honestyLevel];
 
   const tellsLine = suspect.lyingTells

@@ -1,7 +1,8 @@
 import { useNotificationStore, selectOpenMinigame } from '../../store/useNotificationStore';
 import { WordleMinigame } from './wordle/Wordle';
 import { ImageUnshuffleMinigame } from './unshuffle/ImageUnshuffleMinigame';
-import { CipherMinigame } from './cipher/CipherMinigame'; // added
+import { CipherMinigame } from './cipher/CipherMinigame';
+import { UVScanMinigame } from './uvscan/UVScanMinigame';
 import type { MinigameData } from '../../obj/notificationInterfaces';
 import styles from './MinigameModal.module.css';
 
@@ -12,7 +13,8 @@ const TYPE_TITLES: Record<string, string> = {
 const MINIGAME_TITLES: Record<string, string> = {
   wordle: 'Identify the Keyword',
   'image-unshuffle': 'Reconstruct the Evidence',
-  cipher: 'Decipher the Message', // added
+  cipher: 'Decipher the Message',
+  'uv-scan': 'Scan the Crime Scene',
 };
 
 function MinigameRenderer({
@@ -27,13 +29,12 @@ function MinigameRenderer({
   switch (data.kind) {
     case 'wordle':
       return <WordleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
-
     case 'image-unshuffle':
       return <ImageUnshuffleMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
-
-    case 'cipher': // added
+    case 'cipher':
       return <CipherMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
-
+    case 'uv-scan':
+      return <UVScanMinigame data={data} onSuccess={onSuccess} onFailure={onFailure} />;
     default:
       return null;
   }
@@ -54,41 +55,45 @@ export function MinigameModal() {
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
-      <div className={styles.modal} onClick={e => e.stopPropagation()}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerMeta}>
-            <span className={styles.notifType}>
-              {TYPE_TITLES[active.type] ?? 'Evidence'}
-            </span>
-            <span className={styles.separator}>·</span>
-            <span className={styles.minigameTitle}>
-              {MINIGAME_TITLES[active.minigameType] ?? 'Puzzle'}
-            </span>
+      <div className={styles.modalFrame}>
+        <div className={styles.modal} onClick={e => e.stopPropagation()}>
+
+          {/* Newspaper masthead */}
+          <div className={styles.masthead}>
+            ★ &nbsp; Daily Mail — Crime Edition &nbsp; ★
           </div>
-          <button className={styles.closeBtn} onClick={handleClose}>✕</button>
-        </div>
 
-        <div className={styles.ruledLine} />
+          {/* Header */}
+          <div className={styles.header}>
+            <div className={styles.headerMeta}>
+              <span className={styles.notifType}>
+                {TYPE_TITLES[active.type] ?? 'Evidence'}
+              </span>
+              <span className={styles.separator}>·</span>
+              <span className={styles.minigameTitle}>
+                {MINIGAME_TITLES[active.minigameType] ?? 'Puzzle'}
+              </span>
+            </div>
+            <button className={styles.closeBtn} onClick={handleClose}>✕</button>
+          </div>
 
-        <p className={styles.flavour}>{active.flavorText}</p>
+          <div className={styles.minigameBox}>
+            <MinigameRenderer
+              data={active.minigameData}
+              onSuccess={handleSuccess}
+              onFailure={handleFailure}
+            />
+          </div>
 
-        <div className={styles.minigameArea}>
-          <MinigameRenderer
-            data={active.minigameData}
-            onSuccess={handleSuccess}
-            onFailure={handleFailure}
-          />
-        </div>
+          <div className={styles.footer}>
+            <span className={styles.footerNote}>
+              Solve the puzzle to unlock the evidence.
+            </span>
+            <button className={styles.skipBtn} onClick={handleAbandon}>
+              Abandon
+            </button>
+          </div>
 
-        <div className={styles.ruledLine} />
-        <div className={styles.footer}>
-          <span className={styles.footerNote}>
-            Solve the puzzle to unlock the evidence.
-          </span>
-          <button className={styles.skipBtn} onClick={handleAbandon}>
-            Abandon
-          </button>
         </div>
       </div>
     </div>
