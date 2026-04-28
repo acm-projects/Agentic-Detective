@@ -49,7 +49,7 @@ function KeyEvidenceSnapshot() {
       <p className="report-evidence-line">
         <span className="report-evidence-label">Location</span>
         <span className="report-evidence-value">
-          Hallway outside <strong className="report-evidence-key">ESCW 1.315</strong>.
+          Hallway outside <strong className="report-evidence-key">ECSW 1.315</strong>.
         </span>
       </p>
       <p className="report-evidence-line">

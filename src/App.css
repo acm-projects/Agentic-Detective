@@ -289,7 +289,7 @@ body {
 
 .chat-layered-photo {
   width: 140%;
-  top: -25%;
+  top: -9px;
   left: 60%; 
   filter: grayscale(80%) contrast(.8);
   cursor: pointer;
