@@ -32,6 +32,10 @@
   --gold-light:       #e3d5a5;
 }
 
+#my {
+  zoom: 80%;
+}
+
 html, body {
   margin: 0; padding: 0;
   height: 100vh; width: 100vw;
@@ -94,13 +98,16 @@ a { color: inherit; text-decoration: none; }
 ═══════════════════════════════════════════ */
 .navigate {
   display: flex; flex-direction: column;
-  gap: 10px; padding: 14px 10px;
+  gap: 10px; padding: 14px 6px;
   background-color: var(--sidebar-bg);
   background-image:
     linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(0,0,0,0.10) 100%);
   border-right: 4px solid var(--sidebar-border);
   box-shadow: inset -2px 0 0 rgba(255,255,255,0.04);
-  width: 16vw; min-width: 160px;
+
+  /* ✅ UPDATED WIDTH */
+  width: clamp(140px, 14vw, 220px);
+
   height: 100vh;
   overflow-y: auto;
   margin-top: auto;
@@ -108,7 +115,7 @@ a { color: inherit; text-decoration: none; }
 
 .navigate > button {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.65rem;
+  font-size: 0.55rem;
   background-color: var(--gold-light);
   border: 3px solid #1a1a1a;
   box-shadow: 3px 3px 0px rgba(0,0,0,0.55);
@@ -116,7 +123,7 @@ a { color: inherit; text-decoration: none; }
   text-transform: uppercase;
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 52px; padding: 0 10px; margin: 0;
+  width: 100%; height: 46px; padding: 0 6px; margin: 0;
   transition: transform 0.1s, box-shadow 0.1s, background 0.1s, color 0.1s;
   letter-spacing: 0.04em;
 }
@@ -144,19 +151,16 @@ a { color: inherit; text-decoration: none; }
     box-shadow: 0 0 0 1px #8a1515, 0 0 0 4px #fff5db;
     background-color: #8a1515;
   }
-
   38% {
     transform: translate(0, -1px) scale(1.02);
     box-shadow: 0 0 0 1px #8a1515, 0 0 0 8px rgba(241, 213, 140, 0.75);
     background-color: #d32c2c;
   }
-
   68% {
     transform: translate(0, 0.5px) scale(1.008);
     box-shadow: 0 0 0 1px #8a1515, 0 0 0 6px rgba(241, 213, 140, 0.55);
     background-color: #be2424;
   }
-
   100% {
     transform: translate(0, 0) scale(1);
     box-shadow: 0 0 0 1px #8a1515, 0 0 0 4px #fff5db;
@@ -281,28 +285,28 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Vertical suspect avatar picker ── */
 .suspect-avatar-picker {
-  display: flex; flex-direction: column; gap: 8px;
-  margin-top: 8px;
-  padding: 0px 3px;
+  display: flex; flex-direction: column; gap: 4px;
+  margin-top: 6px;
+  padding: 0px 2px;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
 .suspect-picker-label {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.42rem;
+  font-size: 0.38rem;
   color: var(--gold-light);
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-align: center;
-  padding-bottom: 6px;
+  padding-bottom: 5px;
   border-bottom: 1px solid rgba(227, 213, 165, 0.22);
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
   opacity: 0.85;
 }
 
 .suspect-avatar-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  width: 100%; padding: 7px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  width: 100%; padding: 5px 3px;
   background: rgba(255,255,255,0.06);
   border: 2px solid transparent;
   border-left: 3px solid transparent;
@@ -311,7 +315,7 @@ a { color: inherit; text-decoration: none; }
   overflow: hidden;
 }
 .suspect-avatar-btn img {
-  width: 65px; height: 56px;
+  width: 52px; height: 45px;
   object-fit: cover;
   image-rendering: pixelated;
   border: 2px solid rgba(60,55,45,0.7);
@@ -319,20 +323,23 @@ a { color: inherit; text-decoration: none; }
 }
 
 .suspect-picker-portrait {
-  width: clamp(62px, 7.2vw, 86px) !important;
+  width: clamp(46px, 5vw, 64px) !important;
   height: auto !important;
   border: 2px solid rgba(60,55,45,0.7);
   background: transparent;
 }
 
-
 .suspect-avatar-btn .suspect-avatar-name {
   font-family: 'VT323', monospace;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   color: rgba(224, 220, 211, 0.82);
   text-align: center;
   line-height: 1.1;
   word-break: break-word;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  width: 100%;
 }
 .suspect-avatar-btn:hover {
   background: rgba(227, 213, 165, 0.12);
@@ -342,8 +349,7 @@ a { color: inherit; text-decoration: none; }
 .suspect-avatar-btn:hover .suspect-avatar-name {
   color: var(--gold-light);
 }
-/* Can remove the stuff below here (until .suspect-avatar-btn:focus-visible */
-/* Purpose was to remove the default blue "selected" ring that showed up upon clicking */
+
 .suspect-avatar-btn:focus {
   outline: none;
 }
@@ -371,7 +377,7 @@ a { color: inherit; text-decoration: none; }
 .suspect-avatar-btn.active .suspect-avatar-name {
   color: var(--gold-light);
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.42rem;
+  font-size: 0.38rem;
   text-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }
 
@@ -382,9 +388,8 @@ a { color: inherit; text-decoration: none; }
   flex: 1;
   display: flex; flex-direction: column;
   padding: 0; overflow: hidden;
-  position: relative;              /* needed for absolute children */
+  position: relative;
   background-color: var(--bg-paper);
-  /* locker.png and updatedcasedetails.png removed from here — now real <img> elements */
   background-image:
     url("./assets/light.png"),
     url("./assets/updatedsecurity.png"),
@@ -414,12 +419,11 @@ a { color: inherit; text-decoration: none; }
 
 /* ── Clickable background-replacement images ── */
 
-/* updatedcasedetails.png — was: left 30px bottom 15px, 230px auto */
 .bg-img-casedetails {
   position: absolute;
-  left: 30px;
-  bottom: 15px;
-  width: 300px;
+  left: 20px;
+  bottom: 0px;
+  width: 250px;
   height: auto;
   cursor: pointer;
   z-index: 5;
@@ -432,19 +436,12 @@ a { color: inherit; text-decoration: none; }
   transform: scale(1.02);
 }
 
-/* locker.png — was: left 95px top 150px, 250px auto */
 .bg-img-locker {
   position: absolute;
-  left: 125px;
+  left: 80px;
   top: 175px;
   width: 250px;
-  height: 170px; 
-  /*
-    left: 45px;
-  top: 150px;
-  width: 400px;
-  height: auto;
-  */
+  height: 170px;
   cursor: pointer;
   z-index: 5;
   transition: filter 0.15s, transform 0.1s;
@@ -524,13 +521,13 @@ a { color: inherit; text-decoration: none; }
 }
 
 .character-container {
-  display: flex; 
-  flex-direction: row; 
+  display: flex;
+  flex-direction: row;
   gap: 1rem;
-  flex: 0 0 auto; 
+  flex: 0 0 auto;
   max-height: 200px;
-  margin-top: 18vh;
-  margin-left: 18vw;
+  margin-top: 10vh;
+  margin-left: 24vw;
   width: clamp(460px, 74%, 980px);
   position: relative;
   z-index: 2;
@@ -848,20 +845,28 @@ a { color: inherit; text-decoration: none; }
   background: #555; color: #888; box-shadow: none; transform: none; cursor: not-allowed;
 }
 
-
 /* ── Notes-window (notepad image, opens notebook modal) ── */
 .notes-window {
-  width: 29%; position: relative;
-  padding: 2.5em 1.5em; font-size: 1.6rem;
+  width: 29%;
+  position: relative;
+  padding: 2.5em 1.5em;
+  font-size: 1.6rem;
   background-image: url("./assets/bettershadethemednotepad.png");
-  background-size: 85%; background-position: center; background-repeat: no-repeat;
-  margin-top: auto; margin-bottom: 0; margin-right: 2.5rem;
-  height: 40%; top: 2rem; cursor: pointer; transition: opacity 0.1s;
+  background-size: 85%;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-top: auto;
+  margin-bottom: 0;
+  margin-left: 1rem;
+  height: 40%;
+  top: 2rem;
+  cursor: pointer;
+  transition: opacity 0.1s;
 }
-.notes-window:hover { 
+.notes-window:hover {
   filter: brightness(1.12) drop-shadow(0 0 6px rgba(0,0,0,0.4));
   transform: scale(1.02);
- }
+}
 
 /* ── Dialogs ── */
 .nes-dialog {
@@ -915,9 +920,7 @@ a { color: inherit; text-decoration: none; }
   box-shadow: 6px 6px 0 rgba(0,0,0,0.7);
 }
 
-/* Notebook modal is a bit wider */
 .notebook-drag-modal { width: 420px; }
-
 .notes-drag-modal { width: 420px; }
 
 .notes-modal .clue-modal-title::before {
@@ -925,7 +928,7 @@ a { color: inherit; text-decoration: none; }
   background: #355f8c;
   color: #e7f1ff;
 }
-.suspect-modal .clue-modal-title::before{
+.suspect-modal .clue-modal-title::before {
   content: 'SUSPECT';
   background: #357e51;
   color: #e7f1ff;
@@ -979,7 +982,7 @@ a { color: inherit; text-decoration: none; }
 .clue-modal-close:hover { background: #9b2020; color: #ffd0d0; }
 
 .clue-modal-hint {
-  font-size: 10px; 
+  font-size: 10px;
   color: #ffffff;
   font-weight: bold;
   letter-spacing: 0.1em; text-transform: uppercase;
@@ -1067,7 +1070,7 @@ a { color: inherit; text-decoration: none; }
 .clue-modal-navigator {
   display: flex;
   padding: 10px;
-  align-items: center; /* only works if display set to flex*/
+  align-items: center;
   justify-content: center;
   gap: 8px;
 }
@@ -1186,8 +1189,6 @@ a { color: inherit; text-decoration: none; }
   border-color: #6d675c;
 }
 
-
-
 .locker-modal .clue-modal-close:hover {
   background: var(--ink-color);
   color: var(--white);
@@ -1256,7 +1257,7 @@ a { color: inherit; text-decoration: none; }
 }
 .notes-entry-text {
   font-family: 'VT323', monospace;
-  font-size: 1.15rem;          /* bumped up */
+  font-size: 1.15rem;
   margin: 0; line-height: 1.45;
   color: var(--ink-color);
   white-space: pre-wrap;
@@ -1366,19 +1367,19 @@ a { color: inherit; text-decoration: none; }
   flex: 1;
 }
 .notebook-suspect-avatar {
-  width: 72px; height: 72px;   /* a bit bigger */
+  width: 72px; height: 72px;
   object-fit: contain; image-rendering: pixelated;
   border: 2px solid var(--ink-color);
 }
 .notebook-suspect-name {
   font-family: 'Press Start 2P', cursive;
-  font-size: 0.75rem;          /* bumped */
+  font-size: 0.75rem;
   color: var(--ink-color); margin-bottom: 5px; letter-spacing: 2px;
   overflow-wrap: anywhere;
 }
 .notebook-suspect-meta {
   color: #555; margin-bottom: 6px;
-  font-family: 'VT323', monospace; font-size: 1.2rem; /* bumped */
+  font-family: 'VT323', monospace; font-size: 1.2rem;
 }
 .notebook-suspicion-tag {
   display: inline-block; font-size: 0.5rem; padding: 3px 8px;
@@ -1430,7 +1431,7 @@ a { color: inherit; text-decoration: none; }
 }
 .notebook-suspect-field {
   font-family: 'VT323', monospace;
-  font-size: 1.2rem;           /* bumped */
+  font-size: 1.2rem;
   color: var(--ink-color); margin-bottom: 5px; line-height: 1.45;
   overflow-wrap: anywhere;
 }
@@ -1554,7 +1555,7 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ═══════════════════════════════════════════
-   CLUE DETAIL PANEL (unchanged)
+   CLUE DETAIL PANEL
 ═══════════════════════════════════════════ */
 .clue-detail {
   position: fixed; top: 50%; right: 5%;

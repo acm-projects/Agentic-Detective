@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from './useGameStore';
-import s1 from './assets/s1.png';
-import s2 from './assets/s2.png';
-import s3 from './assets/s3.png';
-import s4 from './assets/s4.png';
+import s1 from './assets/polaroid.png';
+import s2 from './assets/polaroid.png';
+import s3 from './assets/polaroid.png';
+import s4 from './assets/polaroid.png';
 import jailHer from './assets/jailher.gif';
 import suspectavatar from './assets/portraitgirl.png';
 import who from './assets/updatedwho.png';
@@ -155,7 +155,7 @@ function Suspects() {
                   width: '47%',
                   pointerEvents: 'none',
                 }}>
-                  <SuspectPortrait features={profile.portraitFeatures} size={267} />
+                  <SuspectPortrait features={profile.portraitFeatures} size={269} />
                 </div>
               )
               : <img src={suspectavatar} alt="character" className="character-avatar" />

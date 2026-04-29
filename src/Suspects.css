@@ -186,14 +186,14 @@
 
 .polaroid-name {
   position: absolute;
-  left: 50%;
-  bottom: 12%;
+  left: 54%;
+  bottom: 13%;
   transform: translateX(-50%);
-  width: 82%;
+  width: 50%;
   text-align: center;
-  font-family: 'Courier Prime', monospace;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
   letter-spacing: 0.08em;
   color: #111111;
   text-transform: uppercase;
