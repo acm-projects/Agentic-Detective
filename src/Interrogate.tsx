@@ -158,9 +158,6 @@ function PopulateNotificationBoard({
 }
 
 function Interrogate() {
-  const TUTORIAL_KEY = 'tutorialSeen';
-  const TUTORIAL_STEP_KEY = 'tutorialStep';
-  const TUTORIAL_AUTO_STARTED_KEY = 'tutorialAutoStarted';
   const navigate = useNavigate();
   const { signOut } = useClerk();
   const {
@@ -188,7 +185,6 @@ function Interrogate() {
   const [showNotebook, setShowNotebook] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [cluesModalOpen, setCluesModalOpen] = useState(false);
-  const [tutorialVersion, setTutorialVersion] = useState(0);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
@@ -479,13 +475,6 @@ function Interrogate() {
     localStorage.removeItem("lastCaseId");
   };
 
-  const handleReopenTutorial = () => {
-    localStorage.removeItem(TUTORIAL_KEY);
-    localStorage.removeItem(TUTORIAL_STEP_KEY);
-    sessionStorage.removeItem(TUTORIAL_AUTO_STARTED_KEY);
-    setTutorialVersion(prev => prev + 1);
-  };
-
   useEffect(() => {
     const handlePotentialSignOutClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
@@ -532,7 +521,7 @@ function Interrogate() {
   // Avatar index map for vertical suspect picker (1-based)
   return (
     <div className='game-container'>
-      <TutorialModal key={tutorialVersion} />
+      <TutorialModal />
 
       {/* ── Sidebar nav ── */}
       <div className='navigate'>
