@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress, type SuspicionLevel } from './useGameStore';
-import { StressBar } from './StressBar';
 import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
@@ -346,6 +345,8 @@ function Interrogate() {
       previousStressRef.current = stressLevel;
 
       return () => window.clearTimeout(timeoutId);
+
+      return;
     }
 
     previousStressRef.current = stressLevel;
@@ -409,7 +410,7 @@ function Interrogate() {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [history]);
 
-  const { isListening, toggle: toggleSpeech } = useSpeechToText(
+  const { isListening, isTranscribing, speechError, toggle: toggleSpeech } = useSpeechToText(
     (transcript) => setInput(prev => prev ? `${prev} ${transcript}` : transcript)
     // appends to existing input rather than replacing it
   );
@@ -712,7 +713,6 @@ function Interrogate() {
                     
                   </div>
                   <div className="avatar-overlay" />
-                  <StressBar level={stressLevel} />
                 </div>
               </div>
             )}
@@ -789,11 +789,11 @@ function Interrogate() {
                     <button
                       type="button"
                       onClick={toggleSpeech}
-                      disabled={isResponding}
+                      disabled={isResponding || isTranscribing}
                       className={`mic-btn ${isListening ? 'mic-btn--active' : ''}`}
-                      title={isListening ? 'Stop listening' : 'Speak your question'}
+                      title={speechError ?? (isTranscribing ? 'Transcribing voice' : isListening ? 'Stop recording' : 'Speak your question')}
                     >
-                      {isListening ? '🔴' : '🎙️'}
+                      {isTranscribing ? '...' : isListening ? '🔴' : '🎙️'}
                     </button>
                     <input
                       type="text"
@@ -803,6 +803,7 @@ function Interrogate() {
                       onChange={e => setInput(e.target.value)}
                     />
                   </div>
+                  {speechError && <div className="speech-error" role="status">{speechError}</div>}
                   <div className='submit-button'>
                     <button
                       type='submit'

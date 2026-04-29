@@ -11,7 +11,9 @@ body {
   background-color: #101010;
   cursor: url('./assets/cursor.png'), auto;
   image-rendering: pixelated;
-  overflow: hidden;
+  /* FIX: removed overflow: hidden so footer and tall content can scroll */
+  overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior-y: none;
 }
 
@@ -19,16 +21,17 @@ body {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 0; /* Remove the 24px padding */
+  padding: 0;
   box-sizing: border-box;
 }
 
 #root {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   display: flex;
   justify-content: center;
-  overflow: hidden;
+  /* FIX: removed overflow: hidden so footer isn't clipped */
+  overflow: visible;
 }
 
 .newgame-screen {
@@ -36,11 +39,13 @@ body {
   inset: 0;
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  /* FIX: allow internal scroll so footer is reachable */
+  overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background-image: url('./desk/assets/desk-bg-new.png');
+  background-image: url('./desk/assets/extranewdesk.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -48,8 +53,8 @@ body {
 
 .newgame-container {
   height: auto;
-  max-height: 100vh;
-  overflow: hidden;
+  max-height: none; /* FIX: was 100vh which clipped the footer */
+  overflow: visible;
   margin: 0;
   outline-offset: 0;
 }
@@ -148,12 +153,24 @@ body {
   color: #000000;
   letter-spacing: -2px;
   white-space: nowrap;
-  overflow: hidden;
+  /* FIX: removed overflow: hidden which clipped the text.
+     The typing animation now clips via max-width instead. */
+  overflow: visible;
   animation: typing 2s steps(20, end) forwards;
   text-transform: uppercase;
   text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
   position: relative;
   display: inline-block;
+  /* FIX: clip only the width during animation, not the visible overflow */
+  clip-path: inset(0 0 0 0);
+}
+
+/* FIX: use a wrapper to constrain width animation without hiding text */
+.title-wrapper {
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
 }
 
 .title::after {
@@ -169,14 +186,14 @@ body {
 
 @keyframes typing {
   from {
-    width: 0;
+    max-width: 0;
     opacity: 0;
   }
   1% {
     opacity: 1;
   }
   to {
-    width: 100%;
+    max-width: 100%;
     opacity: 1;
   }
 }
@@ -513,10 +530,10 @@ body {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-
   display: block;
   transform: rotate(-25deg);
 }
+
 .duration-toggle {
   width: 100%;
   display: grid;
@@ -551,7 +568,6 @@ body {
   box-shadow: 0 0 0 2px #e7dcc4;
 }
 
-
 .duration-option.active.short {
   background-color: #1f5c3a;
 }
@@ -563,7 +579,6 @@ body {
 .duration-option.active.long {
   background-color: #7a1f1f;
 }
-
 
 .intensity-toggle {
   width: 100%;
@@ -600,15 +615,12 @@ body {
   box-shadow: 0 0 0 2px #e7dcc4;
 }
 
-
 .intensity-option.active.g {
   background-color: #1f5c3a;
-
 }
 
 .intensity-option.active.pg13 {
   background-color: #c4952a;
-
 }
 
 .intensity-option.active.r {
@@ -810,6 +822,7 @@ body {
   .title {
     font-size: 2.2rem;
     white-space: normal;
+    letter-spacing: -1px;
   }
 
   .subtitle {
@@ -878,6 +891,7 @@ body {
   margin-top: 12px;
   border-top: 4px double #000000;
   padding-top: 10px;
+  padding-bottom: 16px; /* FIX: was relying on margin-bottom: 4vh on child which got clipped */
   text-align: center;
 }
 
@@ -888,13 +902,13 @@ body {
   opacity: 0.5;
   letter-spacing: 0.5px;
   line-height: 2;
-  margin-bottom: 4vh;
+  margin-bottom: 0; /* FIX: removed 4vh margin that was being cut off */
   text-transform: uppercase;
 }
 
 /* --- Tips Section --- */
 .tip-section {
-  z-index:0;
+  z-index: 0;
   width: 100%;
   margin-top: 12px;
   border-top: 4px double #000000;
@@ -918,7 +932,6 @@ body {
   margin-top: 2%;
   margin-bottom: 5%;
   text-transform: uppercase;
-
 }
 
 .tip-content h6 {

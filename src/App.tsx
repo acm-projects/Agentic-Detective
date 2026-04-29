@@ -20,7 +20,7 @@ export const AudioContext = createContext<{
 
 function AppInner() {
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const location = useLocation();
   const isSilentPage = location.pathname === '/' || location.pathname === '/loading' || location.pathname === '/accuse';
 
@@ -63,6 +63,10 @@ function AppInner() {
   useEffect(() => {
     if (audioRef.current) audioRef.current.muted = isMuted;
   }, [isMuted]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = 0.1;
+  }, []);
 
   return (
     <AudioContext.Provider value={{ isMuted, setIsMuted }}>

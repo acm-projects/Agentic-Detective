@@ -837,6 +837,67 @@ app.post('/api/llm', async (req, res) => {
   res.json(data);
 });
 
+app.post(
+  '/api/speech-to-text',
+  express.raw({
+    type: [
+      'audio/aac',
+      'audio/mp4',
+      'audio/mpeg',
+      'audio/mp3',
+      'audio/ogg',
+      'audio/wav',
+      'audio/webm',
+      'application/octet-stream',
+    ],
+    limit: '25mb',
+  }),
+  async (req, res) => {
+    const apiKey = process.env.ELEVEN_LABS_API_KEY ?? process.env.ELEVENLABS_API_KEY ?? '';
+
+    if (!apiKey) {
+      return res.status(500).json({ error: 'ElevenLabs API key is not configured on the backend.' });
+    }
+
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      return res.status(400).json({ error: 'No audio was received for transcription.' });
+    }
+
+    const contentType = req.headers['content-type'] || 'audio/webm';
+    const form = new FormData();
+    const audioBlob = new Blob([req.body], { type: contentType });
+
+    form.append('model_id', 'scribe_v2');
+    form.append('language_code', 'eng');
+    form.append('tag_audio_events', 'false');
+    form.append('file', audioBlob, 'voice-input.webm');
+
+    try {
+      const response = await fetch('https://api.elevenlabs.io/v1/speech-to-text', {
+        method: 'POST',
+        headers: {
+          'xi-api-key': apiKey,
+        },
+        body: form,
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        console.error('[speech-to-text] ElevenLabs error:', data);
+        return res.status(response.status).json({
+          error: data?.detail?.message ?? data?.message ?? 'ElevenLabs speech transcription failed.',
+        });
+      }
+
+      return res.json({ text: data?.text ?? '' });
+    } catch (error) {
+      console.error('[speech-to-text] Error:', error);
+      return res.status(500).json({ error: 'Speech transcription failed.' });
+    }
+  }
+);
+
 // ── Start server only after DB connects ──
 connectDB()
   .then(() => {
