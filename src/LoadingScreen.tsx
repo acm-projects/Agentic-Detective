@@ -31,7 +31,7 @@ export default function LoadingScreen() {
   useEffect(() => {
     const audio = new Audio(AUDIO_SRC);
     audio.loop = true;
-    audio.volume = 0.7;
+    audio.volume = 0.01;
     audioRef.current = audio;
     audio.play().catch(() => {});
     return () => { audio.pause(); audio.src = ''; };

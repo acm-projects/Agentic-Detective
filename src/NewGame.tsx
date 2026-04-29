@@ -108,7 +108,7 @@ Set the story at ecsw 1.315 during ACM Projects Presentation Night.`;
         const audio = audioRef.current;
         if (!audio) return;
 
-    audio.volume = 0.3;
+    audio.volume = 0.01;
 
     const startAudio = () => {
       audio.play().catch(err => console.log('Audio playback failed:', err));

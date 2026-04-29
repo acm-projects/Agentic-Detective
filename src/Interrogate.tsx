@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress, type SuspicionLevel } from './useGameStore';
-import { StressBar } from './StressBar';
 import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
@@ -157,6 +156,12 @@ function PopulateNotificationBoard({
 
 }
 
+const MIC_PRESET_QUESTIONS: Record<number, string> = {
+  0: 'Mercedes told me that she lent you the textbook used to kill Muhammad. Do you have anything to say for yourself?',
+  1: 'What do you have to say about this Adarsh? Suhani also mentioned that you were the last person with the murder weapon. All the evidence points to you. Fess up.',
+  3: 'Your name was found in the textbook that killed Mohammed. Care to explain?',
+};
+
 function Interrogate() {
   const navigate = useNavigate();
   const { signOut } = useClerk();
@@ -181,6 +186,10 @@ function Interrogate() {
   const history = useActiveHistory();
   const activeProfile = useActiveSuspectProfile();
   const profiles = useMemo(() => player?.characterProfiles ?? [], [player?.characterProfiles]);
+  const activeSuspectIndex = useMemo(
+    () => profiles.findIndex(profile => profile.name === activeProfile?.name),
+    [activeProfile?.name, profiles],
+  );
   const [input, setInput] = useState('');
   const [showNotebook, setShowNotebook] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
@@ -410,9 +419,23 @@ function Interrogate() {
   }, [history]);
 
   const { isListening, toggle: toggleSpeech } = useSpeechToText(
-    (transcript) => setInput(prev => prev ? `${prev} ${transcript}` : transcript)
+    (transcript) => {
+      if (MIC_PRESET_QUESTIONS[activeSuspectIndex]) return;
+      setInput(prev => prev ? `${prev} ${transcript}` : transcript);
+    }
     // appends to existing input rather than replacing it
   );
+
+  const handleMicClick = useCallback(() => {
+    if (isListening) {
+      const presetQuestion = MIC_PRESET_QUESTIONS[activeSuspectIndex];
+      if (presetQuestion) {
+        setInput(presetQuestion);
+      }
+    }
+
+    toggleSpeech();
+  }, [activeSuspectIndex, isListening, toggleSpeech]);
 
   // ── Drop zone ──────────────────────────────────────────
   const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragOver(true); };
@@ -711,8 +734,6 @@ function Interrogate() {
                     )}
                     
                   </div>
-                  <div className="avatar-overlay" />
-                  <StressBar level={stressLevel} />
                 </div>
               </div>
             )}
@@ -788,7 +809,7 @@ function Interrogate() {
                   <div className='question-box'>
                     <button
                       type="button"
-                      onClick={toggleSpeech}
+                      onClick={handleMicClick}
                       disabled={isResponding}
                       className={`mic-btn ${isListening ? 'mic-btn--active' : ''}`}
                       title={isListening ? 'Stop listening' : 'Speak your question'}
