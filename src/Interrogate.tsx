@@ -344,6 +344,7 @@ function Interrogate() {
 
       const timeoutId = window.setTimeout(() => {
         setStressIncreaseNotice(null);
+        return;
       }, 7000);
 
       previousStressRef.current = stressLevel;
@@ -590,12 +591,7 @@ function Interrogate() {
               <button><Link to="/">Go Home</Link></button>
             </menu>
           </form>
-        </dialog>
-
-        {isFirstTimePlayer && (
-          <button onClick={handleReopenTutorial}>Reopen Tutorial?</button>
-        )}
-        
+        </dialog> 
 
         <dialog className="nes-dialog" id="signout-warning">
           <form method="dialog">
