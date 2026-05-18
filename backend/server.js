@@ -938,6 +938,82 @@ app.post('/api/llm', async (req, res) => {
   res.json(data);
 });
 
+//TTS 
+app.post('/api/tts', async (req, res) => {
+  const { text, voiceId } = req.body;
+
+  if (!text?.trim()) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+
+  const FALLBACK_VOICE = 'cgSgspJ2msm6clMCkdW9';
+  const resolvedVoiceId = voiceId?.trim() || FALLBACK_VOICE;
+  const apiKey = process.env.ELEVEN_LABS_API_KEY ?? '';
+
+  if (!apiKey) {
+    console.error('[/api/tts] ELEVEN_LABS_API_KEY is not set');
+    return res.status(500).json({ error: 'ELEVEN_LABS_API_KEY is not set on the server' });
+  }
+
+  try {
+    const elevenRes = await fetch(
+      `https://api.elevenlabs.io/v1/text-to-speech/${resolvedVoiceId}/stream`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'xi-api-key': apiKey,
+          'Accept': 'audio/mpeg',
+        },
+        body: JSON.stringify({
+          text,
+          model_id: 'eleven_flash_v2_5',
+          voice_settings: {
+            stability: 0.5,
+            similarity_boost: 0.8,
+            use_speaker_boost: true,
+          },
+        }),
+      }
+    );
+
+    if (!elevenRes.ok) {
+      res.setHeader('Content-Type', 'audio/mpeg');
+
+      // fetch() in Node 18+ returns a Web ReadableStream, not a Node stream.
+      const { Readable } = await import('stream');
+      const nodeStream = Readable.fromWeb(elevenRes.body);
+      nodeStream.pipe(res);
+
+      nodeStream.on('error', (err) => {
+        console.error('[/api/tts] Stream error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Stream failed' });
+        }
+      });
+    }
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+
+    // fetch() in Node 18+ returns a Web ReadableStream, not a Node stream.
+    // We need to convert it before we can pipe it.
+    const { Readable } = await import('stream');
+    const nodeStream = Readable.fromWeb(elevenRes.body);
+    nodeStream.pipe(res);
+
+    nodeStream.on('error', (err) => {
+      console.error('[/api/tts] Stream error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Stream failed' });
+      }
+    });
+
+  } catch (err) {
+    console.error('[/api/tts] Caught exception:', err.message);
+    res.status(500).json({ error: 'TTS request failed', detail: err.message });
+  }
+});
+
 // ── Start server only after DB connects ──
 connectDB()
   .then(() => {

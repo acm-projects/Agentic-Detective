@@ -177,7 +177,7 @@ function Accuse() {
     setFeedbackError(null);
 
     try {
-      const res = await fetch(`http://localhost:3000/cases/${encodeURIComponent(sessionId)}/feedback`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/${encodeURIComponent(sessionId)}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

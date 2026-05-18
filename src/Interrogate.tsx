@@ -196,7 +196,7 @@ function Interrogate() {
   const stressLevel = useActiveSuspectStress();
   const { isMuted, setIsMuted } = useContext(AudioContext);
   const isFirstTimePlayer = totalConversationCount <= 2;
-  console.log("first time? " + isFirstTimePlayer);
+  //console.log("first time? " + isFirstTimePlayer);
 
   // ── Evidence / clue state ──────────────────────────────
   const allClues = useNotificationStore(s => s.clues);
@@ -268,7 +268,7 @@ function Interrogate() {
     const { useNotificationStore } = await import('./store/useNotificationStore');
     const notificationState = useNotificationStore.getState();
 
-    await fetch(`http://localhost:3000/cases/${persistedSessionId}/progress`, {
+    await fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/${persistedSessionId}/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -307,7 +307,7 @@ function Interrogate() {
       const query = new URLSearchParams({ suspectName: activeSuspectName });
       if (userId) query.set('userId', userId);
       const res = await fetch(
-        `http://localhost:3000/case/${sessionId}/suspectNotes?${query.toString()}`
+        `${import.meta.env.VITE_API_BASE_URL}/case/${sessionId}/suspectNotes?${query.toString()}`
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data: SuspectNote[] = await res.json();
@@ -399,7 +399,7 @@ function Interrogate() {
     setNoteSaving(true);
     setNotesError(null);
     try {
-      const res = await fetch(`http://localhost:3000/case/${sessionId}/suspectNotes`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/case/${sessionId}/suspectNotes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -799,7 +799,6 @@ function Interrogate() {
                     
                   </div>
                   <div className="avatar-overlay" />
-                  <StressBar level={stressLevel} />
                 </div>
               </div>
             )}

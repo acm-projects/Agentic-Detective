@@ -46,7 +46,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
             setFeedLoading(true);
             setFeedError(null);
             try {
-                const res = await fetch('http://localhost:3000/community/feed?limit=12');
+                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/community/feed?limit=12`);
                 console.log("Community feed response:", res.status, res.statusText);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
@@ -76,7 +76,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
             // If this signed-in user already has progress for this case ID, resume it instead of resetting.
             if (isSignedIn && userId) {
                 const existingRes = await fetch(
-                    `http://localhost:3000/cases/${encodeURIComponent(trimmedCode)}?userId=${encodeURIComponent(userId)}`
+                    `${import.meta.env.VITE_API_BASE_URL}/cases/${encodeURIComponent(trimmedCode)}?userId=${encodeURIComponent(userId)}`
                 );
                 if (existingRes.ok) {
                     const existingDoc = await existingRes.json();
@@ -90,7 +90,7 @@ export default function Community({ onCloseModal }: CommunityProps) {
                 }
             }
 
-            const res = await fetch(`http://localhost:3000/community/cases/${encodeURIComponent(trimmedCode)}/template`);
+            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/community/cases/${encodeURIComponent(trimmedCode)}/template`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const template = await res.json();
             await loadSharedCaseTemplate(template, trimmedCode, navigate);

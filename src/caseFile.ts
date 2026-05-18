@@ -632,7 +632,7 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   // Save to MongoDB if signed in
   if (seed.isSignedIn && seed.userId) {
     try {
-      const response = await fetch("http://localhost:3000/cases/create", {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

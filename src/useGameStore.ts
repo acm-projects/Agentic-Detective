@@ -557,7 +557,7 @@ const raw = await callModel({
           }))
 
           console.log("right before mongo fetch");
-          fetch(`http://localhost:3000/cases/${sessionId}/progress`, {
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/${sessionId}/progress`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -667,7 +667,7 @@ set({ isResponding: false });
         "";
       console.log("right before mongo fetch");
       if (sessionId) {
-          fetch(`http://localhost:3000/cases/${sessionId}/outcome`, {
+          fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/${sessionId}/outcome`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -820,7 +820,7 @@ set({ isResponding: false });
       useNotificationStore.getState().initClues(player.clues);
 
       if (mergedSeed.isSignedIn && mergedSeed.userId) {
-        fetch('http://localhost:3000/cases/create', {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/create`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

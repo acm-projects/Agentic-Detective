@@ -26,7 +26,7 @@ type SavedGamesListProps = {
 };
 
 async function fetchCasesFromUserId(userId: string): Promise<SavedCase[]> {
-  const response = await fetch(`http://localhost:3000/cases/user/${userId}`);
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/user/${userId}`);
 
   if (!response.ok) {
     throw new Error(`Request failed with status ${response.status}`);
@@ -65,7 +65,7 @@ function SavedGameCard({
     setIsStarred(newStarred); // optimistic update
     setIsStarring(true);
     try {
-      const response = await fetch(`http://localhost:3000/cases/${game.sessionId}/star`, {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/${game.sessionId}/star`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, isStarred: newStarred }),

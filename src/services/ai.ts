@@ -18,7 +18,7 @@ export async function callModel({
   temperature?: number;
   max_tokens?: number;
 }): Promise<string> {
-  const response = await fetch("http://localhost:3000/api/llm", {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/llm`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ model, system, messages, temperature, max_tokens }),
