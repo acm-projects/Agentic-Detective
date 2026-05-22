@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useContext, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useGameStore, useActiveHistory, useActiveSuspectProfile, useActiveSuspectStress, type SuspicionLevel } from './useGameStore';
-import { StressBar } from './StressBar';
 import { useNotificationStore } from './store/useNotificationStore'
 import { useNotificationScheduler } from './services/useNotificationScheduler'
 import { NotificationToast } from './components/notifications/NotificationToast'
