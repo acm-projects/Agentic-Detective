@@ -1,12 +1,13 @@
 // ============================================================
 //  CASE FILE — Two-call generation pipeline
-//  Call 1: Story Bible  (logic / consistency)
-//  Call 2: Full Case    (creative, built on locked story)
+//  Call 1: Story Bible  (logic / consistency)  — Gemini
+//  Call 2: Full Case    (creative)             — Gemini
 // ============================================================
 import type { PlayerSeed, Storyline } from "./obj/backendInterfaces";
+import { callModel } from "./services/ai";
+import type { Provider } from "./services/ai";
 
-import { callModel, fastModel } from "./services/ai";
-
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
 // ─────────────────────────────────────────────
 //  AVATAR POOL
@@ -102,11 +103,11 @@ function sanitizeHex(value: unknown, fallback: string): string {
 
 function sanitizePortraitFeatures(raw: any): FeatureSelection {
   return {
-    backHairFrameIndex:  Math.min(9, Math.max(0, Number(raw?.backHairFrameIndex  ?? 0))),
+    backHairFrameIndex:  Math.min(9,  Math.max(0, Number(raw?.backHairFrameIndex  ?? 0))),
     frontHairFrameIndex: Math.min(11, Math.max(0, Number(raw?.frontHairFrameIndex ?? 0))),
-    eyesFrameIndex:      Math.min(5, Math.max(0, Number(raw?.eyesFrameIndex      ?? 0))),
-    noseFrameIndex:      Math.min(5, Math.max(0, Number(raw?.noseFrameIndex      ?? 0))),
-    mouthFrameIndex:     Math.min(5, Math.max(0, Number(raw?.mouthFrameIndex     ?? 0))),
+    eyesFrameIndex:      Math.min(5,  Math.max(0, Number(raw?.eyesFrameIndex      ?? 0))),
+    noseFrameIndex:      Math.min(5,  Math.max(0, Number(raw?.noseFrameIndex      ?? 0))),
+    mouthFrameIndex:     Math.min(5,  Math.max(0, Number(raw?.mouthFrameIndex     ?? 0))),
     hairColor:  sanitizeHex(raw?.hairColor,  "#7B4B2A"),
     skinColor:  sanitizeHex(raw?.skinColor,  "#F5C28A"),
     eyeColor:   sanitizeHex(raw?.eyeColor,   "#634E34"),
@@ -122,7 +123,7 @@ function cleanRawJson(raw: string): string {
     .replace(/^```\s*/i, "")
     .replace(/```\s*$/i, "")
     .trim();
-  
+
   // Fix newlines and other control chars inside JSON strings
   cleaned = cleaned.replace(/"(?:[^"\\]|\\.)*"/g, (match) =>
     match
@@ -130,13 +131,13 @@ function cleanRawJson(raw: string): string {
       .replace(/(?<!\\)\r/g, "\\r")
       .replace(/(?<!\\)\t/g, "\\t")
   );
-  
+
   // Remove any trailing non-JSON characters (text after the closing brace)
   const lastBraceIndex = cleaned.lastIndexOf("}");
   if (lastBraceIndex !== -1) {
     cleaned = cleaned.slice(0, lastBraceIndex + 1);
   }
-  
+
   return cleaned;
 }
 
@@ -243,7 +244,6 @@ export interface RestoredSuspectSession {
 
 // ─────────────────────────────────────────────
 //  DERIVE characterProfiles FROM suspects
-//  No second LLM generation needed — just strip sensitive fields.
 // ─────────────────────────────────────────────
 
 function deriveCharacterProfiles(suspects: Suspect[]): CharacterProfile[] {
@@ -257,7 +257,6 @@ function deriveCharacterProfiles(suspects: Suspect[]): CharacterProfile[] {
     claimedAlibi: s.claimedAlibi,
     physicalDescription: s.physicalDescription,
     avatarId: s.avatarId,
-    // Derive suspicion level from honesty without exposing isGuilty
     suspicionLevel:
       s.honestyLevel === "deceptive" ? "high"
       : s.honestyLevel === "partially_honest" ? "medium"
@@ -268,8 +267,6 @@ function deriveCharacterProfiles(suspects: Suspect[]): CharacterProfile[] {
 
 // ─────────────────────────────────────────────
 //  PROMPT — CALL 1: STORY BIBLE
-//  Small, fast, logic-only. Locks victim, murderer,
-//  clue IDs, and contradictions before Call 2 runs.
 // ─────────────────────────────────────────────
 
 interface StoryBible {
@@ -279,7 +276,7 @@ interface StoryBible {
   victimBackground: string;
   causeOfDeath: string;
   bodyFoundAt: string;
-  murdererIndex: number; // 0–3, which suspect slot is guilty
+  murdererIndex: number;
   murderWeapon: string;
   murderLocation: string;
   murderTime: string;
@@ -292,7 +289,7 @@ interface StoryBible {
     honestyLevel: "honest" | "partially_honest" | "deceptive";
   }>;
   clues: Array<{
-    id: string;       // clue_1 through clue_6
+    id: string;
     type: string;
     isDecisive: boolean;
     severity: ClueSeverity;
@@ -380,7 +377,6 @@ Respond ONLY with valid JSON:
 
 // ─────────────────────────────────────────────
 //  PROMPT — CALL 2: FULL CASE
-//  Creative work only — story is already locked.
 // ─────────────────────────────────────────────
 
 function buildFullCasePrompt(seed: PlayerSeed, bible: StoryBible, estimatedConversations: number): string {
@@ -540,13 +536,16 @@ Respond ONLY with valid JSON. No markdown, no commentary:
 async function callWithRetry<T>(
   prompt: string,
   temperature: number,
-  maxRetries = 2
+  provider: Provider,
+  model: string,
+  maxRetries = 3
 ): Promise<T> {
   let lastError: unknown;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       const text = await callModel({
-        model: fastModel,
+        model,
+        provider,
         messages: [{ role: "user", content: prompt }],
         temperature,
       });
@@ -592,20 +591,27 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
 }> {
   const estimatedConversations = Math.round(seed.duration / 2);
 
-  // ── CALL 1: Story Bible (logic-only, lower temperature for consistency)
+  // ── CALL 1: Story Bible — Gemini (logic-only, lower temperature)
   console.log("[CaseGen] Call 1: Story Bible...");
   const bible = await callWithRetry<StoryBible>(
     buildStoryBiblePrompt(seed, estimatedConversations),
-    0.7
+    0.7,
+    "groq",
+    "llama-3.3-70b-versatile"
   );
 
-  // ── CALL 2: Full Case (creative, uses locked bible as context)
+  // ── CALL 2: Full Case — Gemini (creative, locked bible as context)
   console.log("[CaseGen] Call 2: Full Case...");
   const fullCase = await callWithRetry<{
     suspects: Suspect[];
     caseReport: CaseReport;
     clues: Omit<Clue, "discovered" | "clueLost">[];
-  }>(buildFullCasePrompt(seed, bible, estimatedConversations), 0.9);
+  }>(
+    buildFullCasePrompt(seed, bible, estimatedConversations),
+    0.9,
+    "groq",
+    "llama-3.3-70b-versatile"
+  );
 
   // Sanitize portrait features
   const suspects: Suspect[] = fullCase.suspects.map((s) => ({
@@ -613,7 +619,7 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
     portraitFeatures: sanitizePortraitFeatures(s.portraitFeatures),
   }));
 
-  // Hardcode always-false fields — no need for LLM to generate these
+  // Hardcode always-false fields
   const clues: Clue[] = fullCase.clues.map((c) => ({
     ...c,
     discovered: false,
@@ -632,7 +638,7 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
   // Save to MongoDB if signed in
   if (seed.isSignedIn && seed.userId) {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/create`, {
+      const response = await fetch(`${API_BASE}/cases/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -659,12 +665,12 @@ export async function generateCaseFile(seed: PlayerSeed): Promise<{
           },
         }),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("[MongoDB] POST failed:", response.status, errorData);
       }
-      
+
       const result = await response.json();
       console.log("[MongoDB] Case saved successfully:", result);
     } catch (err) {
@@ -688,9 +694,8 @@ export async function feedCaseFile(game: any): Promise<{
   restoredSessions: Record<string, RestoredSuspectSession>;
   isResolved: boolean;
 }> {
-  // Merge initialClues metadata with discovered/clueLost from clueState
   const mergedClues = game.caseData.initialClues.map((clue: any) => {
-    const state = game.clueState[clue.id]; // look up by clue id in clueState
+    const state = game.clueState[clue.id];
     return {
       id: clue.id,
       name: clue.name,
@@ -699,13 +704,11 @@ export async function feedCaseFile(game: any): Promise<{
       couldImplicateSuspects: clue.couldImplicateSuspects,
       severity: clue.severity,
       isDecisive: clue.isDecisive,
-      // these two come from clueState, not initialClues
       discovered: state?.discovered ?? false,
       clueLost: state?.clueLost ?? false,
     };
   });
 
-  // Rebuild message history, stress, and counts for all suspects.
   const restoredSessions: Record<string, RestoredSuspectSession> = {};
   const suspectSessions = game?.interrogation?.suspectSessions ?? [];
 

@@ -1,9 +1,9 @@
 import dotenv from 'dotenv';
-dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
 import { MongoClient } from 'mongodb';
+import rateLimit from 'express-rate-limit';
 
 import 'dotenv/config';
 import fs from 'node:fs';
@@ -13,15 +13,28 @@ import { dirname, resolve } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
+import { generateText } from 'ai'; 
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createGroq } from '@ai-sdk/groq';
+
+const google = createGoogleGenerativeAI({ apiKey: process.env.GEMINI_API_KEY });
+const groq = createGroq({ apiKey: process.env.GROQ_API_KEY });
+
+
 // ── ESM __dirname equivalent ──
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
 
+dotenv.config({ path: resolve(__dirname, '.env') }); // load backend/.env explicitly
+
 const app = express();
+app.set('trust proxy', 1);
 const port = 3000;
 
 // ── Middleware ──
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:5174'];
 
 app.use(cors({
   origin: allowedOrigins,
@@ -31,6 +44,35 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,                  // 100 requests per window per IP
+  standardHeaders: true,     // Return rate limit info in headers
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
+
+const llmLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: 10,              // 10 LLM calls per minute per IP
+  message: { error: 'Too many AI requests, please slow down.' },
+});
+
+const ttsLimiter = rateLimit({
+  windowMs: 60 * 1000,  // 1 minute
+  max: 30,              // 30 TTS calls per minute per IP
+  message: { error: 'Too many TTS requests, please slow down.' },
+});
+
+const caseGenLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,                   // 10 new cases per hour per IP
+  message: { error: 'Too many cases generated, please wait before creating another.' },
+});
+
+// Apply general limiter to everything
+app.use(generalLimiter);
 
 // ── MongoDB setup ──
 const client = new MongoClient(process.env.ATLAS_URI);
@@ -265,7 +307,7 @@ function buildInitialNotesState() {
 }
 
 // ── Routes ──
-app.post('/cases/create', async (req, res) => {
+app.post('/cases/create', caseGenLimiter, async (req, res) => {
   try {
     console.log('[/cases/create] received:', req.body.sessionId);
     const now = nowIso();
@@ -915,31 +957,40 @@ app.get('/case/:caseId', async (req, res) => {
 */
 
 //ai backend
-app.post('/api/llm', async (req, res) => {
-  const { system, messages, model, temperature, max_tokens } = req.body;
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': process.env.ANTHROPIC_API_KEY,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: model ?? 'claude-haiku-4-5',
-      max_tokens: max_tokens ?? 8000,
+function getModel(provider, model) {
+  switch (provider) {
+    case 'google':
+    case 'gemini':  // add this alias
+      return google(model ?? 'gemini-2.5-flash');
+    case 'groq':
+      return groq(model ?? 'llama-3.3-70b-versatile');
+    default:
+      throw new Error(`Unknown provider: ${provider}`);
+  }
+}
+
+app.post('/api/llm', llmLimiter, async (req, res) => {
+  const { system, messages, model, provider, temperature, max_tokens } = req.body;
+
+  try {
+    const { text } = await generateText({
+      model: getModel(provider ?? 'groq', model),
       system,
       messages,
       temperature,
-    }),
-  });
+      maxTokens: max_tokens ?? 8000,
+    });
 
-  const data = await response.json();
-  res.json(data);
+    res.json({ text });
+  } catch (err) {
+    console.error('[LLM error]', err);
+    res.status(500).json({ type: 'error', error: { message: err.message } });
+  }
 });
 
 //TTS 
-app.post('/api/tts', async (req, res) => {
+app.post('/api/tts', ttsLimiter, async (req, res) => {
   const { text, voiceId } = req.body;
 
   if (!text?.trim()) {

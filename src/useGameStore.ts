@@ -1,6 +1,5 @@
 // ============================================================
 //  GAME STATE — Zustand store
-//  npm install zustand @google/generative-ai
 // ============================================================
 
 import { create } from "zustand";
@@ -8,17 +7,19 @@ import type { CaseFileBackend, CaseFilePlayer } from "./caseFile";
 import type { PlayerSeed } from "./obj/backendInterfaces";
 import { generateCaseFile, feedCaseFile, buildSuspectSystemPrompt } from "./caseFile";
 import { streamSpeech } from "./services/ttsService";
-import { selectVoicesForCase } from "./services/voiceSelectorServices.ts";
-console.log(import.meta.env.VITE_GEMINI_API_KEY)
-import { callModel, fastModel } from "./services/ai";
+import { selectVoicesForCase } from "./services/voiceSelectorServices";
+import { callModel } from "./services/ai";
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+
 // ─────────────────────────────────────────────
 //  CHAT TYPES
 // ─────────────────────────────────────────────
 
 export interface ChatMessage {
   role: "player" | "suspect";
-  text: string;           // raw LLM string (includes injected evidence)
-  displayText: string;    // what the player typed — shown in chat
+  text: string;
+  displayText: string;
   displayClues?: { id: string; name: string }[];
   timestamp: number;
 }
@@ -38,13 +39,13 @@ export interface SuspectSession {
 // ─────────────────────────────────────────────
 
 export type GamePhase =
-  | "setup"          // Player entering seed inputs
-  | "generating"     // LLM generating the case file
-  | "refreshed"      // When the game needs to be pulled from mongodb
-  | "briefing"       // Player reading the case report
-  | "interrogation"  // Asking questions to the suspects and finding clues
-  | "accusation"     // Player making their final accusation
-  | "resolved";      // Case closed, outcome shown
+  | "setup"
+  | "generating"
+  | "refreshed"
+  | "briefing"
+  | "interrogation"
+  | "accusation"
+  | "resolved";
 
 // ─────────────────────────────────────────────
 //  STORE
@@ -54,8 +55,8 @@ interface GameState {
   phase: GamePhase;
   seed: PlayerSeed | null;
 
-  backend: CaseFileBackend | null;  // 🔒 Never pass directly to UI components
-  player: CaseFilePlayer | null;    // ✅ Safe to render anywhere
+  backend: CaseFileBackend | null;
+  player: CaseFilePlayer | null;
 
   activeSuspectName: string | null;
   sessions: Record<string, SuspectSession>;
@@ -97,7 +98,7 @@ interface GameState {
   clearFirstClueDiscovery: () => void;
   clearLoadedCase: () => void;
   tickElapsed: () => void;
-  setCurrentSessionId: (sessionId: string) => void; // This function can only be called when the user is signed in
+  setCurrentSessionId: (sessionId: string) => void;
   setSelectedCase: (caseDoc: any) => void;
   setSessions: (sessions: Record<string, SuspectSession>) => void;
   loadSharedCaseTemplate: (template: any, caseCode: string, navigate: (path: string) => void) => Promise<void>;
@@ -118,7 +119,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   phase: "setup",
   seed: { ...DEFAULT_SEED },
 
-
   backend: null,
   player: null,
   activeSuspectName: null,
@@ -136,13 +136,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   voiceIds: {},
   isSpeaking: false,
 
-  // ── Merge partial seed updates ──
   setSeed: (partial) =>
     set(state => ({
       seed: { ...(state.seed ?? DEFAULT_SEED), ...partial },
     })),
 
-  // ── Generate the full case from player seed ──
   startCase: async (navigate: (path: string) => void): Promise<boolean> => {
     const { seed, phase, currentSessionId, selectedCase } = get() as {
       seed: PlayerSeed;
@@ -184,142 +182,119 @@ export const useGameStore = create<GameState>((set, get) => ({
         });
         const { useNotificationStore } = await import("./store/useNotificationStore");
         useNotificationStore.getState().initClues(player.clues);
-        navigate("/report");           // ← instead of set({ phase: "briefing" })
+        navigate("/report");
         return false;
       } catch (err) {
         set({ error: "Failed to generate case.", phase: "setup" });
         console.error(err);
         return false;
       }
-    } 
-    else {
-        // Reloading existing case from selected save.
-        try {
-          const { backend, player, restoredSessions, isResolved } = await feedCaseFile(selectedCase);
-          const discoveredCluesCount = player.clues.filter(c => c.discovered).length;
+    } else {
+      try {
+        const { backend, player, restoredSessions, isResolved } = await feedCaseFile(selectedCase);
+        const discoveredCluesCount = player.clues.filter(c => c.discovered).length;
 
-          const gameState = selectedCase?.game ?? {};
-          const restoredPhase = (gameState.phase as GamePhase) ?? "briefing";
-          /*
-          const savedIsResolved =
-            selectedCase?.status === "resolved" ||
-            restoredPhase === "resolved" ||
-            Boolean(selectedCase?.outcome?.accusedName);
-          */
+        const gameState = selectedCase?.game ?? {};
+        const restoredPhase = (gameState.phase as GamePhase) ?? "briefing";
 
-          const restoredAccusationResult = selectedCase?.outcome?.accusedName
-            ? {
-                accusedName: selectedCase.outcome.accusedName,
-                isCorrect: Boolean(selectedCase.outcome.isCorrect),
-                trueKiller: String(selectedCase.outcome.trueKiller ?? "Unknown"),
-                explanation: String(selectedCase.outcome.explanation ?? ""),
-              }
-            : null;
+        const restoredAccusationResult = selectedCase?.outcome?.accusedName
+          ? {
+              accusedName: selectedCase.outcome.accusedName,
+              isCorrect: Boolean(selectedCase.outcome.isCorrect),
+              trueKiller: String(selectedCase.outcome.trueKiller ?? "Unknown"),
+              explanation: String(selectedCase.outcome.explanation ?? ""),
+            }
+          : null;
 
-          set({
-            backend,
-            player,
-            sessions: restoredSessions as unknown as Record<string, SuspectSession>,
-            activeSuspectName: gameState.activeSuspectName ?? null,
-            totalConversationCount: Number(gameState.totalConversationCount ?? 0),
-            elapsed: Number(gameState.elapsedSeconds ?? 0),
-            phase: isResolved ? "resolved" : restoredPhase,
-            numDiscoveredClues: discoveredCluesCount,
-            isFirstClueDiscovery: discoveredCluesCount === 1,
-            accusationUnlocked: discoveredCluesCount >= ACCUSATION_MIN_CLUES,
-            accusationResult: restoredAccusationResult,
-          });
+        set({
+          backend,
+          player,
+          sessions: restoredSessions as unknown as Record<string, SuspectSession>,
+          activeSuspectName: gameState.activeSuspectName ?? null,
+          totalConversationCount: Number(gameState.totalConversationCount ?? 0),
+          elapsed: Number(gameState.elapsedSeconds ?? 0),
+          phase: isResolved ? "resolved" : restoredPhase,
+          numDiscoveredClues: discoveredCluesCount,
+          isFirstClueDiscovery: discoveredCluesCount === 1,
+          accusationUnlocked: discoveredCluesCount >= ACCUSATION_MIN_CLUES,
+          accusationResult: restoredAccusationResult,
+        });
 
-          const { useNotificationStore } = await import("./store/useNotificationStore");
-          useNotificationStore.getState().initClues(player.clues);
-          useNotificationStore.getState().hydrateSchedulerState(selectedCase?.schedulerState ?? null);
+        const { useNotificationStore } = await import("./store/useNotificationStore");
+        useNotificationStore.getState().initClues(player.clues);
+        useNotificationStore.getState().hydrateSchedulerState(selectedCase?.schedulerState ?? null);
 
-          if (isResolved) {
-            console.log(selectedCase?.status)
-            navigate("/case-already-resolved-error");
-            return true;
-          }
-
-          navigate("/report");
+        if (isResolved) {
+          console.log(selectedCase?.status);
+          navigate("/case-already-resolved-error");
           return true;
-        } catch (err) {
-          set({ error: "Failed to feed case details from MongoDB.", phase: "setup" });
-          console.error(err);
-          return false;
         }
-        
+
+        navigate("/report");
+        return true;
+      } catch (err) {
+        set({ error: "Failed to feed case details from MongoDB.", phase: "setup" });
+        console.error(err);
+        return false;
+      }
     }
 
-      return false;
-
-
-    
+    return false;
   },
 
-  // ── Player has read the briefing, move to investigation ──
   goToBriefing: (navigate: (path: string) => void) => {
     set({ phase: "briefing" });
-    navigate("/report");             // ← instead of set({ phase: "briefing" })
-    },
-    proceedToInvestigation: (navigate) => {
-      set({ phase: "interrogation" });
-      navigate("/interrogate");
-    },
+    navigate("/report");
+  },
+  proceedToInvestigation: (navigate) => {
+    set({ phase: "interrogation" });
+    navigate("/interrogate");
+  },
 
   startInterrogation: (suspectName) => {
-  const { backend, player, sessions } = get();
-  if (!backend || !player) return;
+    const { backend, player, sessions } = get();
+    if (!backend || !player) return;
 
-  // Session already exists — nothing to initialize
-  if (sessions[suspectName]) {
-    set({ phase: "interrogation", activeSuspectName: suspectName });
-    return;
-  }
+    if (sessions[suspectName]) {
+      set({ phase: "interrogation", activeSuspectName: suspectName });
+      return;
+    }
 
-  // Fresh session
-  set(state => ({
-    phase: "interrogation",
-    activeSuspectName: suspectName,
-    sessions: {
-      ...state.sessions,
-      [suspectName]: {
-        suspectName,
-        history: [],
-        conversationCount: 0,
-        stressLevel: 0,
-        suspicionLevel: null,
+    set(state => ({
+      phase: "interrogation",
+      activeSuspectName: suspectName,
+      sessions: {
+        ...state.sessions,
+        [suspectName]: {
+          suspectName,
+          history: [],
+          conversationCount: 0,
+          stressLevel: 0,
+          suspicionLevel: null,
+        },
       },
-    },
-  }));
-},
+    }));
+  },
 
   setSuspicionLevelForSuspect: (suspectName, level) => {
     set((state) => {
       const currentSession = state.sessions[suspectName];
       if (!currentSession) return state;
-
       return {
         sessions: {
           ...state.sessions,
-          [suspectName]: {
-            ...currentSession,
-            suspicionLevel: level,
-          },
+          [suspectName]: { ...currentSession, suspicionLevel: level },
         },
       };
     });
   },
 
-
-  // ── Send a player message to the active suspect ──
   sendMessage: async (text, displayText, displayClues) => {
-      
     const { activeSuspectName, backend, player } = get();
     const { seed } = get() as { seed: PlayerSeed };
 
     if (!activeSuspectName || !backend || !player || get().isResponding) return;
 
-    // Ensure session exists — startInterrogation is idempotent
     if (!get().sessions[activeSuspectName]) {
       get().startInterrogation(activeSuspectName);
     }
@@ -332,13 +307,12 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const playerMessage: ChatMessage = {
       role: "player",
-      text,           // full injected LLM string
+      text,
       displayText,
       displayClues,
       timestamp: Date.now(),
     };
 
-    // Optimistically add player message and lock input
     set(state => ({
       isResponding: true,
       sessions: {
@@ -349,33 +323,25 @@ export const useGameStore = create<GameState>((set, get) => ({
         },
       },
     }));
-    
+
     try {
-      // Detect pure spam/gibberish so the prompt explicitly signals it to the model.
-      // A message is "spam" if it has no real words — only symbols, repeated chars, or profanity with no sentence structure.
       const isSpam = (() => {
-        const stripped = text.replace(/\[EVIDENCE PRESENTED[\s\S]*?\n\n/g, "").trim(); // ignore evidence blocks
+        const stripped = text.replace(/\[EVIDENCE PRESENTED[\s\S]*?\n\n/g, "").trim();
         if (!stripped) return false;
-        // Has at least one word-like token (≥2 consecutive letters)? If not → spam
         const hasWord = /[a-zA-Z]{2,}/.test(stripped);
-        // Is it suspiciously repetitive? (same char repeated ≥5 times)
         const isRepetitive = /(.)\1{4,}/.test(stripped);
-        // Entirely symbols/numbers with no letters
         const noLetters = !/[a-zA-Z]/.test(stripped);
         return (!hasWord && isRepetitive) || noLetters || (!hasWord && stripped.length > 3);
       })();
 
-      // Detect questions that are clearly unrelated to a murder investigation.
-      // These are things a suspect in an interrogation room would have zero reason to engage with.
       const isOffTopic = (() => {
-        if (isSpam) return false; // already classified
+        if (isSpam) return false;
         const lower = text.toLowerCase();
-        // Patterns that are never interrogation-relevant
         const offTopicPatterns = [
           /\bfavorite\s+(color|colour|food|movie|film|song|band|book|animal|sport|game|math|number|function|formula)\b/,
           /\bwrite\s+(me\s+)?(a\s+)?(poem|song|story|haiku|essay|joke|riddle)\b/,
           /\btell\s+(me\s+)?a\s+joke\b/,
-          /\bwhat\s+is\s+\d+\s*[\+\-\*\/]\s*\d+\b/, // math questions
+          /\bwhat\s+is\s+\d+\s*[\+\-\*\/]\s*\d+\b/,
           /\bwho\s+would\s+win\b/,
           /\bmeaning\s+of\s+life\b/,
           /\brecipe\s+for\b/,
@@ -391,10 +357,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         : isOffTopic
         ? "[DETECTIVE INPUT CLASSIFICATION: OFF-TOPIC — completely unrelated to the case or interrogation. Do NOT answer the question. Do NOT raise stress. Respond in-character with confused irritation and redirect to the interrogation.]\n\n"
         : "";
+
       const hasEvidencePresentation = Boolean(displayClues?.length);
       const hasDirectEvidence = /directly implicates you/i.test(text);
 
-      // Check for repeated questions to warn the model before it responds
       const recentForPrefix = session.history
         .filter(m => m.role === "player")
         .slice(-3)
@@ -414,65 +380,56 @@ export const useGameStore = create<GameState>((set, get) => ({
 
       const messageWithContext = `${spamPrefix}${repetitionPrefix}[Current stress level: ${session.stressLevel}]\n\n${text}`;
       const messages: { role: "user" | "assistant"; content: string }[] = [
-  ...session.history
-    .filter(m => m.text?.trim())
-    .map(m => ({
-      role: (m.role === "player" ? "user" : "assistant") as "user" | "assistant",
-      content: m.text,
-    })),
-  { role: "user", content: messageWithContext },
-];
+        ...session.history
+          .filter(m => m.text?.trim())
+          .map(m => ({
+            role: (m.role === "player" ? "user" : "assistant") as "user" | "assistant",
+            content: m.text,
+          })),
+        { role: "user", content: messageWithContext },
+      ];
 
-const suspect = backend.suspects.find(s => s.name === activeSuspectName)!;
-const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport, player.clues);
+      const suspect = backend.suspects.find(s => s.name === activeSuspectName)!;
+      const systemPrompt = buildSuspectSystemPrompt(suspect, player.caseReport, player.clues);
 
-const raw = await callModel({
-  model: fastModel,
-  system: systemPrompt,
-  messages,
-  temperature: 0.9,
-});
+      // ── Suspect chat uses Groq (fast, low-latency)
+      const raw = await callModel({
+        model: "llama-3.3-70b-versatile",
+        provider: "groq",
+        system: systemPrompt,
+        messages,
+        temperature: 0.9,
+      });
+
       console.log("suspect raw response", raw);
       let responseText = raw;
-      console.log(responseText);
-      let newStress = session.stressLevel; // default: keep current if parse fails
+      let newStress = session.stressLevel;
 
       try {
-        // Strip markdown code fences
         const cleaned = raw
           .replace(/^```json\s*/i, "")
           .replace(/^```\s*/i, "")
           .replace(/```\s*$/i, "")
           .trim();
 
-        // Try to extract a JSON object even if there's trailing garbage
         const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
         const jsonStr = jsonMatch ? jsonMatch[0] : cleaned;
-
         const parsed = JSON.parse(jsonStr);
 
-        // Ensure response is a plain string with no JSON artifacts
         const rawResponse = parsed.response;
         if (typeof rawResponse === "string") {
           responseText = rawResponse;
         } else {
-          // parsed.response missing or not a string — strip stress JSON from raw as last resort
           responseText = raw.replace(/["\s]*stressLevel["\s]*:[\s\d]+\}?\s*$/i, "").trim();
         }
 
         newStress = Math.min(100, Math.max(0, Number(parsed.stressLevel ?? session.stressLevel)));
 
-        // ── Client-side stress sanity guards ──────────────────────────────
-        // 1. Hard cap: no single message can raise stress by more than 20 points.
-        //    This prevents the model from jumping 40+ points on a vague accusation.
         const MAX_STRESS_DELTA = 20;
         if (newStress > session.stressLevel + MAX_STRESS_DELTA) {
           newStress = session.stressLevel + MAX_STRESS_DELTA;
         }
 
-        // 2. Repetition guard: if the last 3 player messages are near-identical,
-        //    stress cannot rise — it can only stay flat or drop.
-        //    "did you kill her" x5 should not compound.
         const recentPlayerMessages = session.history
           .filter(m => m.role === "player")
           .slice(-3)
@@ -480,17 +437,13 @@ const raw = await callModel({
         const currentMsg = (displayText ?? text).trim().toLowerCase();
         const isRepeatedQuestion =
           recentPlayerMessages.length >= 2 &&
-          recentPlayerMessages.every(m => {
-            // Simple similarity: same first 12 chars, or one contains the other
-            return (
-              m.slice(0, 12) === currentMsg.slice(0, 12) ||
-              m === currentMsg ||
-              (m.length > 4 && currentMsg.includes(m)) ||
-              (currentMsg.length > 4 && m.includes(currentMsg))
-            );
-          });
+          recentPlayerMessages.every(m => (
+            m.slice(0, 12) === currentMsg.slice(0, 12) ||
+            m === currentMsg ||
+            (m.length > 4 && currentMsg.includes(m)) ||
+            (currentMsg.length > 4 && m.includes(currentMsg))
+          ));
         if (isRepeatedQuestion && newStress > session.stressLevel) {
-          // Repeated question: freeze stress (or allow the model's drop if it dropped)
           newStress = session.stressLevel;
         }
 
@@ -500,18 +453,16 @@ const raw = await callModel({
         }
       } catch {
         console.warn("Could not parse suspect JSON reply — stripping stress artifact from raw text");
-        // Fallback: strip any trailing stressLevel JSON fragment from raw
         responseText = raw.replace(/["\s]*stressLevel["\s]*:[\s\d]+\}?\s*$/i, "").trim();
       }
 
       const suspectMessage: ChatMessage = {
         role: "suspect",
         text: responseText,
-        displayText: "",  // suspects have no separate display text
+        displayText: "",
         timestamp: Date.now(),
       };
 
-      // Add message to history first
       set(state => ({
         totalConversationCount: state.totalConversationCount + 1,
         sessions: {
@@ -526,18 +477,15 @@ const raw = await callModel({
         isResponding: false,
       }));
 
-      console.log("send message function reached, before sign in check")
-      // Send data to MongoDB
-      if (seed.isSignedIn && seed.userId != "") {
-        
+      // Persist to MongoDB
+      if (seed.isSignedIn && seed.userId !== "") {
         const sessionId =
           get().currentSessionId ||
-          get().player?.caseReport?.caseId || // Fallback
+          get().player?.caseReport?.caseId ||
           localStorage.getItem("lastSessionId") ||
           localStorage.getItem("lastCaseId") ||
           "";
 
-        console.log("right before sessionId check, after sign in check")
         if (sessionId) {
           const state = get();
           const { useNotificationStore } = await import("./store/useNotificationStore");
@@ -554,10 +502,9 @@ const raw = await callModel({
               text: m.text,
               timestamp: m.timestamp,
             })),
-          }))
+          }));
 
-          console.log("right before mongo fetch");
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/${sessionId}/progress`, {
+          fetch(`${API_BASE}/cases/${sessionId}/progress`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -570,57 +517,47 @@ const raw = await callModel({
                 totalConversationCount: state.totalConversationCount,
                 seed: state.seed,
               },
-
-              interrogation: {
-                suspectSessions,
-              },
+              interrogation: { suspectSessions },
               schedulerState: {
                 lastFiredAt: notificationState.lastFiredAt,
                 nextFireAt: notificationState.nextFireAt,
                 timerPaused: notificationState.timerPaused,
-              }
+              },
             }),
           }).catch(() => {});
-      }
-    }
-
-      // Generate and play speech asynchronously (don't block UI)
-      //tts streamed better
-      const voiceId = get().voiceIds[activeSuspectName];
-      console.log(get())
-
-      console.log("[tts] about to speak, voiceId:", voiceId, "text length:", responseText.length);
-      if (responseText) {
-  streamSpeech(
-    responseText,
-    voiceId ?? null,
-    (speaking) => set({ isSpeaking: speaking }),
-    (revealedText) => {
-      // Update the last message's displayText in place
-      set(state => {
-        const session = state.sessions[activeSuspectName];
-        if (!session) return state;
-        const history = [...session.history];
-        const lastIdx = history.length - 1;
-        if (history[lastIdx]?.role === 'suspect') {
-          history[lastIdx] = { ...history[lastIdx], displayText: revealedText };
         }
-        return {
-          sessions: {
-            ...state.sessions,
-            [activeSuspectName]: { ...session, history },
-          },
-        };
-      });
-    }
-  ).catch(err => console.error("[tts] playback failed:", err));
-}
+      }
 
-// Mark as no longer responding after message is added
-set({ isResponding: false });
+      // TTS
+      const voiceId = get().voiceIds[activeSuspectName];
+      if (responseText) {
+        streamSpeech(
+          responseText,
+          voiceId ?? null,
+          (speaking) => set({ isSpeaking: speaking }),
+          (revealedText) => {
+            set(state => {
+              const session = state.sessions[activeSuspectName];
+              if (!session) return state;
+              const history = [...session.history];
+              const lastIdx = history.length - 1;
+              if (history[lastIdx]?.role === "suspect") {
+                history[lastIdx] = { ...history[lastIdx], displayText: revealedText };
+              }
+              return {
+                sessions: {
+                  ...state.sessions,
+                  [activeSuspectName]: { ...session, history },
+                },
+              };
+            });
+          }
+        ).catch(err => console.error("[tts] playback failed:", err));
+      }
+
+      set({ isResponding: false });
     } catch (err) {
       console.error("Message failed:", err);
-      // Revert optimistic message on failure
       set(state => ({
         isResponding: false,
         error: "Failed to get a response. Try again.",
@@ -635,10 +572,9 @@ set({ isResponding: false });
     }
   },
 
-  // ── Player makes their final accusation ──
   makeAccusation: (accusedName, navigate) => {
     const { backend, player, numDiscoveredClues } = get();
-    const { seed } = get() as { seed: PlayerSeed};
+    const { seed } = get() as { seed: PlayerSeed };
     if (!backend) return;
     if (numDiscoveredClues >= ACCUSATION_MIN_CLUES) {
       set({ accusationUnlocked: true });
@@ -647,7 +583,7 @@ set({ isResponding: false });
     const trueKiller = backend.suspects.find(s => s.isGuilty);
     const isCorrect  = accusedName === trueKiller?.name;
 
-      set({
+    set({
       phase: "resolved",
       accusationResult: {
         accusedName,
@@ -656,33 +592,34 @@ set({ isResponding: false });
         explanation: backend.storyline.trueSequenceOfEvents,
       },
     });
-    console.log("accusation function called");
-    // Save outcome to MongoDB if signed in
-    if (seed.isSignedIn && seed.userId != "") {
+
+    if (seed.isSignedIn && seed.userId !== "") {
       const sessionId =
         get().currentSessionId ||
         get().player?.caseReport?.caseId ||
         localStorage.getItem("lastSessionId") ||
         localStorage.getItem("lastCaseId") ||
         "";
-      console.log("right before mongo fetch");
+
       if (sessionId) {
-          fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/${sessionId}/outcome`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              userId: seed.userId,
-              sessionId,
-              caseId: player?.caseReport?.caseId ?? sessionId,
-              accusedName,
-              isCorrect,
-              trueKiller: trueKiller?.name ?? "Unknown",
-              explanation: backend.storyline.trueSequenceOfEvents,
-            }),
-          }).catch(() => {});
-    }}
-    navigate("/accuse");   // ← navigate AFTER state is set
-},
+        fetch(`${API_BASE}/cases/${sessionId}/outcome`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: seed.userId,
+            sessionId,
+            caseId: player?.caseReport?.caseId ?? sessionId,
+            accusedName,
+            isCorrect,
+            trueKiller: trueKiller?.name ?? "Unknown",
+            explanation: backend.storyline.trueSequenceOfEvents,
+          }),
+        }).catch(() => {});
+      }
+    }
+
+    navigate("/accuse");
+  },
 
   markClueDiscovered: (clueId) => {
     set(state => {
@@ -700,16 +637,10 @@ set({ isResponding: false });
           ...state.player,
           clues: state.player.clues.map(c =>
             c.id === clueId ? { ...c, discovered: true } : c
-          )
-        }
+          ),
+        },
       };
     });
-
-    if (useGameStore.getState().isFirstClueDiscovery) {
-      console.log("YEEHAW FIRST CLAWUE");
-    }
-
-    console.log("num disc cluee: " +useGameStore.getState().numDiscoveredClues)
   },
 
   clearFirstClueDiscovery: () => {
@@ -720,9 +651,6 @@ set({ isResponding: false });
     set({ currentSessionId: "", selectedCase: null });
   },
 
-  
-  // ── Reset everything for a new game ──
-  
   resetGame: () =>
     set({
       phase: "setup",
@@ -743,18 +671,16 @@ set({ isResponding: false });
       voiceIds: {},
       accusationUnlocked: false,
     }),
-  
-    // keeps track of elapsed time
+
   tickElapsed: () => {
     set(state => ({ elapsed: state.elapsed + 1 }));
   },
 
-  // Sidenote: session ID is equivalent to case ID
   setCurrentSessionId: (sessionId) => {
     set({ currentSessionId: sessionId });
   },
 
-  setSelectedCase: (caseDoc) => set({ selectedCase: caseDoc }), // stores caseDoc from mongo in zustand
+  setSelectedCase: (caseDoc) => set({ selectedCase: caseDoc }),
 
   setSessions: (sessions) => set({ sessions }),
 
@@ -793,9 +719,10 @@ set({ isResponding: false });
       } catch (err) {
         console.warn("[VoiceSelector] Failed, continuing without voices:", err);
       }
+
       const sharedSessionId = String(caseCode ?? template?.caseData?.caseReport?.caseId ?? "").trim();
       if (!sharedSessionId) {
-        throw new Error('Missing case code for shared session');
+        throw new Error("Missing case code for shared session");
       }
 
       set({
@@ -820,15 +747,15 @@ set({ isResponding: false });
       useNotificationStore.getState().initClues(player.clues);
 
       if (mergedSeed.isSignedIn && mergedSeed.userId) {
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/cases/create`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        fetch(`${API_BASE}/cases/create`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sessionId: sharedSessionId,
             userId: mergedSeed.userId,
             seed: mergedSeed,
             game: {
-              phase: 'briefing',
+              phase: "briefing",
               elapsedSeconds: 0,
               activeSuspectName: null,
               totalConversationCount: 0,
@@ -845,48 +772,45 @@ set({ isResponding: false });
           .then(async (res) => {
             if (!res.ok) {
               const errorData = await res.json();
-              console.error('[loadSharedCaseTemplate] POST failed:', res.status, errorData);
+              console.error("[loadSharedCaseTemplate] POST failed:", res.status, errorData);
               return;
             }
             const result = await res.json();
-            console.log('[loadSharedCaseTemplate] Game created successfully:', result);
+            console.log("[loadSharedCaseTemplate] Game created successfully:", result);
           })
           .catch((err) => {
-            console.error('[loadSharedCaseTemplate] Network error:', err);
+            console.error("[loadSharedCaseTemplate] Network error:", err);
           });
       } else {
-        console.warn('[loadSharedCaseTemplate] Skipping /cases/create because auth is missing in seed:', {
+        console.warn("[loadSharedCaseTemplate] Skipping /cases/create because auth is missing in seed:", {
           isSignedIn: mergedSeed.isSignedIn,
           userId: mergedSeed.userId,
         });
       }
 
-      navigate('/report');
+      navigate("/report");
     } catch (err) {
-      console.error('Could not load shared case template:', err);
-      set({ error: 'Could not load shared case template.' });
+      console.error("Could not load shared case template:", err);
+      set({ error: "Could not load shared case template." });
     }
   },
 }));
 
 // ─────────────────────────────────────────────
-//  SELECTOR HOOKS  (use these in components)
+//  SELECTOR HOOKS
 // ─────────────────────────────────────────────
 
-// Current active session's chat history
-const EMPTY_HISTORY: ChatMessage[] = []
+const EMPTY_HISTORY: ChatMessage[] = [];
 
-export const useActiveHistory = () => // fix to account for rebuilt case details
+export const useActiveHistory = () =>
   useGameStore(state =>
     state.activeSuspectName
       ? (state.sessions[state.activeSuspectName]?.history ?? EMPTY_HISTORY)
-      : EMPTY_HISTORY // FIX: lift the fallback array outside the selector so it's always the same reference, otherwise new obj created within zustand
-  )
+      : EMPTY_HISTORY
+  );
 
-// Safe player data — the only thing UI components should read from
 export const usePlayerData = () => useGameStore(state => state.player);
 
-// Active suspect's profile (player-facing only)
 export const useActiveSuspectProfile = () =>
   useGameStore(state => {
     if (!state.activeSuspectName || !state.player) return null;
@@ -895,14 +819,14 @@ export const useActiveSuspectProfile = () =>
     ) ?? null;
   });
 
-  export const useActiveSuspectStress = () =>
+export const useActiveSuspectStress = () =>
   useGameStore(state =>
     state.activeSuspectName
       ? (state.sessions[state.activeSuspectName]?.stressLevel ?? 0)
       : 0
   );
 
-  export const useActiveSuspectVoiceId = () =>
+export const useActiveSuspectVoiceId = () =>
   useGameStore(state =>
     state.activeSuspectName
       ? (state.voiceIds[state.activeSuspectName] ?? null)

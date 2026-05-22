@@ -13,6 +13,8 @@
     "verify:db3": "node backend/data/verifyThreeCollections.cjs"
   },
   "dependencies": {
+    "@ai-sdk/google": "^3.0.79",
+    "@ai-sdk/groq": "^3.0.39",
     "@ai-sdk/openai": "^3.0.53",
     "@clerk/react": "^6.1.1",
     "@clerk/react-router": "^3.0.5",
@@ -22,10 +24,12 @@
     "@google/genai": "^1.46.0",
     "@google/generative-ai": "^0.24.1",
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "ai": "^6.0.190",
     "concurrently": "^9.2.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
     "immer": "^11.1.4",
     "mongodb": "^7.1.0",
     "nes.css": "^2.2.1",

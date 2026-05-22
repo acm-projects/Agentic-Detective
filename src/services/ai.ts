@@ -1,27 +1,28 @@
-// src/lib/ai.ts
+// services/ai.ts
 
-export type ModelId = "claude-haiku-4-5" | "claude-sonnet-4-5";
+export type Provider = "groq" | "gemini";
 
-export const fastModel: ModelId  = "claude-haiku-4-5";
-export const smartModel: ModelId = "claude-sonnet-4-5";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
 export async function callModel({
   model,
+  provider,
   system,
   messages,
   temperature = 0.9,
-  max_tokens = 8000,  // ← was 1000, case generation needs much more
+  max_tokens = 8000,
 }: {
-  model: ModelId;
+  model: string;
+  provider: Provider;
   system?: string;
   messages: { role: "user" | "assistant"; content: string }[];
   temperature?: number;
   max_tokens?: number;
 }): Promise<string> {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/llm`, {
+  const response = await fetch(`${API_BASE}/api/llm`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ model, system, messages, temperature, max_tokens }),
+    body: JSON.stringify({ model, provider, system, messages, temperature, max_tokens }),
   });
 
   if (!response.ok) {
@@ -30,7 +31,8 @@ export async function callModel({
   }
 
   const data = await response.json();
-  const text = data?.content?.find((b: any) => b.type === "text")?.text ?? "";
+  console.log("[LLM proxy raw response]", JSON.stringify(data));
+  const text = data?.text ?? "";
   if (!text) throw new Error("Empty response from LLM proxy");
   return text;
 }

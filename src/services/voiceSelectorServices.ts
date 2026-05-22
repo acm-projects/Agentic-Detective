@@ -6,7 +6,7 @@
 
 import type { Suspect } from '../caseFile';
 
-const SERVER = 'http://localhost:3000';
+const SERVER = import.meta.env.VITE_API_BASE_URL;
 
 export interface VoiceSelection {
   voiceId: string;
