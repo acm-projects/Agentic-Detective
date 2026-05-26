@@ -74,6 +74,8 @@ const caseGenLimiter = rateLimit({
 // Apply general limiter to everything
 app.use(generalLimiter);
 
+console.log('[Node version]', process.version);
+
 // ── MongoDB setup ──
 const client = new MongoClient(process.env.ATLAS_URI);
 let db;
@@ -1028,26 +1030,15 @@ app.post('/api/tts', ttsLimiter, async (req, res) => {
       }
     );
 
+    // ← Handle error FIRST, read body ONCE, then return
     if (!elevenRes.ok) {
-      res.setHeader('Content-Type', 'audio/mpeg');
-
-      // fetch() in Node 18+ returns a Web ReadableStream, not a Node stream.
-      const { Readable } = await import('stream');
-      const nodeStream = Readable.fromWeb(elevenRes.body);
-      nodeStream.pipe(res);
-
-      nodeStream.on('error', (err) => {
-        console.error('[/api/tts] Stream error:', err);
-        if (!res.headersSent) {
-          res.status(500).json({ error: 'Stream failed' });
-        }
-      });
+      const errText = await elevenRes.text();
+      console.error('[/api/tts] ElevenLabs error:', elevenRes.status, errText);
+      return res.status(502).json({ error: 'TTS request failed', detail: errText });
     }
 
+    // ← Only reached if ok — body not yet consumed
     res.setHeader('Content-Type', 'audio/mpeg');
-
-    // fetch() in Node 18+ returns a Web ReadableStream, not a Node stream.
-    // We need to convert it before we can pipe it.
     const { Readable } = await import('stream');
     const nodeStream = Readable.fromWeb(elevenRes.body);
     nodeStream.pipe(res);
