@@ -1032,9 +1032,19 @@ app.post('/api/tts', ttsLimiter, async (req, res) => {
 
     // ← Handle error FIRST, read body ONCE, then return
     if (!elevenRes.ok) {
-      const errText = await elevenRes.text();
-      console.error('[/api/tts] ElevenLabs error:', elevenRes.status, errText);
-      return res.status(502).json({ error: 'TTS request failed', detail: errText });
+       res.setHeader('Content-Type', 'audio/mpeg');
+
+      // fetch() in Node 18+ returns a Web ReadableStream, not a Node stream.
+      const { Readable } = await import('stream');
+      const nodeStream = Readable.fromWeb(elevenRes.body);
+      nodeStream.pipe(res);
+
+      nodeStream.on('error', (err) => {
+        console.error('[/api/tts] Stream error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Stream failed' });
+        }
+      });
     }
 
     // ← Only reached if ok — body not yet consumed
